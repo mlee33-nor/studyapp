@@ -169,19 +169,40 @@ svg *,
 .recharts-layer,
 .recharts-pie,
 .recharts-bar,
-.recharts-sector {
+.recharts-sector,
+.recharts-rectangle,
+.recharts-tooltip-wrapper,
+rect,
+path,
+g {
   outline: none !important;
   -webkit-tap-highlight-color: transparent !important;
 }
 
 /* Prevent focus rings on all focusable elements */
 *:focus,
-*:focus-visible {
+*:focus-visible,
+*:active,
+*:focus-within {
   outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Remove tap highlight color globally */
 * {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection for input elements */
+input,
+textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
