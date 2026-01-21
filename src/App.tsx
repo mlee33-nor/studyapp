@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock } from 'lucide-react';
+import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 
 // --- STORAGE HELPERS ---
 const getDarkMode = () => {
@@ -107,6 +109,60 @@ const saveSession = (category: string, duration: number) => {
   return newSession;
 };
 
+// --- CHART DATA HELPERS ---
+const getTimeDistributionData = (history: FocusSession[]) => {
+  const categoryMap: { [key: string]: number } = {};
+  history.forEach(session => {
+    categoryMap[session.category] = (categoryMap[session.category] || 0) + session.duration;
+  });
+  return Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
+};
+
+const getDailyFocusData = (history: FocusSession[]) => {
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 }); // Sunday
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+  return weekDays.map(day => {
+    const dayTotal = history
+      .filter(session => isSameDay(parseISO(session.date), day))
+      .reduce((sum, session) => sum + session.duration, 0);
+    return {
+      day: format(day, 'EEE'),
+      minutes: dayTotal
+    };
+  });
+};
+
+const getMonthlyProgressData = (history: FocusSession[]) => {
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  let cumulative = 0;
+  return daysInMonth.map(day => {
+    const dayTotal = history
+      .filter(session => isSameDay(parseISO(session.date), day))
+      .reduce((sum, session) => sum + session.duration, 0);
+    cumulative += dayTotal;
+    return {
+      date: format(day, 'MMM d'),
+      minutes: cumulative
+    };
+  });
+};
+
+const getCalendarData = (history: FocusSession[]) => {
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  return daysInMonth.map(day => ({
+    date: day,
+    day: format(day, 'd'),
+    hasSession: history.some(session => isSameDay(parseISO(session.date), day))
+  }));
+};
+
 // --- GAME LOGIC ---
 const calculateXpForLevel = (level: number) => {
   return 100 * level;
@@ -129,6 +185,33 @@ const THEME_UNLOCK_LEVELS = {
 
 const isThemeUnlocked = (theme: string, level: number) => {
   return level >= THEME_UNLOCK_LEVELS[theme as keyof typeof THEME_UNLOCK_LEVELS];
+};
+
+// Theme-aware colors for charts
+const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const themeColorMap = {
+    morning: {
+      primary: 'rgba(167, 139, 250, 0.8)',
+      secondary: 'rgba(139, 92, 246, 0.8)',
+      pastels: ['#E6D2FF', '#C8E6FF', '#C8FFE6', '#FFE6D2', '#FFD2E6', '#D2FFE6']
+    },
+    twilight: {
+      primary: 'rgba(236, 72, 153, 0.8)',
+      secondary: 'rgba(167, 139, 250, 0.8)',
+      pastels: ['#FFC8E3', '#E6C8FF', '#C8D6FF', '#FFC8C8', '#E6FFC8', '#C8FFE6']
+    },
+    golden: {
+      primary: 'rgba(251, 191, 36, 0.8)',
+      secondary: 'rgba(249, 115, 22, 0.8)',
+      pastels: ['#FFE6C8', '#FFDCC8', '#FFD2C8', '#FFC8D2', '#FFE6FF', '#E6FFD2']
+    },
+    midnight: {
+      primary: 'rgba(59, 130, 246, 0.8)',
+      secondary: 'rgba(139, 92, 246, 0.8)',
+      pastels: ['#C8D6FF', '#D2C8FF', '#C8FFE6', '#C8F0FF', '#E6C8FF', '#FFC8E6']
+    }
+  };
+  return themeColorMap[theme];
 };
 
 // --- SOFT ANIMATIONS ---
@@ -1607,6 +1690,7 @@ export default function App() {
               {[
                 { id: 'Timer', icon: Home },
                 { id: 'Stats', icon: BarChart2 },
+                { id: 'Reports', icon: FileText },
                 { id: 'Avatar', icon: User },
                 { id: 'Settings', icon: SettingsIcon }
               ].map(tab => {
@@ -1756,6 +1840,257 @@ export default function App() {
         </GlassCard>
       </motion.div>
     );
+
+    if (activeTab === 'Reports') {
+      const colors = getThemeColors(theme);
+      const timeDistData = getTimeDistributionData(focusHistory);
+      const dailyData = getDailyFocusData(focusHistory);
+      const progressData = getMonthlyProgressData(focusHistory);
+      const calendarData = getCalendarData(focusHistory);
+
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={SOFT_SPRING}
+          style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
+        >
+          <h1 style={{
+            fontSize: '1.5rem',
+            fontWeight: 500,
+            color: 'rgba(100, 100, 150, 0.8)',
+            marginBottom: '32px',
+            letterSpacing: '0.05em',
+            fontFamily: "'Quicksand', sans-serif"
+          }}>
+            Detailed Report
+          </h1>
+
+          {/* Card 1: Time Distribution Pie Chart */}
+          <GlassCard style={{ marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+              Time Distribution
+            </h3>
+            {timeDistData.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '48px 24px',
+                color: 'rgba(100, 100, 150, 0.6)',
+                fontSize: '14px',
+                fontFamily: "'Quicksand', sans-serif"
+              }}>
+                No data yet. Complete sessions to see your time distribution!
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={timeDistData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => {
+                      const hours = Math.floor(value / 60);
+                      const mins = value % 60;
+                      return `${name}: ${hours}h ${mins}m`;
+                    }}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {timeDistData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={colors.pastels[index % colors.pastels.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0];
+                        const value = data.value as number;
+                        const hours = Math.floor(value / 60);
+                        const mins = value % 60;
+                        return (
+                          <div style={{
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            backdropFilter: 'blur(10px)',
+                            padding: '8px 12px',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(200, 220, 255, 0.3)',
+                            fontFamily: "'Quicksand', sans-serif",
+                            fontSize: '13px'
+                          }}>
+                            <div style={{ fontWeight: 600, color: 'rgba(100, 100, 150, 0.9)' }}>{data.name}</div>
+                            <div style={{ color: 'rgba(100, 100, 150, 0.7)' }}>{hours}h {mins}m ({value} minutes)</div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </GlassCard>
+
+          {/* Card 2: Daily Focus Bar Chart */}
+          <GlassCard style={{ marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+              Daily Focus (This Week)
+            </h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 220, 255, 0.2)" />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                  stroke="rgba(200, 220, 255, 0.3)"
+                />
+                <YAxis
+                  tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                  stroke="rgba(200, 220, 255, 0.3)"
+                  label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0];
+                      return (
+                        <div style={{
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          backdropFilter: 'blur(10px)',
+                          padding: '8px 12px',
+                          borderRadius: '12px',
+                          border: '1px solid rgba(200, 220, 255, 0.3)',
+                          fontFamily: "'Quicksand', sans-serif",
+                          fontSize: '13px'
+                        }}>
+                          <div style={{ fontWeight: 600, color: 'rgba(100, 100, 150, 0.9)' }}>{data.payload.day}</div>
+                          <div style={{ color: 'rgba(100, 100, 150, 0.7)' }}>{data.value} minutes</div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="minutes" fill={colors.primary} radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </GlassCard>
+
+          {/* Card 3: Focus Time Goal Area Chart */}
+          <GlassCard style={{ marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+              Focus Time Goal (This Month)
+            </h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={progressData}>
+                <defs>
+                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={colors.primary} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={colors.primary} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 220, 255, 0.2)" />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 11 }}
+                  stroke="rgba(200, 220, 255, 0.3)"
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                  stroke="rgba(200, 220, 255, 0.3)"
+                  label={{ value: 'Total Minutes', angle: -90, position: 'insideLeft', fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0];
+                      return (
+                        <div style={{
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          backdropFilter: 'blur(10px)',
+                          padding: '8px 12px',
+                          borderRadius: '12px',
+                          border: '1px solid rgba(200, 220, 255, 0.3)',
+                          fontFamily: "'Quicksand', sans-serif",
+                          fontSize: '13px'
+                        }}>
+                          <div style={{ fontWeight: 600, color: 'rgba(100, 100, 150, 0.9)' }}>{data.payload.date}</div>
+                          <div style={{ color: 'rgba(100, 100, 150, 0.7)' }}>Total: {data.value} minutes</div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="minutes"
+                  stroke={colors.primary}
+                  strokeWidth={3}
+                  fill="url(#areaGradient)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </GlassCard>
+
+          {/* Card 4: Pomodoro Record Calendar Grid */}
+          <GlassCard>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+              Pomodoro Record ({format(new Date(), 'MMMM yyyy')})
+            </h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              gap: '8px'
+            }}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} style={{
+                  textAlign: 'center',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: 'rgba(100, 100, 150, 0.6)',
+                  fontFamily: "'Quicksand', sans-serif",
+                  padding: '8px 0'
+                }}>
+                  {day}
+                </div>
+              ))}
+              {calendarData.map((day, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: day.hasSession ? 1.1 : 1 }}
+                  style={{
+                    aspectRatio: '1',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: day.hasSession ? colors.primary : 'rgba(200, 220, 255, 0.2)',
+                    color: day.hasSession ? 'white' : 'rgba(100, 100, 150, 0.7)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: "'Quicksand', sans-serif",
+                    position: 'relative',
+                    cursor: day.hasSession ? 'pointer' : 'default',
+                    boxShadow: day.hasSession ? '0 2px 10px rgba(167, 139, 250, 0.3)' : 'none'
+                  }}
+                >
+                  {day.hasSession ? (
+                    <div style={{ position: 'relative' }}>
+                      <Check size={16} strokeWidth={3} />
+                    </div>
+                  ) : (
+                    day.day
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </GlassCard>
+        </motion.div>
+      );
+    }
 
     if (activeTab === 'Avatar') return (
       <motion.div
@@ -2057,6 +2392,7 @@ export default function App() {
             {[
               { id: 'Timer', icon: Home },
               { id: 'Stats', icon: BarChart2 },
+              { id: 'Reports', icon: FileText },
               { id: 'Avatar', icon: User },
               { id: 'Settings', icon: SettingsIcon }
             ].map(tab => {
