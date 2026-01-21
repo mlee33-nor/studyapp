@@ -1143,7 +1143,7 @@ export default function App() {
           justifyContent: 'center',
           width: '100%'
         }}>
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
             <h1 style={{
               fontSize: '1.25rem',
               fontWeight: 500,
@@ -1179,9 +1179,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* Zone 2 (Middle): Timer & Mascot Card - flex-[3] */}
+        {/* Zone 2 (Middle): Timer & Mascot Card - flex-[2.5] */}
         <div style={{
-          flex: 3,
+          flex: 2.5,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -1196,13 +1196,15 @@ export default function App() {
             flexDirection: 'column',
             alignItems: 'center'
           }}>
-            <InteractiveTimerRing
-              minutes={timerMinutes}
-              onMinutesChange={setTimerMinutes}
-              isRunning={isRunning}
-              timeLeft={timeLeft}
-              totalSeconds={timerMinutes * 60}
-            />
+            <div style={{ maxHeight: '85%', width: '100%', display: 'flex', justifyContent: 'center' }}>
+              <InteractiveTimerRing
+                minutes={timerMinutes}
+                onMinutesChange={setTimerMinutes}
+                isRunning={isRunning}
+                timeLeft={timeLeft}
+                totalSeconds={timerMinutes * 60}
+              />
+            </div>
 
             {/* Mascot Container */}
             <div style={{
@@ -1210,12 +1212,12 @@ export default function App() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              marginTop: '16px'
+              marginTop: '12px'
             }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                transform: 'scale(0.9)',
+                transform: 'scale(0.85)',
                 transformOrigin: 'center'
               }}>
                 <SproutCharacter size={80} level={userData.level} isTimerActive={isRunning} />
@@ -1246,14 +1248,13 @@ export default function App() {
           </GlassCard>
         </div>
 
-        {/* Zone 3 (Bottom): Action Zone - flex-1 */}
+        {/* Zone 3 (Bottom): Action Zone - flex-1.5 */}
         <div style={{
-          flex: 1,
+          flex: 1.5,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: '1rem',
+          justifyContent: 'flex-start',
           width: '100%',
           padding: '0 1.25rem'
         }}>
@@ -1263,7 +1264,8 @@ export default function App() {
             flexDirection: 'column',
             gap: '10px',
             maxWidth: '280px',
-            width: '100%'
+            width: '100%',
+            marginBottom: '3rem'
           }}>
             {!isRunning ? (
               <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
