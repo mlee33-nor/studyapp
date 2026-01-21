@@ -1134,12 +1134,12 @@ export default function App() {
         flexDirection: 'column',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '1.5rem 1.25rem 0',
+        padding: '0 1.25rem 0',
         position: 'relative',
         zIndex: 1
       }}>
         {/* Top: Header */}
-        <div style={{ width: '100%', textAlign: 'center', flexShrink: 0 }}>
+        <div style={{ width: '100%', textAlign: 'center', flexShrink: 0, marginTop: '3rem' }}>
           <h1 style={{
             fontSize: '1.25rem',
             fontWeight: 500,
@@ -1184,9 +1184,10 @@ export default function App() {
           justifyContent: 'center',
           width: '100%',
           maxWidth: '400px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          gap: '1rem'
         }}>
-          <GlassCard theme={selectedTheme} style={{ width: '100%', padding: '20px 16px' }}>
+          <GlassCard theme={selectedTheme} style={{ width: '100%', padding: '20px 16px 16px' }}>
             <InteractiveTimerRing
               minutes={timerMinutes}
               onMinutesChange={setTimerMinutes}
@@ -1202,7 +1203,7 @@ export default function App() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '16px 0 12px',
+              margin: '8px 0 6px',
               overflow: 'hidden'
             }}>
               <div style={{
@@ -1243,11 +1244,12 @@ export default function App() {
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.5rem',
+          gap: '0.75rem',
           width: '100%',
           maxWidth: '400px',
           flexShrink: 0,
-          paddingBottom: '2rem'
+          paddingBottom: '1.5rem',
+          marginBottom: '0.5rem'
         }}>
           {/* Start/Stop Buttons */}
           <div style={{
