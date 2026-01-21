@@ -173,28 +173,28 @@ const isThemeUnlocked = (theme: string, level: number) => {
   return level >= THEME_UNLOCK_LEVELS[theme as keyof typeof THEME_UNLOCK_LEVELS];
 };
 
-// Theme-aware colors for charts
+// Theme-aware colors for charts - Deep Twilight Neon Palette
 const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
   const themeColorMap = {
     morning: {
-      primary: 'rgba(167, 139, 250, 0.8)',
-      secondary: 'rgba(139, 92, 246, 0.8)',
-      pastels: ['#E6D2FF', '#C8E6FF', '#C8FFE6', '#FFE6D2', '#FFD2E6', '#D2FFE6']
+      primary: '#F472B6', // Neon Pink
+      secondary: '#A855F7', // Electric Purple
+      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
     },
     twilight: {
-      primary: 'rgba(236, 72, 153, 0.8)',
-      secondary: 'rgba(167, 139, 250, 0.8)',
-      pastels: ['#FFC8E3', '#E6C8FF', '#C8D6FF', '#FFC8C8', '#E6FFC8', '#C8FFE6']
+      primary: '#F472B6', // Neon Pink
+      secondary: '#A855F7', // Electric Purple
+      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
     },
     golden: {
-      primary: 'rgba(251, 191, 36, 0.8)',
-      secondary: 'rgba(249, 115, 22, 0.8)',
-      pastels: ['#FFE6C8', '#FFDCC8', '#FFD2C8', '#FFC8D2', '#FFE6FF', '#E6FFD2']
+      primary: '#F472B6', // Neon Pink
+      secondary: '#A855F7', // Electric Purple
+      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
     },
     midnight: {
-      primary: 'rgba(59, 130, 246, 0.8)',
-      secondary: 'rgba(139, 92, 246, 0.8)',
-      pastels: ['#C8D6FF', '#D2C8FF', '#C8FFE6', '#C8F0FF', '#E6C8FF', '#FFC8E6']
+      primary: '#F472B6', // Neon Pink
+      secondary: '#A855F7', // Electric Purple
+      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
     }
   };
   return themeColorMap[theme];
@@ -204,49 +204,49 @@ const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') =
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 const GENTLE_PRESS = { scale: 0.96 };
 
-// --- BACKGROUND THEMES ---
+// --- BACKGROUND THEMES - Deep Twilight Mode ---
 const BACKGROUND_THEMES = {
   morning: {
     name: 'Morning',
     emoji: '🌅',
-    gradient: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
+    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
     orbs: [
-      { color: 'rgba(230, 210, 255, 0.4)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(200, 255, 230, 0.4)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(200, 230, 255, 0.4)', size: 480, x: '40%', y: '70%' },
-      { color: 'rgba(255, 220, 240, 0.4)', size: 420, x: '80%', y: '60%' }
+      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
+      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
+      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
+      { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
     ]
   },
   twilight: {
     name: 'Twilight',
     emoji: '🌆',
-    gradient: 'linear-gradient(180deg, #1E1B4B 0%, #4C1D95 50%, #831843 100%)',
+    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
     orbs: [
-      { color: 'rgba(167, 139, 250, 0.4)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(236, 72, 153, 0.4)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(99, 102, 241, 0.4)', size: 480, x: '40%', y: '70%' },
-      { color: 'rgba(219, 39, 119, 0.4)', size: 420, x: '80%', y: '60%' }
+      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
+      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
+      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
+      { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
     ]
   },
   golden: {
     name: 'Golden',
     emoji: '🌇',
-    gradient: 'linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%)',
+    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
     orbs: [
-      { color: 'rgba(251, 191, 36, 0.4)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(249, 115, 22, 0.4)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(245, 158, 11, 0.4)', size: 480, x: '40%', y: '70%' },
-      { color: 'rgba(251, 146, 60, 0.4)', size: 420, x: '80%', y: '60%' }
+      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
+      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
+      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
+      { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
     ]
   },
   midnight: {
     name: 'Midnight',
     emoji: '🌌',
-    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E293B 50%, #334155 100%)',
+    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
     orbs: [
-      { color: 'rgba(59, 130, 246, 0.3)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(139, 92, 246, 0.3)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(16, 185, 129, 0.3)', size: 480, x: '40%', y: '70%' },
+      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
+      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
+      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
     ]
   }
@@ -293,20 +293,20 @@ const LivingAuroraBackground: React.FC<{ theme: 'morning' | 'twilight' | 'golden
 // --- METAMORPHIC CHARACTER imported from ./MascotComponent.tsx ---
 
 
-// --- GLASSMORPHISM 2.0 CARD ---
+// --- GLASSMORPHISM 2.0 CARD - Deep Twilight Dark Mode ---
 const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={SOFT_SPRING}
     style={{
-      background: 'rgba(255, 255, 255, 0.6)',
+      background: 'rgba(255, 255, 255, 0.05)',
       backdropFilter: 'blur(25px)',
       WebkitBackdropFilter: 'blur(25px)',
       borderRadius: '32px',
       padding: '32px',
-      border: '1px solid rgba(255, 255, 255, 0.2)',
-      boxShadow: '0 8px 32px rgba(147, 197, 253, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)',
       ...style
     }}
   >
@@ -323,19 +323,19 @@ const SoftButton: React.FC<{
 }> = ({ text, icon: Icon, onClick, variant = 'primary' }) => {
   const colors = {
     primary: {
-      bg: 'linear-gradient(135deg, rgba(167, 139, 250, 0.7) 0%, rgba(139, 92, 246, 0.7) 100%)',
-      shadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
-      hoverShadow: '0 6px 30px rgba(167, 139, 250, 0.4)'
+      bg: 'linear-gradient(135deg, rgba(244, 114, 182, 0.7) 0%, rgba(168, 85, 247, 0.7) 100%)',
+      shadow: '0 4px 20px rgba(244, 114, 182, 0.4)',
+      hoverShadow: '0 6px 30px rgba(244, 114, 182, 0.6)'
     },
     secondary: {
-      bg: 'rgba(255, 255, 255, 0.5)',
-      shadow: '0 4px 20px rgba(147, 197, 253, 0.2)',
-      hoverShadow: '0 6px 30px rgba(147, 197, 253, 0.3)'
+      bg: 'rgba(255, 255, 255, 0.1)',
+      shadow: '0 4px 20px rgba(168, 85, 247, 0.2)',
+      hoverShadow: '0 6px 30px rgba(168, 85, 247, 0.3)'
     },
     ghost: {
-      bg: 'rgba(255, 255, 255, 0.3)',
-      shadow: '0 4px 15px rgba(147, 197, 253, 0.15)',
-      hoverShadow: '0 6px 25px rgba(147, 197, 253, 0.25)'
+      bg: 'rgba(255, 255, 255, 0.05)',
+      shadow: '0 4px 15px rgba(45, 212, 191, 0.15)',
+      hoverShadow: '0 6px 25px rgba(45, 212, 191, 0.25)'
     }
   };
 
@@ -440,7 +440,7 @@ const InteractiveTimerRing: React.FC<{
     <div ref={containerRef} style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         {/* Background circle - uses cx, cy, and calculated radius */}
-        <circle cx={cx} cy={cy} r={radius} stroke="rgba(200, 220, 255, 0.3)" strokeWidth={strokeWidth} fill="none" />
+        <circle cx={cx} cy={cy} r={radius} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={strokeWidth} fill="none" />
         {/* Progress circle - animated stroke offset */}
         <motion.circle
           cx={cx}
@@ -513,7 +513,7 @@ const InteractiveTimerRing: React.FC<{
           style={{
             fontSize: '2.5rem',
             margin: 0,
-            color: 'rgba(100, 100, 150, 0.9)',
+            color: 'rgba(255, 255, 255, 0.9)',
             fontFamily: "'Quicksand', sans-serif",
             fontWeight: 400,
             letterSpacing: '0.05em',
@@ -527,7 +527,7 @@ const InteractiveTimerRing: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             style={{
               fontSize: '12px',
-              color: 'rgba(100, 100, 150, 0.6)',
+              color: 'rgba(255, 255, 255, 0.5)',
               marginTop: '4px',
               fontFamily: "'Quicksand', sans-serif",
               fontWeight: 500
@@ -552,7 +552,7 @@ const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number }> = ({ cu
         justifyContent: 'space-between',
         marginBottom: '8px',
         fontSize: '13px',
-        color: 'rgba(100, 100, 150, 0.7)',
+        color: 'rgba(255, 255, 255, 0.7)',
         fontWeight: 600,
         fontFamily: "'Quicksand', sans-serif"
       }}>
@@ -572,8 +572,8 @@ const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number }> = ({ cu
           transition={SOFT_SPRING}
           style={{
             height: '100%',
-            background: 'linear-gradient(90deg, rgba(167, 139, 250, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%)',
-            boxShadow: '0 2px 10px rgba(167, 139, 250, 0.4)'
+            background: 'linear-gradient(90deg, rgba(244, 114, 182, 0.8) 0%, rgba(168, 85, 247, 0.8) 100%)',
+            boxShadow: '0 2px 10px rgba(244, 114, 182, 0.5)'
           }}
         />
       </div>
@@ -625,7 +625,7 @@ const EvolutionStages: React.FC<{ currentLevel: number }> = ({ currentLevel }) =
             <div style={{
               fontSize: '14px',
               fontWeight: 600,
-              color: 'rgba(100, 100, 150, 0.8)',
+              color: 'rgba(255, 255, 255, 0.9)',
               marginBottom: '4px',
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -633,7 +633,7 @@ const EvolutionStages: React.FC<{ currentLevel: number }> = ({ currentLevel }) =
             </div>
             <div style={{
               fontSize: '12px',
-              color: 'rgba(100, 100, 150, 0.6)',
+              color: 'rgba(255, 255, 255, 0.5)',
               fontFamily: "'Quicksand', sans-serif"
             }}>
               Level {stage.level}+
@@ -665,7 +665,7 @@ const SoftStatsChart: React.FC = () => {
               boxShadow: i % 2 === 0 ? '0 4px 15px rgba(167, 139, 250, 0.2)' : '0 4px 15px rgba(147, 197, 253, 0.2)',
             }}
           />
-          <span style={{ fontSize: '12px', color: 'rgba(100, 100, 150, 0.7)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+          <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}
           </span>
         </div>
@@ -775,7 +775,7 @@ const CategorySelectionModal: React.FC<{
         <h2 style={{
           fontSize: '1.5rem',
           fontWeight: 600,
-          color: 'rgba(100, 100, 150, 0.9)',
+          color: 'rgba(255, 255, 255, 0.9)',
           marginBottom: '24px',
           textAlign: 'center',
           fontFamily: "'Quicksand', sans-serif",
@@ -826,7 +826,7 @@ const CategorySelectionModal: React.FC<{
             display: 'block',
             fontSize: '13px',
             fontWeight: 600,
-            color: 'rgba(100, 100, 150, 0.7)',
+            color: 'rgba(255, 255, 255, 0.7)',
             marginBottom: '8px',
             fontFamily: "'Quicksand', sans-serif",
           }}>
@@ -851,7 +851,7 @@ const CategorySelectionModal: React.FC<{
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               fontSize: '15px',
-              color: 'rgba(100, 100, 150, 0.9)',
+              color: 'rgba(255, 255, 255, 0.9)',
               fontFamily: "'Quicksand', sans-serif",
               fontWeight: 500,
               outline: 'none',
@@ -879,7 +879,7 @@ const CategorySelectionModal: React.FC<{
               borderRadius: '20px',
               padding: '14px 24px',
               cursor: 'pointer',
-              color: 'rgba(100, 100, 150, 0.8)',
+              color: 'rgba(255, 255, 255, 0.9)',
               fontSize: '15px',
               fontWeight: 600,
               fontFamily: "'Quicksand', sans-serif",
@@ -1082,7 +1082,7 @@ export default function App() {
           <h1 style={{
             fontSize: '1.25rem',
             fontWeight: 500,
-            color: 'rgba(100, 100, 150, 0.8)',
+            color: 'rgba(255, 255, 255, 0.9)',
             margin: 0,
             letterSpacing: '0.05em',
             fontFamily: "'Quicksand', sans-serif"
@@ -1223,12 +1223,12 @@ export default function App() {
               animate={{ y: 0, opacity: 1 }}
               transition={SOFT_SPRING}
               style={{
-                background: 'rgba(255, 255, 255, 0.6)',
+                background: 'rgba(0, 0, 0, 0.4)',
                 backdropFilter: 'blur(25px)',
                 WebkitBackdropFilter: 'blur(25px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '30px',
-                boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)',
                 display: 'flex',
                 gap: '8px',
                 padding: '10px 16px',
@@ -1252,12 +1252,12 @@ export default function App() {
                       cursor: 'pointer',
                       padding: '8px',
                       borderRadius: '14px',
-                      background: isActive ? 'rgba(167, 139, 250, 0.2)' : 'transparent',
-                      boxShadow: isActive ? '0 4px 15px rgba(167, 139, 250, 0.2)' : 'none',
+                      background: isActive ? 'rgba(244, 114, 182, 0.2)' : 'transparent',
+                      boxShadow: isActive ? '0 4px 15px rgba(244, 114, 182, 0.3)' : 'none',
                     }}
                   >
                     <tab.icon
-                      color={isActive ? 'rgba(139, 92, 246, 0.9)' : 'rgba(100, 100, 150, 0.5)'}
+                      color={isActive ? '#F472B6' : 'rgba(255, 255, 255, 0.6)'}
                       size={20}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
@@ -1280,7 +1280,7 @@ export default function App() {
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
-          color: 'rgba(100, 100, 150, 0.8)',
+          color: 'rgba(255, 255, 255, 0.9)',
           marginBottom: '32px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
@@ -1289,7 +1289,7 @@ export default function App() {
         </h1>
 
         <GlassCard style={{ marginBottom: '20px' }}>
-          <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+          <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             Weekly Activity
           </h3>
           <SoftStatsChart />
@@ -1310,10 +1310,10 @@ export default function App() {
               <User size={24} color="rgba(139, 92, 246, 0.8)" strokeWidth={2.5} />
             </div>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: 600, color: 'rgba(100, 100, 150, 0.9)', fontFamily: "'Quicksand', sans-serif" }}>
+              <div style={{ fontSize: '18px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', sans-serif" }}>
                 {userData.sessionsCompleted} Sessions
               </div>
-              <div style={{ fontSize: '14px', color: 'rgba(100, 100, 150, 0.6)', fontFamily: "'Quicksand', sans-serif" }}>
+              <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', sans-serif" }}>
                 Total Completed
               </div>
             </div>
@@ -1321,14 +1321,14 @@ export default function App() {
         </GlassCard>
 
         <GlassCard>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             Recent Sessions
           </h3>
           {focusHistory.length === 0 ? (
             <div style={{
               textAlign: 'center',
               padding: '24px',
-              color: 'rgba(100, 100, 150, 0.6)',
+              color: 'rgba(255, 255, 255, 0.5)',
               fontSize: '14px',
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -1355,14 +1355,14 @@ export default function App() {
                     <div style={{
                       fontSize: '14px',
                       fontWeight: 600,
-                      color: 'rgba(100, 100, 150, 0.9)',
+                      color: 'rgba(255, 255, 255, 0.9)',
                       fontFamily: "'Quicksand', sans-serif"
                     }}>
                       📚 {session.category}
                     </div>
                     <div style={{
                       fontSize: '12px',
-                      color: 'rgba(100, 100, 150, 0.6)',
+                      color: 'rgba(255, 255, 255, 0.5)',
                       marginTop: '2px',
                       fontFamily: "'Quicksand', sans-serif"
                     }}>
@@ -1423,7 +1423,7 @@ export default function App() {
           <h1 style={{
             fontSize: '1.5rem',
             fontWeight: 500,
-            color: 'rgba(100, 100, 150, 0.8)',
+            color: 'rgba(255, 255, 255, 0.9)',
             marginBottom: '32px',
             letterSpacing: '0.05em',
             fontFamily: "'Quicksand', sans-serif"
@@ -1433,7 +1433,7 @@ export default function App() {
 
           {/* Card 4: Pomodoro Record Calendar Grid (Always visible) */}
           <GlassCard style={{ marginBottom: selectedDate ? '20px' : '0' }}>
-            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
               Pomodoro Record ({format(new Date(), 'MMMM yyyy')})
             </h3>
             <div style={{
@@ -1446,7 +1446,7 @@ export default function App() {
                   textAlign: 'center',
                   fontSize: '11px',
                   fontWeight: 600,
-                  color: 'rgba(100, 100, 150, 0.6)',
+                  color: 'rgba(255, 255, 255, 0.5)',
                   fontFamily: "'Quicksand', sans-serif",
                   padding: '8px 0'
                 }}>
@@ -1470,18 +1470,18 @@ export default function App() {
                       background: isSelected
                         ? colors.primary
                         : day.hasSession
-                          ? 'rgba(167, 139, 250, 0.5)'
-                          : 'rgba(200, 220, 255, 0.2)',
-                      color: (day.hasSession || isSelected) ? 'white' : 'rgba(100, 100, 150, 0.7)',
+                          ? 'rgba(168, 85, 247, 0.4)'
+                          : 'rgba(255, 255, 255, 0.1)',
+                      color: (day.hasSession || isSelected) ? 'white' : 'rgba(255, 255, 255, 0.5)',
                       fontSize: '14px',
                       fontWeight: 600,
                       fontFamily: "'Quicksand', sans-serif",
                       position: 'relative',
                       cursor: day.hasSession ? 'pointer' : 'default',
                       boxShadow: isSelected
-                        ? '0 8px 24px rgba(167, 139, 250, 0.6), 0 0 20px rgba(167, 139, 250, 0.4)'
+                        ? '0 0 15px rgba(244, 114, 182, 0.5), 0 0 30px rgba(244, 114, 182, 0.3)'
                         : day.hasSession
-                          ? '0 2px 10px rgba(167, 139, 250, 0.3)'
+                          ? '0 2px 10px rgba(168, 85, 247, 0.3)'
                           : 'none',
                       outline: 'none',
                       border: isSelected ? '2px solid rgba(255, 255, 255, 0.8)' : 'none',
@@ -1513,7 +1513,7 @@ export default function App() {
                   textAlign: 'center',
                   fontSize: '14px',
                   fontWeight: 600,
-                  color: 'rgba(100, 100, 150, 0.8)',
+                  color: 'rgba(255, 255, 255, 0.9)',
                   fontFamily: "'Quicksand', sans-serif"
                 }}
               >
@@ -1534,14 +1534,14 @@ export default function App() {
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent'
               } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
                   Time Distribution - {format(selectedDate, 'MMM d')}
                 </h3>
                 {timeDistData.length === 0 ? (
                   <div style={{
                     textAlign: 'center',
                     padding: '48px 24px',
-                    color: 'rgba(100, 100, 150, 0.6)',
+                    color: 'rgba(255, 255, 255, 0.5)',
                     fontSize: '14px',
                     fontFamily: "'Quicksand', sans-serif"
                   }}>
@@ -1605,7 +1605,7 @@ export default function App() {
                           }}
                           formatter={(value: string, entry: any) => (
                             <span style={{
-                              color: 'rgba(100, 100, 150, 0.8)',
+                              color: 'rgba(255, 255, 255, 0.9)',
                               fontSize: '12px',
                               fontWeight: 600,
                               fontFamily: "'Quicksand', sans-serif"
@@ -1634,7 +1634,7 @@ export default function App() {
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent'
               } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
                   Weekly Context - {format(startOfWeek(selectedDate, { weekStartsOn: 0 }), 'MMM d')} to {format(addDays(startOfWeek(selectedDate, { weekStartsOn: 0 }), 6), 'MMM d')}
                 </h3>
                 <div style={{
@@ -1643,15 +1643,15 @@ export default function App() {
                 }}>
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={dailyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 220, 255, 0.2)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
                       <XAxis
                         dataKey="day"
                         tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke="rgba(200, 220, 255, 0.3)"
+                        stroke="rgba(255, 255, 255, 0.1)"
                       />
                       <YAxis
                         tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke="rgba(200, 220, 255, 0.3)"
+                        stroke="rgba(255, 255, 255, 0.1)"
                         label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
                       />
                       <Tooltip
@@ -1664,13 +1664,13 @@ export default function App() {
                           fontFamily: "'Quicksand', sans-serif",
                           fontSize: '13px',
                           fontWeight: 600,
-                          color: 'rgba(100, 100, 150, 0.9)',
+                          color: 'rgba(255, 255, 255, 0.9)',
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                           outline: 'none'
                         }}
                         cursor={{ fill: 'transparent' }}
                         wrapperStyle={{ outline: 'none' }}
-                        labelStyle={{ color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600 }}
+                        labelStyle={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}
                       />
                       <Bar
                         dataKey="minutes"
@@ -1723,7 +1723,7 @@ export default function App() {
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
-          color: 'rgba(100, 100, 150, 0.8)',
+          color: 'rgba(255, 255, 255, 0.9)',
           marginBottom: '32px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
@@ -1746,7 +1746,7 @@ export default function App() {
             boxShadow: '0 4px 15px rgba(167, 139, 250, 0.2)',
             display: 'inline-block'
           }}>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: 'rgba(100, 100, 150, 0.9)', fontFamily: "'Quicksand', sans-serif" }}>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', sans-serif" }}>
               Level {userData.level}
             </div>
           </div>
@@ -1767,7 +1767,7 @@ export default function App() {
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
-          color: 'rgba(100, 100, 150, 0.8)',
+          color: 'rgba(255, 255, 255, 0.9)',
           marginBottom: '32px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
@@ -1793,7 +1793,7 @@ export default function App() {
               }}
             >
               <item.icon size={20} color="rgba(100, 100, 150, 0.7)" strokeWidth={2.5} />
-              <span style={{ marginLeft: 16, flex: 1, color: 'rgba(100, 100, 150, 0.8)', fontSize: '16px', fontWeight: 500, fontFamily: "'Quicksand', sans-serif" }}>
+              <span style={{ marginLeft: 16, flex: 1, color: 'rgba(255, 255, 255, 0.9)', fontSize: '16px', fontWeight: 500, fontFamily: "'Quicksand', sans-serif" }}>
                 {item.label}
               </span>
               <SoftToggle enabled={item.enabled} onToggle={item.toggle} />
@@ -1805,7 +1805,7 @@ export default function App() {
           <h3 style={{
             margin: '0 0 20px 0',
             fontSize: '16px',
-            color: 'rgba(100, 100, 150, 0.8)',
+            color: 'rgba(255, 255, 255, 0.9)',
             fontWeight: 600,
             fontFamily: "'Quicksand', sans-serif"
           }}>
@@ -1874,7 +1874,7 @@ export default function App() {
                     <div style={{
                       fontSize: '13px',
                       fontWeight: 600,
-                      color: 'rgba(100, 100, 150, 0.9)',
+                      color: 'rgba(255, 255, 255, 0.9)',
                       fontFamily: "'Quicksand', sans-serif"
                     }}>
                       {themeData.emoji} {themeData.name}
@@ -1882,7 +1882,7 @@ export default function App() {
                     {!unlocked && (
                       <div style={{
                         fontSize: '11px',
-                        color: 'rgba(100, 100, 150, 0.6)',
+                        color: 'rgba(255, 255, 255, 0.5)',
                         marginTop: '2px',
                         fontFamily: "'Quicksand', sans-serif"
                       }}>
@@ -1900,7 +1900,7 @@ export default function App() {
           <h3 style={{
             margin: '0 0 20px 0',
             fontSize: '16px',
-            color: 'rgba(100, 100, 150, 0.8)',
+            color: 'rgba(255, 255, 255, 0.9)',
             fontWeight: 600,
             fontFamily: "'Quicksand', sans-serif"
           }}>
@@ -1913,7 +1913,7 @@ export default function App() {
               justifyContent: 'space-between',
               marginBottom: '12px',
               fontSize: '14px',
-              color: 'rgba(100, 100, 150, 0.7)',
+              color: 'rgba(255, 255, 255, 0.7)',
               fontWeight: 600,
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -1941,7 +1941,7 @@ export default function App() {
 
           <div style={{
             fontSize: '12px',
-            color: 'rgba(100, 100, 150, 0.6)',
+            color: 'rgba(255, 255, 255, 0.5)',
             textAlign: 'center',
             marginTop: '12px',
             fontFamily: "'Quicksand', sans-serif"
@@ -1998,12 +1998,12 @@ export default function App() {
             animate={{ y: 0, opacity: 1 }}
             transition={SOFT_SPRING}
             style={{
-              background: 'rgba(255, 255, 255, 0.6)',
+              background: 'rgba(0, 0, 0, 0.4)',
               backdropFilter: 'blur(25px)',
               WebkitBackdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '30px',
-              boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)',
               display: 'flex',
               gap: '8px',
               padding: '12px 20px',
@@ -2028,12 +2028,12 @@ export default function App() {
                     cursor: 'pointer',
                     padding: '10px',
                     borderRadius: '16px',
-                    background: isActive ? 'rgba(167, 139, 250, 0.2)' : 'transparent',
-                    boxShadow: isActive ? '0 4px 15px rgba(167, 139, 250, 0.2)' : 'none',
+                    background: isActive ? 'rgba(244, 114, 182, 0.2)' : 'transparent',
+                    boxShadow: isActive ? '0 4px 15px rgba(244, 114, 182, 0.3)' : 'none',
                   }}
                 >
                   <tab.icon
-                    color={isActive ? 'rgba(139, 92, 246, 0.9)' : 'rgba(100, 100, 150, 0.5)'}
+                    color={isActive ? '#F472B6' : 'rgba(255, 255, 255, 0.6)'}
                     size={22}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
