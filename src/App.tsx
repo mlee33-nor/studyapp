@@ -74,6 +74,39 @@ const updateStreak = () => {
   return newStreak;
 };
 
+// --- FOCUS HISTORY STORAGE ---
+interface FocusSession {
+  id: number;
+  category: string;
+  duration: number;
+  date: string;
+}
+
+const getFocusHistory = (): FocusSession[] => {
+  const data = localStorage.getItem('focusHistory');
+  if (data) {
+    return JSON.parse(data);
+  }
+  return [];
+};
+
+const saveFocusHistory = (history: FocusSession[]) => {
+  localStorage.setItem('focusHistory', JSON.stringify(history));
+};
+
+const saveSession = (category: string, duration: number) => {
+  const history = getFocusHistory();
+  const newSession: FocusSession = {
+    id: Date.now(),
+    category: category,
+    duration: duration,
+    date: new Date().toISOString()
+  };
+  history.push(newSession);
+  saveFocusHistory(history);
+  return newSession;
+};
+
 // --- GAME LOGIC ---
 const calculateXpForLevel = (level: number) => {
   return 100 * level;
@@ -1267,8 +1300,15 @@ export default function App() {
   const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'twilight' | 'golden' | 'midnight'>(getSelectedTheme());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
+  const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
 
   const theme = selectedTheme;
+
+  // Persistence Engine: Load saved data on mount
+  useEffect(() => {
+    const savedHistory = getFocusHistory();
+    setFocusHistory(savedHistory);
+  }, []);
 
   // Update timeLeft when timerMinutes changes
   useEffect(() => {
@@ -1337,17 +1377,20 @@ export default function App() {
     updateStreak();
     setIsRunning(false);
 
-    // XP Scaling Logic: XP = timerMinutes * 10
+    // Save session to focusHistory
+    const savedSession = saveSession(currentCategory || 'Uncategorized', timerMinutes);
+    setFocusHistory(prev => [...prev, savedSession]);
+
+    // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
     const xpGained = timerMinutes * 10;
-    const newXp = userData.xp + xpGained;
-    const requiredXp = calculateXpForLevel(userData.level);
-
     let newLevel = userData.level;
-    let remainingXp = newXp;
+    let remainingXp = userData.xp + xpGained;
 
-    if (newXp >= requiredXp) {
-      newLevel = userData.level + 1;
-      remainingXp = newXp - requiredXp;
+    // Handle level up (can level up multiple times)
+    while (remainingXp >= calculateXpForLevel(newLevel)) {
+      const xpNeeded = calculateXpForLevel(newLevel);
+      remainingXp -= xpNeeded;
+      newLevel += 1;
     }
 
     const newData = {
@@ -1359,7 +1402,7 @@ export default function App() {
     setUserData(newData);
     saveUserData(newData);
 
-    // Trigger celebration!
+    // Trigger Success Burst celebration with bubbles and leaves!
     triggerCelebration();
   };
 
@@ -1615,7 +1658,7 @@ export default function App() {
           <SoftStatsChart />
         </GlassCard>
 
-        <GlassCard>
+        <GlassCard style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{
               width: 48,
@@ -1638,6 +1681,72 @@ export default function App() {
               </div>
             </div>
           </div>
+        </GlassCard>
+
+        <GlassCard>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+            Recent Sessions
+          </h3>
+          {focusHistory.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '24px',
+              color: 'rgba(100, 100, 150, 0.6)',
+              fontSize: '14px',
+              fontFamily: "'Quicksand', sans-serif"
+            }}>
+              No sessions yet. Complete a focus session to see your history!
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {focusHistory.slice(-5).reverse().map((session) => (
+                <div
+                  key={session.id}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.5)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    padding: '12px 16px',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    boxShadow: '0 2px 10px rgba(147, 197, 253, 0.1)'
+                  }}
+                >
+                  <div>
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: 'rgba(100, 100, 150, 0.9)',
+                      fontFamily: "'Quicksand', sans-serif"
+                    }}>
+                      📚 {session.category}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: 'rgba(100, 100, 150, 0.6)',
+                      marginTop: '2px',
+                      fontFamily: "'Quicksand', sans-serif"
+                    }}>
+                      {new Date(session.date).toLocaleDateString()} at {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  <div style={{
+                    background: 'rgba(167, 139, 250, 0.2)',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: 'rgba(139, 92, 246, 0.9)',
+                    fontFamily: "'Quicksand', sans-serif"
+                  }}>
+                    {session.duration} min
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </GlassCard>
       </motion.div>
     );
