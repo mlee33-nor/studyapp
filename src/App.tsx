@@ -3,7 +3,7 @@ import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { SproutCharacter } from './MascotComponent';
 
@@ -1551,23 +1551,16 @@ export default function App() {
                   <div style={{
                     outline: 'none',
                     WebkitTapHighlightColor: 'transparent',
-                    padding: '20px'
+                    padding: '20px 20px 10px'
                   }}>
-                    <ResponsiveContainer width="100%" height={320}>
+                    <ResponsiveContainer width="100%" height={360}>
                       <PieChart>
                         <Pie
                           data={timeDistData}
                           cx="50%"
-                          cy="50%"
+                          cy="45%"
                           labelLine={false}
-                          label={{
-                            position: 'inside',
-                            fill: '#FFFFFF',
-                            fontSize: 12,
-                            fontWeight: 'bold',
-                            fontFamily: "'Quicksand', sans-serif"
-                          }}
-                          outerRadius="90%"
+                          outerRadius="85%"
                           paddingAngle={0}
                           fill="#8884d8"
                           dataKey="value"
@@ -1580,6 +1573,47 @@ export default function App() {
                             />
                           ))}
                         </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            padding: '8px 12px',
+                            fontFamily: "'Quicksand', sans-serif",
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            color: 'white',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                            outline: 'none'
+                          }}
+                          wrapperStyle={{ outline: 'none' }}
+                          formatter={(value: any) => {
+                            if (!value) return '';
+                            const hours = Math.floor(value / 60);
+                            const mins = value % 60;
+                            return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                          }}
+                        />
+                        <Legend
+                          verticalAlign="bottom"
+                          align="center"
+                          iconType="circle"
+                          wrapperStyle={{
+                            paddingTop: '15px',
+                            fontFamily: "'Quicksand', sans-serif"
+                          }}
+                          formatter={(value: string, entry: any) => (
+                            <span style={{
+                              color: 'rgba(100, 100, 150, 0.8)',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              fontFamily: "'Quicksand', sans-serif"
+                            }}>
+                              {value}: {entry.payload.value}m
+                            </span>
+                          )}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -1622,9 +1656,9 @@ export default function App() {
                       />
                       <Tooltip
                         contentStyle={{
-                          background: 'rgba(255, 255, 255, 0.95)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
                           backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(167, 139, 250, 0.3)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
                           borderRadius: '12px',
                           padding: '8px 12px',
                           fontFamily: "'Quicksand', sans-serif",
