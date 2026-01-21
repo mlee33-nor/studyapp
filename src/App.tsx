@@ -1560,51 +1560,24 @@ export default function App() {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, value, percent, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
-                            // Ensure all required values are defined
-                            if (!name || midAngle === undefined || percent === undefined || !cx || !cy || !innerRadius || !outerRadius) {
-                              return null;
-                            }
-
-                            // Calculate position for inside labels
-                            const RADIAN = Math.PI / 180;
-                            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-                            const hours = Math.floor(value / 60);
-                            const mins = value % 60;
-                            const displayName = name.length > 10 ? name.substring(0, 10) + '...' : name;
-
-                            // Only show label if slice is large enough (>5%)
-                            if (percent < 0.05) return null;
-
-                            return (
-                              <text
-                                x={x}
-                                y={y}
-                                fill="white"
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                style={{
-                                  fontSize: '12px',
-                                  fontWeight: 600,
-                                  fontFamily: "'Quicksand', sans-serif",
-                                  pointerEvents: 'none'
-                                }}
-                              >
-                                <tspan x={x} dy="0">{displayName}</tspan>
-                                <tspan x={x} dy="16">{hours}h {mins}m</tspan>
-                              </text>
-                            );
+                          label={{
+                            position: 'inside',
+                            fill: '#FFFFFF',
+                            fontSize: 12,
+                            fontWeight: 'bold',
+                            fontFamily: "'Quicksand', sans-serif"
                           }}
-                          outerRadius="80%"
-                          paddingAngle={5}
+                          outerRadius="90%"
+                          paddingAngle={0}
                           fill="#8884d8"
                           dataKey="value"
                         >
                           {timeDistData.map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={colors.pastels[index % colors.pastels.length]} />
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={colors.pastels[index % colors.pastels.length]}
+                              stroke="none"
+                            />
                           ))}
                         </Pie>
                       </PieChart>
