@@ -763,12 +763,15 @@ const InteractiveTimerRing: React.FC<{
   timeLeft: number;
   totalSeconds: number;
 }> = ({ minutes, onMinutesChange, isRunning, timeLeft, totalSeconds }) => {
-  const size = 192; // 80% of original 240px for mobile optimization
+  // SVG Constants - Define once for perfect mathematical alignment
+  const size = 192;
   const strokeWidth = 5;
-  const radius = (size - strokeWidth) / 2;
+  const cx = size / 2; // Center X coordinate
+  const cy = size / 2; // Center Y coordinate
+  // Radius accounts for stroke width: position handle on centerline of stroke
+  // For stroke to fit within bounds: radius + (strokeWidth/2) <= size/2
+  const radius = (size / 2) - (strokeWidth / 2); // 96 - 2.5 = 93.5
   const circumference = radius * 2 * Math.PI;
-  const centerX = size / 2;
-  const centerY = size / 2;
   const containerRef = useRef<HTMLDivElement>(null);
 
   const progress = 1 - (timeLeft / totalSeconds);
@@ -780,16 +783,17 @@ const InteractiveTimerRing: React.FC<{
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate handle position based on minutes (when not running)
+  // Calculate angle from minutes (0-360 degrees)
   const angleFromMinutes = (mins: number) => {
-    // Map 5-60 minutes to 0-360 degrees
-    const normalized = (mins - 5) / (60 - 5); // 0-1
-    return normalized * 360 - 90; // -90 to start at top
+    const normalized = (mins - 5) / (60 - 5); // Map 5-60 to 0-1
+    return normalized * 360 - 90; // -90 to start at top (12 o'clock position)
   };
 
+  // Mathematical orbit calculation: x = cx + radius * cos(angle), y = cy + radius * sin(angle)
   const handleAngle = angleFromMinutes(minutes);
-  const handleX = centerX + radius * Math.cos((handleAngle * Math.PI) / 180);
-  const handleY = centerY + radius * Math.sin((handleAngle * Math.PI) / 180);
+  const handleAngleRad = (handleAngle * Math.PI) / 180; // Convert to radians
+  const handleX = cx + radius * Math.cos(handleAngleRad);
+  const handleY = cy + radius * Math.sin(handleAngleRad);
 
   const handleDrag = (_event: any, info: any) => {
     if (isRunning || !containerRef.current) return;
@@ -817,10 +821,12 @@ const InteractiveTimerRing: React.FC<{
   return (
     <div ref={containerRef} style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={centerX} cy={centerY} r={radius} stroke="rgba(200, 220, 255, 0.3)" strokeWidth={strokeWidth} fill="none" />
+        {/* Background circle - uses cx, cy, and calculated radius */}
+        <circle cx={cx} cy={cy} r={radius} stroke="rgba(200, 220, 255, 0.3)" strokeWidth={strokeWidth} fill="none" />
+        {/* Progress circle - animated stroke offset */}
         <motion.circle
-          cx={centerX}
-          cy={centerY}
+          cx={cx}
+          cy={cy}
           r={radius}
           stroke="url(#lavenderGradient)"
           strokeWidth={strokeWidth}
@@ -838,24 +844,24 @@ const InteractiveTimerRing: React.FC<{
         </defs>
       </svg>
 
-      {/* Draggable Handle */}
+      {/* Draggable Handle - positioned on orbit using mathematical formula */}
       {!isRunning && (
         <motion.div
           drag
           dragMomentum={false}
           onDrag={handleDrag}
           dragElastic={0}
-          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          key={`handle-${minutes}`} // Re-mount on minute change to reset position
           style={{
             position: 'absolute',
             left: handleX,
             top: handleY,
-            transform: 'translate(-50%, -50%)',
+            transform: 'translate(-50%, -50%)', // Center the handle on calculated position
             cursor: 'grab',
             touchAction: 'none',
+            pointerEvents: 'auto',
           }}
           whileTap={{ scale: 1.1, cursor: 'grabbing' }}
-          animate={{ x: 0, y: 0 }}
         >
           <div style={{
             width: 36,
