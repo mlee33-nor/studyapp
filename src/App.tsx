@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
-import { SproutCharacter } from './MascotComponent';
+import { AstronautCat } from './AstronautCat';
 
 // --- STORAGE HELPERS ---
 const getDarkMode = () => {
@@ -155,10 +155,10 @@ const calculateXpForLevel = (level: number) => {
 };
 
 const getCharacterStage = (level: number) => {
-  if (level < 10) return 0; // Bean (Lvl 1-9)
-  if (level < 20) return 1; // Pear with Arms (Lvl 10-19)
-  if (level < 30) return 2; // Flower Bloom (Lvl 20-29)
-  return 3; // Transcendent (Lvl 30+)
+  if (level < 10) return 0; // Cadet (Lvl 1-9)
+  if (level < 20) return 1; // Pilot (Lvl 10-19)
+  if (level < 30) return 2; // Commander (Lvl 20-29)
+  return 3; // Star-Walker (Lvl 30+)
 };
 
 // Theme unlock levels
@@ -645,14 +645,14 @@ const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number; theme: 'm
 // --- EVOLUTION STAGES GRID ---
 const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ currentLevel, theme }) => {
   const stages = [
-    { name: 'Seed', level: 1, emoji: '🌰' },
-    { name: 'Sprout', level: 5, emoji: '🌱' },
-    { name: 'Pear', level: 10, emoji: '🌿' },
-    { name: 'Spirit', level: 15, emoji: '✨' },
-    { name: 'Bloom', level: 20, emoji: '🌸' },
-    { name: 'Guardian', level: 25, emoji: '🌺' },
-    { name: 'Transcendent', level: 30, emoji: '👑' },
-    { name: 'Divine', level: 33, emoji: '🌟' }
+    { name: 'Cadet', level: 1, emoji: '📦' },
+    { name: 'Astronaut', level: 5, emoji: '🐱' },
+    { name: 'Pilot', level: 10, emoji: '🚀' },
+    { name: 'Navigator', level: 15, emoji: '🧭' },
+    { name: 'Commander', level: 20, emoji: '⚡' },
+    { name: 'Captain', level: 25, emoji: '🛸' },
+    { name: 'Star-Walker', level: 30, emoji: '⭐' },
+    { name: 'Cosmic', level: 33, emoji: '🌌' }
   ];
 
   return (
@@ -1216,11 +1216,9 @@ export default function App() {
             }}>
               <div style={{
                 display: 'flex',
-                justifyContent: 'center',
-                transform: 'scale(0.85)',
-                transformOrigin: 'center'
+                justifyContent: 'center'
               }}>
-                <SproutCharacter size={80} level={userData.level} isTimerActive={isRunning} />
+                <AstronautCat size={80} level={userData.level} isTimerActive={isRunning} theme={selectedTheme} />
               </div>
 
               <div style={{
@@ -1238,10 +1236,10 @@ export default function App() {
                 textAlign: 'center',
                 marginTop: '8px'
               }}>
-                {getCharacterStage(userData.level) === 0 && 'Bean'}
-                {getCharacterStage(userData.level) === 1 && 'Pear'}
-                {getCharacterStage(userData.level) === 2 && 'Bloom'}
-                {getCharacterStage(userData.level) === 3 && 'Transcendent'}
+                {getCharacterStage(userData.level) === 0 && 'Cadet'}
+                {getCharacterStage(userData.level) === 1 && 'Pilot'}
+                {getCharacterStage(userData.level) === 2 && 'Commander'}
+                {getCharacterStage(userData.level) === 3 && 'Star-Walker'}
                 {' · Lvl '}{userData.level}
               </div>
             </div>
@@ -1804,7 +1802,7 @@ export default function App() {
 
         <GlassCard theme={selectedTheme}>
           <div style={{ marginBottom: '32px' }}>
-            <SproutCharacter size={160} level={userData.level} isTimerActive={false} />
+            <AstronautCat size={160} level={userData.level} isTimerActive={false} theme={selectedTheme} />
           </div>
 
           <div style={{
