@@ -173,13 +173,13 @@ const isThemeUnlocked = (theme: string, level: number) => {
   return level >= THEME_UNLOCK_LEVELS[theme as keyof typeof THEME_UNLOCK_LEVELS];
 };
 
-// Theme-aware colors for charts - Deep Twilight Neon Palette
+// Theme-aware colors for charts - 4 Distinct Palettes
 const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
   const themeColorMap = {
     morning: {
-      primary: '#F472B6', // Neon Pink
-      secondary: '#A855F7', // Electric Purple
-      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
+      primary: 'rgba(167, 139, 250, 0.8)',
+      secondary: 'rgba(139, 92, 246, 0.8)',
+      pastels: ['#E6D2FF', '#C8E6FF', '#C8FFE6', '#FFE6D2', '#FFD2E6', '#D2FFE6']
     },
     twilight: {
       primary: '#F472B6', // Neon Pink
@@ -187,14 +187,14 @@ const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') =
       pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
     },
     golden: {
-      primary: '#F472B6', // Neon Pink
-      secondary: '#A855F7', // Electric Purple
-      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
+      primary: 'rgba(251, 191, 36, 0.8)',
+      secondary: 'rgba(249, 115, 22, 0.8)',
+      pastels: ['#FFE6C8', '#FFDCC8', '#FFD2C8', '#FFC8D2', '#FFE6FF', '#E6FFD2']
     },
     midnight: {
-      primary: '#F472B6', // Neon Pink
-      secondary: '#A855F7', // Electric Purple
-      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
+      primary: 'rgba(59, 130, 246, 0.8)',
+      secondary: 'rgba(139, 92, 246, 0.8)',
+      pastels: ['#3B82F6', '#8B5CF6', '#10B981', '#06B6D4', '#6366F1', '#EC4899']
     }
   };
   return themeColorMap[theme];
@@ -204,18 +204,19 @@ const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') =
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 const GENTLE_PRESS = { scale: 0.96 };
 
-// --- BACKGROUND THEMES - Deep Twilight Mode ---
+// --- BACKGROUND THEMES - 4 Distinct Palettes ---
 const BACKGROUND_THEMES = {
   morning: {
     name: 'Morning',
     emoji: '🌅',
-    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
+    gradient: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
     orbs: [
-      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
-      { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
-    ]
+      { color: 'rgba(230, 210, 255, 0.4)', size: 500, x: '10%', y: '10%' },
+      { color: 'rgba(200, 255, 230, 0.4)', size: 450, x: '70%', y: '30%' },
+      { color: 'rgba(200, 230, 255, 0.4)', size: 480, x: '40%', y: '70%' },
+      { color: 'rgba(255, 220, 240, 0.4)', size: 420, x: '80%', y: '60%' }
+    ],
+    isDark: false
   },
   twilight: {
     name: 'Twilight',
@@ -226,29 +227,32 @@ const BACKGROUND_THEMES = {
       { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
       { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
-    ]
+    ],
+    isDark: true
   },
   golden: {
     name: 'Golden',
     emoji: '🌇',
-    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
+    gradient: 'linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%)',
     orbs: [
-      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
-      { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
-    ]
+      { color: 'rgba(251, 191, 36, 0.4)', size: 500, x: '10%', y: '10%' },
+      { color: 'rgba(249, 115, 22, 0.4)', size: 450, x: '70%', y: '30%' },
+      { color: 'rgba(245, 158, 11, 0.4)', size: 480, x: '40%', y: '70%' },
+      { color: 'rgba(251, 146, 60, 0.4)', size: 420, x: '80%', y: '60%' }
+    ],
+    isDark: false
   },
   midnight: {
     name: 'Midnight',
     emoji: '🌌',
-    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
+    gradient: 'linear-gradient(180deg, #000000 0%, #0F172A 50%, #1E1B4B 100%)',
     orbs: [
-      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
+      { color: 'rgba(59, 130, 246, 0.3)', size: 500, x: '10%', y: '10%' },
+      { color: 'rgba(139, 92, 246, 0.3)', size: 450, x: '70%', y: '30%' },
+      { color: 'rgba(16, 185, 129, 0.3)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
-    ]
+    ],
+    isDark: true
   }
 };
 
@@ -293,26 +297,32 @@ const LivingAuroraBackground: React.FC<{ theme: 'morning' | 'twilight' | 'golden
 // --- METAMORPHIC CHARACTER imported from ./MascotComponent.tsx ---
 
 
-// --- GLASSMORPHISM 2.0 CARD - Deep Twilight Dark Mode ---
-const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={SOFT_SPRING}
-    style={{
-      background: 'rgba(255, 255, 255, 0.05)',
-      backdropFilter: 'blur(25px)',
-      WebkitBackdropFilter: 'blur(25px)',
-      borderRadius: '32px',
-      padding: '32px',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)',
-      ...style
-    }}
-  >
-    {children}
-  </motion.div>
-);
+// --- THEME-AWARE GLASSMORPHISM CARD ---
+const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ children, style, theme }) => {
+  const isDark = BACKGROUND_THEMES[theme].isDark;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SOFT_SPRING}
+      style={{
+        background: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.6)',
+        backdropFilter: 'blur(25px)',
+        WebkitBackdropFilter: 'blur(25px)',
+        borderRadius: '32px',
+        padding: '32px',
+        border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: isDark
+          ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)'
+          : '0 8px 32px rgba(147, 197, 253, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+        ...style
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 // --- SOFT BUTTON ---
 const SoftButton: React.FC<{
@@ -1125,7 +1135,7 @@ export default function App() {
           maxWidth: '400px',
           overflow: 'hidden'
         }}>
-          <GlassCard style={{ width: '100%', padding: '20px 16px' }}>
+          <GlassCard theme={selectedTheme} style={{ width: '100%', padding: '20px 16px' }}>
             <InteractiveTimerRing
               minutes={timerMinutes}
               onMinutesChange={setTimerMinutes}
@@ -1223,12 +1233,14 @@ export default function App() {
               animate={{ y: 0, opacity: 1 }}
               transition={SOFT_SPRING}
               style={{
-                background: 'rgba(0, 0, 0, 0.4)',
+                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
                 backdropFilter: 'blur(25px)',
                 WebkitBackdropFilter: 'blur(25px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                border: BACKGROUND_THEMES[selectedTheme].isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '30px',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)',
+                boxShadow: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)'
+                  : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
                 display: 'flex',
                 gap: '8px',
                 padding: '10px 16px',
@@ -1242,6 +1254,7 @@ export default function App() {
                 { id: 'Settings', icon: SettingsIcon }
               ].map(tab => {
                 const isActive = activeTab === tab.id;
+                const colors = getThemeColors(selectedTheme);
                 return (
                   <motion.div
                     key={tab.id}
@@ -1252,12 +1265,12 @@ export default function App() {
                       cursor: 'pointer',
                       padding: '8px',
                       borderRadius: '14px',
-                      background: isActive ? 'rgba(244, 114, 182, 0.2)' : 'transparent',
-                      boxShadow: isActive ? '0 4px 15px rgba(244, 114, 182, 0.3)' : 'none',
+                      background: isActive ? (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(167, 139, 250, 0.2)') : 'transparent',
+                      boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
                     }}
                   >
                     <tab.icon
-                      color={isActive ? '#F472B6' : 'rgba(255, 255, 255, 0.6)'}
+                      color={isActive ? colors.primary : (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(100, 100, 150, 0.5)')}
                       size={20}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
@@ -1288,14 +1301,14 @@ export default function App() {
           Statistics
         </h1>
 
-        <GlassCard style={{ marginBottom: '20px' }}>
+        <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
           <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             Weekly Activity
           </h3>
           <SoftStatsChart />
         </GlassCard>
 
-        <GlassCard style={{ marginBottom: '20px' }}>
+        <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{
               width: 48,
@@ -1320,7 +1333,7 @@ export default function App() {
           </div>
         </GlassCard>
 
-        <GlassCard>
+        <GlassCard theme={selectedTheme}>
           <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             Recent Sessions
           </h3>
@@ -1432,7 +1445,7 @@ export default function App() {
           </h1>
 
           {/* Card 4: Pomodoro Record Calendar Grid (Always visible) */}
-          <GlassCard style={{ marginBottom: selectedDate ? '20px' : '0' }}>
+          <GlassCard theme={selectedTheme} style={{ marginBottom: selectedDate ? '20px' : '0' }}>
             <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
               Pomodoro Record ({format(new Date(), 'MMMM yyyy')})
             </h3>
@@ -1529,7 +1542,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={SOFT_SPRING}
             >
-              <GlassCard style={{
+              <GlassCard theme={selectedTheme} style={{
                 marginBottom: '20px',
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent'
@@ -1629,7 +1642,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SOFT_SPRING, delay: 0.1 }}
             >
-              <GlassCard style={{
+              <GlassCard theme={selectedTheme} style={{
                 marginBottom: '20px',
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent'
@@ -1731,7 +1744,7 @@ export default function App() {
           Your Character
         </h1>
 
-        <GlassCard>
+        <GlassCard theme={selectedTheme}>
           <div style={{ marginBottom: '32px' }}>
             <SproutCharacter size={160} level={userData.level} isTimerActive={false} />
           </div>
@@ -1775,7 +1788,7 @@ export default function App() {
           Settings
         </h1>
 
-        <GlassCard style={{ marginBottom: '20px' }}>
+        <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
           {[
             { icon: Volume2, label: 'Sound', enabled: false, toggle: () => { } },
             { icon: Bell, label: 'Notifications', enabled: false, toggle: () => { } },
@@ -1801,7 +1814,7 @@ export default function App() {
           ))}
         </GlassCard>
 
-        <GlassCard style={{ marginBottom: '20px' }}>
+        <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
           <h3 style={{
             margin: '0 0 20px 0',
             fontSize: '16px',
@@ -1896,7 +1909,7 @@ export default function App() {
           </div>
         </GlassCard>
 
-        <GlassCard>
+        <GlassCard theme={selectedTheme}>
           <h3 style={{
             margin: '0 0 20px 0',
             fontSize: '16px',
@@ -1998,12 +2011,14 @@ export default function App() {
             animate={{ y: 0, opacity: 1 }}
             transition={SOFT_SPRING}
             style={{
-              background: 'rgba(0, 0, 0, 0.4)',
+              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
               backdropFilter: 'blur(25px)',
               WebkitBackdropFilter: 'blur(25px)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: BACKGROUND_THEMES[selectedTheme].isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: '30px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)',
+              boxShadow: BACKGROUND_THEMES[selectedTheme].isDark
+                ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)'
+                : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
               display: 'flex',
               gap: '8px',
               padding: '12px 20px',
@@ -2018,6 +2033,7 @@ export default function App() {
               { id: 'Settings', icon: SettingsIcon }
             ].map(tab => {
               const isActive = activeTab === tab.id;
+              const colors = getThemeColors(selectedTheme);
               return (
                 <motion.div
                   key={tab.id}
@@ -2028,12 +2044,12 @@ export default function App() {
                     cursor: 'pointer',
                     padding: '10px',
                     borderRadius: '16px',
-                    background: isActive ? 'rgba(244, 114, 182, 0.2)' : 'transparent',
-                    boxShadow: isActive ? '0 4px 15px rgba(244, 114, 182, 0.3)' : 'none',
+                    background: isActive ? (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(167, 139, 250, 0.2)') : 'transparent',
+                    boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
                   }}
                 >
                   <tab.icon
-                    color={isActive ? '#F472B6' : 'rgba(255, 255, 255, 0.6)'}
+                    color={isActive ? colors.primary : (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(100, 100, 150, 0.5)')}
                     size={22}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
