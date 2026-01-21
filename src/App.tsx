@@ -1410,6 +1410,28 @@ export default function App() {
           }}>
             Focus Session
           </h1>
+          {currentCategory && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginTop: '8px',
+                padding: '6px 16px',
+                background: 'rgba(167, 139, 250, 0.2)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                borderRadius: '16px',
+                display: 'inline-block',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'rgba(139, 92, 246, 0.9)',
+                fontFamily: "'Quicksand', sans-serif",
+                boxShadow: '0 2px 10px rgba(167, 139, 250, 0.2)',
+              }}
+            >
+              📚 {currentCategory}
+            </motion.div>
+          )}
         </div>
 
         {/* Center: Timer & Mascot - Flexible wrapper that can scale down */}
