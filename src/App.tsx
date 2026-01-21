@@ -1468,13 +1468,15 @@ export default function App() {
                       position: 'relative',
                       cursor: day.hasSession ? 'pointer' : 'default',
                       boxShadow: isSelected
-                        ? '0 4px 16px rgba(167, 139, 250, 0.5)'
+                        ? '0 8px 24px rgba(167, 139, 250, 0.6), 0 0 20px rgba(167, 139, 250, 0.4)'
                         : day.hasSession
                           ? '0 2px 10px rgba(167, 139, 250, 0.3)'
                           : 'none',
                       outline: 'none',
-                      border: isSelected ? '2px solid rgba(255, 255, 255, 0.6)' : 'none'
-                    }}
+                      border: isSelected ? '2px solid rgba(255, 255, 255, 0.8)' : 'none',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'all 0.3s ease'
+                    } as React.CSSProperties}
                   >
                     {day.hasSession ? (
                       <div style={{ position: 'relative' }}>
@@ -1516,7 +1518,11 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={SOFT_SPRING}
             >
-              <GlassCard style={{ marginBottom: '20px' }}>
+              <GlassCard style={{
+                marginBottom: '20px',
+                outline: 'none',
+                WebkitTapHighlightColor: 'transparent'
+              } as React.CSSProperties}>
                 <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
                   Time Distribution - {format(selectedDate, 'MMM d')}
                 </h3>
@@ -1531,28 +1537,33 @@ export default function App() {
                     No sessions recorded for this day.
                   </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={280}>
-                    <PieChart>
-                      <Pie
-                        data={timeDistData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, value }) => {
-                          const hours = Math.floor(value / 60);
-                          const mins = value % 60;
-                          return `${name}: ${hours}h ${mins}m`;
-                        }}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {timeDistData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={colors.pastels[index % colors.pastels.length]} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <div style={{
+                    outline: 'none',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie
+                          data={timeDistData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value }) => {
+                            const hours = Math.floor(value / 60);
+                            const mins = value % 60;
+                            return `${name}: ${hours}h ${mins}m`;
+                          }}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {timeDistData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={colors.pastels[index % colors.pastels.length]} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 )}
               </GlassCard>
             </motion.div>
@@ -1565,45 +1576,59 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...SOFT_SPRING, delay: 0.1 }}
             >
-              <GlassCard style={{ marginBottom: '20px' }}>
+              <GlassCard style={{
+                marginBottom: '20px',
+                outline: 'none',
+                WebkitTapHighlightColor: 'transparent'
+              } as React.CSSProperties}>
                 <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
                   Weekly Context - {format(startOfWeek(selectedDate, { weekStartsOn: 0 }), 'MMM d')} to {format(addDays(startOfWeek(selectedDate, { weekStartsOn: 0 }), 6), 'MMM d')}
                 </h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 220, 255, 0.2)" />
-                    <XAxis
-                      dataKey="day"
-                      tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                      stroke="rgba(200, 220, 255, 0.3)"
-                    />
-                    <YAxis
-                      tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                      stroke="rgba(200, 220, 255, 0.3)"
-                      label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                    />
-                    <Bar
-                      dataKey="minutes"
-                      fill={colors.primary}
-                      radius={[8, 8, 0, 0]}
-                      shape={(props: any) => {
-                        const { x, y, width, height, payload } = props;
-                        const isSelected = payload.isSelected;
-                        return (
-                          <rect
-                            x={x}
-                            y={y}
-                            width={width}
-                            height={height}
-                            fill={isSelected ? colors.primary : 'rgba(167, 139, 250, 0.4)'}
-                            rx={8}
-                            ry={8}
-                          />
-                        );
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div style={{
+                  outline: 'none',
+                  WebkitTapHighlightColor: 'transparent'
+                }}>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={dailyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(200, 220, 255, 0.2)" />
+                      <XAxis
+                        dataKey="day"
+                        tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                        stroke="rgba(200, 220, 255, 0.3)"
+                      />
+                      <YAxis
+                        tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                        stroke="rgba(200, 220, 255, 0.3)"
+                        label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                      />
+                      <Bar
+                        dataKey="minutes"
+                        fill={colors.primary}
+                        radius={[8, 8, 0, 0]}
+                        isAnimationActive={false}
+                        shape={(props: any) => {
+                          const { x, y, width, height, payload } = props;
+                          const isSelected = payload.isSelected;
+                          return (
+                            <rect
+                              x={x}
+                              y={y}
+                              width={width}
+                              height={height}
+                              fill={isSelected ? colors.primary : 'rgba(167, 139, 250, 0.4)'}
+                              rx={8}
+                              ry={8}
+                              style={{
+                                outline: 'none',
+                                pointerEvents: 'none'
+                              }}
+                            />
+                          );
+                        }}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </GlassCard>
             </motion.div>
           )}
