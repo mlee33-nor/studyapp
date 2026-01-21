@@ -1402,6 +1402,16 @@ export default function App() {
         }
       };
 
+      // GlobalStyles component to permanently remove blue focus boxes
+      const GlobalStyles = () => (
+        <style dangerouslySetInnerHTML={{ __html: `
+          * { -webkit-tap-highlight-color: transparent !important; }
+          *:focus { outline: none !important; }
+          .recharts-wrapper, .recharts-surface { outline: none !important; border: none !important; }
+          svg, svg * { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
+        `}} />
+      );
+
       return (
         <motion.div
           initial={{ opacity: 0 }}
@@ -1409,6 +1419,7 @@ export default function App() {
           transition={SOFT_SPRING}
           style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
         >
+          <GlobalStyles />
           <h1 style={{
             fontSize: '1.5rem',
             fontWeight: 500,
@@ -1540,7 +1551,7 @@ export default function App() {
                   <div style={{
                     outline: 'none',
                     WebkitTapHighlightColor: 'transparent',
-                    padding: '20px 10px'
+                    padding: '20px'
                   }}>
                     <ResponsiveContainer width="100%" height={320}>
                       <PieChart>
@@ -1549,12 +1560,46 @@ export default function App() {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, value }) => {
+                          label={({ name, value, percent, cx, cy, midAngle, innerRadius, outerRadius }: any) => {
+                            // Ensure all required values are defined
+                            if (!name || midAngle === undefined || percent === undefined || !cx || !cy || !innerRadius || !outerRadius) {
+                              return null;
+                            }
+
+                            // Calculate position for inside labels
+                            const RADIAN = Math.PI / 180;
+                            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
                             const hours = Math.floor(value / 60);
                             const mins = value % 60;
-                            return `${name}: ${hours}h ${mins}m`;
+                            const displayName = name.length > 10 ? name.substring(0, 10) + '...' : name;
+
+                            // Only show label if slice is large enough (>5%)
+                            if (percent < 0.05) return null;
+
+                            return (
+                              <text
+                                x={x}
+                                y={y}
+                                fill="white"
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                style={{
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  fontFamily: "'Quicksand', sans-serif",
+                                  pointerEvents: 'none'
+                                }}
+                              >
+                                <tspan x={x} dy="0">{displayName}</tspan>
+                                <tspan x={x} dy="16">{hours}h {mins}m</tspan>
+                              </text>
+                            );
                           }}
-                          outerRadius={85}
+                          outerRadius="80%"
+                          paddingAngle={5}
                           fill="#8884d8"
                           dataKey="value"
                         >
