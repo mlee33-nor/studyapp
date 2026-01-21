@@ -1127,67 +1127,75 @@ export default function App() {
   const renderContent = () => {
     if (activeTab === 'Timer') return (
       <div style={{
-        height: '100dvh',
-        maxHeight: '100dvh',
-        overflow: 'hidden',
+        height: '100vh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '0 1.25rem 0',
+        padding: '1rem 0',
         position: 'relative',
         zIndex: 1
       }}>
-        {/* Top: Header */}
-        <div style={{ width: '100%', textAlign: 'center', flexShrink: 0, marginTop: '3rem' }}>
-          <h1 style={{
-            fontSize: '1.25rem',
-            fontWeight: 500,
-            color: getTextColor(selectedTheme, 'primary'),
-            margin: 0,
-            letterSpacing: '0.05em',
-            fontFamily: "'Quicksand', sans-serif"
-          }}>
-            Focus Session
-          </h1>
-          {currentCategory && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                marginTop: '8px',
-                padding: '6px 16px',
-                background: 'rgba(167, 139, 250, 0.2)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                borderRadius: '16px',
-                display: 'inline-block',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: 'rgba(139, 92, 246, 0.9)',
-                fontFamily: "'Quicksand', sans-serif",
-                boxShadow: '0 2px 10px rgba(167, 139, 250, 0.2)',
-              }}
-            >
-              📚 {currentCategory}
-            </motion.div>
-          )}
+        {/* Zone 1 (Top): Header - flex-1 */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{
+              fontSize: '1.25rem',
+              fontWeight: 500,
+              color: getTextColor(selectedTheme, 'primary'),
+              margin: 0,
+              letterSpacing: '0.05em',
+              fontFamily: "'Quicksand', sans-serif"
+            }}>
+              Focus Session
+            </h1>
+            {currentCategory && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  marginTop: '8px',
+                  padding: '6px 16px',
+                  background: 'rgba(167, 139, 250, 0.2)',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  borderRadius: '16px',
+                  display: 'inline-block',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'rgba(139, 92, 246, 0.9)',
+                  fontFamily: "'Quicksand', sans-serif",
+                  boxShadow: '0 2px 10px rgba(167, 139, 250, 0.2)',
+                }}
+              >
+                📚 {currentCategory}
+              </motion.div>
+            )}
+          </div>
         </div>
 
-        {/* Center: Timer & Mascot - Flexible wrapper that can scale down */}
+        {/* Zone 2 (Middle): Timer & Mascot Card - flex-[3] */}
         <div style={{
-          flexGrow: 1,
-          minHeight: 0,
+          flex: 3,
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          maxWidth: '400px',
-          overflow: 'hidden',
-          gap: '1rem'
+          padding: '0 1.25rem'
         }}>
-          <GlassCard theme={selectedTheme} style={{ width: '100%', padding: '20px 16px 16px' }}>
+          <GlassCard theme={selectedTheme} style={{
+            width: '100%',
+            maxWidth: '400px',
+            padding: '24px 20px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}>
             <InteractiveTimerRing
               minutes={timerMinutes}
               onMinutesChange={setTimerMinutes}
@@ -1196,20 +1204,18 @@ export default function App() {
               totalSeconds={timerMinutes * 60}
             />
 
-            {/* Mascot Container with strict height limit */}
+            {/* Mascot Container */}
             <div style={{
-              maxHeight: '25vh',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '8px 0 6px',
-              overflow: 'hidden'
+              marginTop: '16px'
             }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'center',
-                transform: 'scale(0.85)',
+                transform: 'scale(0.9)',
                 transformOrigin: 'center'
               }}>
                 <SproutCharacter size={80} level={userData.level} isTimerActive={isRunning} />
@@ -1240,16 +1246,16 @@ export default function App() {
           </GlassCard>
         </div>
 
-        {/* Bottom: Action Zone (Buttons + Nav) */}
+        {/* Zone 3 (Bottom): Action Zone - flex-1 */}
         <div style={{
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          gap: '0.75rem',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
           width: '100%',
-          maxWidth: '400px',
-          flexShrink: 0,
-          paddingBottom: '1.5rem',
-          marginBottom: '0.5rem'
+          padding: '0 1.25rem'
         }}>
           {/* Start/Stop Buttons */}
           <div style={{
@@ -1257,8 +1263,7 @@ export default function App() {
             flexDirection: 'column',
             gap: '10px',
             maxWidth: '280px',
-            width: '100%',
-            margin: '0 auto'
+            width: '100%'
           }}>
             {!isRunning ? (
               <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
