@@ -3,7 +3,7 @@ import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { SproutCharacter } from './MascotComponent';
 
@@ -1539,9 +1539,10 @@ export default function App() {
                 ) : (
                   <div style={{
                     outline: 'none',
-                    WebkitTapHighlightColor: 'transparent'
+                    WebkitTapHighlightColor: 'transparent',
+                    padding: '20px 10px'
                   }}>
-                    <ResponsiveContainer width="100%" height={280}>
+                    <ResponsiveContainer width="100%" height={320}>
                       <PieChart>
                         <Pie
                           data={timeDistData}
@@ -1553,7 +1554,7 @@ export default function App() {
                             const mins = value % 60;
                             return `${name}: ${hours}h ${mins}m`;
                           }}
-                          outerRadius={80}
+                          outerRadius={85}
                           fill="#8884d8"
                           dataKey="value"
                         >
@@ -1601,6 +1602,24 @@ export default function App() {
                         stroke="rgba(200, 220, 255, 0.3)"
                         label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
                       />
+                      <Tooltip
+                        contentStyle={{
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(167, 139, 250, 0.3)',
+                          borderRadius: '12px',
+                          padding: '8px 12px',
+                          fontFamily: "'Quicksand', sans-serif",
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          color: 'rgba(100, 100, 150, 0.9)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                          outline: 'none'
+                        }}
+                        cursor={{ fill: 'transparent' }}
+                        wrapperStyle={{ outline: 'none' }}
+                        labelStyle={{ color: 'rgba(100, 100, 150, 0.8)', fontWeight: 600 }}
+                      />
                       <Bar
                         dataKey="minutes"
                         fill={colors.primary}
@@ -1609,6 +1628,8 @@ export default function App() {
                         shape={(props: any) => {
                           const { x, y, width, height, payload } = props;
                           const isSelected = payload.isSelected;
+                          const [isHovered, setIsHovered] = React.useState(false);
+
                           return (
                             <rect
                               x={x}
@@ -1616,11 +1637,15 @@ export default function App() {
                               width={width}
                               height={height}
                               fill={isSelected ? colors.primary : 'rgba(167, 139, 250, 0.4)'}
+                              fillOpacity={isHovered ? 0.8 : 1}
                               rx={8}
                               ry={8}
+                              onMouseEnter={() => setIsHovered(true)}
+                              onMouseLeave={() => setIsHovered(false)}
                               style={{
                                 outline: 'none',
-                                pointerEvents: 'none'
+                                transition: 'fill-opacity 0.2s ease',
+                                cursor: 'pointer'
                               }}
                             />
                           );
