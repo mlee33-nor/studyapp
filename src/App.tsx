@@ -1044,6 +1044,217 @@ const SoftToggle: React.FC<{ enabled: boolean; onToggle: () => void }> = ({ enab
   </motion.div>
 );
 
+// --- CATEGORY SELECTION MODAL ---
+const CategorySelectionModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectCategory: (category: string) => void;
+}> = ({ isOpen, onClose, onSelectCategory }) => {
+  const [customInput, setCustomInput] = useState('');
+  const predefinedCategories = ['Accounting', 'Algebra', 'Science', 'Coding'];
+
+  if (!isOpen) return null;
+
+  const handleCategoryClick = (category: string) => {
+    onSelectCategory(category);
+    setCustomInput('');
+  };
+
+  const handleBeginSession = () => {
+    if (customInput.trim()) {
+      onSelectCategory(customInput.trim());
+    } else if (predefinedCategories.length > 0) {
+      onSelectCategory(predefinedCategories[0]);
+    }
+    setCustomInput('');
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 2000,
+        padding: '20px',
+      }}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'rgba(255, 255, 255, 0.7)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderRadius: '32px',
+          padding: '32px 24px',
+          border: '1px solid rgba(255, 255, 255, 0.5)',
+          boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+          maxWidth: '420px',
+          width: '100%',
+          maxHeight: '80vh',
+          overflowY: 'auto',
+        }}
+      >
+        {/* Title */}
+        <h2 style={{
+          fontSize: '1.5rem',
+          fontWeight: 600,
+          color: 'rgba(100, 100, 150, 0.9)',
+          marginBottom: '24px',
+          textAlign: 'center',
+          fontFamily: "'Quicksand', sans-serif",
+          letterSpacing: '0.02em',
+        }}>
+          What are we focusing on?
+        </h2>
+
+        {/* Quick Select Chips */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '12px',
+          marginBottom: '24px',
+        }}>
+          {predefinedCategories.map((category) => (
+            <motion.button
+              key={category}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => handleCategoryClick(category)}
+              style={{
+                background: customInput === ''
+                  ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.6) 0%, rgba(139, 92, 246, 0.6) 100%)'
+                  : 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '20px',
+                padding: '16px 20px',
+                cursor: 'pointer',
+                color: customInput === '' ? 'white' : 'rgba(100, 100, 150, 0.9)',
+                fontSize: '15px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                boxShadow: '0 4px 15px rgba(147, 197, 253, 0.2)',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              {category}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Custom Input Section */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: 'rgba(100, 100, 150, 0.7)',
+            marginBottom: '8px',
+            fontFamily: "'Quicksand', sans-serif",
+          }}>
+            Or enter a custom subject:
+          </label>
+          <input
+            type="text"
+            value={customInput}
+            onChange={(e) => setCustomInput(e.target.value)}
+            placeholder="e.g., CIS114DE"
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && customInput.trim()) {
+                handleBeginSession();
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '14px 18px',
+              borderRadius: '18px',
+              border: '1px solid rgba(200, 220, 255, 0.4)',
+              background: 'rgba(255, 255, 255, 0.6)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              fontSize: '15px',
+              color: 'rgba(100, 100, 150, 0.9)',
+              fontFamily: "'Quicksand', sans-serif",
+              fontWeight: 500,
+              outline: 'none',
+              boxShadow: '0 2px 10px rgba(147, 197, 253, 0.1)',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+        }}>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onClose}
+            style={{
+              flex: 1,
+              background: 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(200, 220, 255, 0.3)',
+              borderRadius: '20px',
+              padding: '14px 24px',
+              cursor: 'pointer',
+              color: 'rgba(100, 100, 150, 0.8)',
+              fontSize: '15px',
+              fontWeight: 600,
+              fontFamily: "'Quicksand', sans-serif",
+              boxShadow: '0 4px 15px rgba(147, 197, 253, 0.15)',
+            }}
+          >
+            Cancel
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleBeginSession}
+            style={{
+              flex: 2,
+              background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.7) 0%, rgba(139, 92, 246, 0.7) 100%)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '14px 24px',
+              cursor: 'pointer',
+              color: 'white',
+              fontSize: '15px',
+              fontWeight: 600,
+              fontFamily: "'Quicksand', sans-serif",
+              boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
+            }}
+          >
+            Begin Session
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 // --- MAIN APP ---
 export default function App() {
   const [activeTab, setActiveTab] = useState('Timer');
@@ -1054,6 +1265,8 @@ export default function App() {
   const [timerMinutes, setTimerMinutes] = useState(25);
   const [timeLeft, setTimeLeft] = useState(timerMinutes * 60);
   const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'twilight' | 'golden' | 'midnight'>(getSelectedTheme());
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState<string>('');
 
   const theme = selectedTheme;
 
@@ -1159,6 +1372,16 @@ export default function App() {
     };
     setUserData(newData);
     saveUserData(newData);
+  };
+
+  const handleStartFocus = () => {
+    setShowCategoryModal(true);
+  };
+
+  const handleCategorySelected = (category: string) => {
+    setCurrentCategory(category);
+    setShowCategoryModal(false);
+    setIsRunning(true);
   };
 
   const renderContent = () => {
@@ -1274,7 +1497,7 @@ export default function App() {
             margin: '0 auto'
           }}>
             {!isRunning ? (
-              <SoftButton text="Start Focus" icon={Play} onClick={() => setIsRunning(true)} variant="primary" />
+              <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
             ) : (
               <>
                 <SoftButton text="Pause" icon={Pause} onClick={() => setIsRunning(false)} variant="secondary" />
@@ -1648,6 +1871,13 @@ export default function App() {
       }}
     >
       <LivingAuroraBackground theme={theme} />
+
+      {/* Category Selection Modal */}
+      <CategorySelectionModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onSelectCategory={handleCategorySelected}
+      />
 
       <div style={{
         maxWidth: '480px',
