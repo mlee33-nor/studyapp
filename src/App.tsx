@@ -929,6 +929,7 @@ export default function App() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const theme = selectedTheme;
 
@@ -962,6 +963,13 @@ export default function App() {
       handleCompleteSession();
     }
   }, [timeLeft, isRunning]);
+
+  // Reset selected date when navigating away from Reports tab
+  useEffect(() => {
+    if (activeTab !== 'Reports') {
+      setSelectedDate(null);
+    }
+  }, [activeTab]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -1381,7 +1389,6 @@ export default function App() {
     );
 
     if (activeTab === 'Reports') {
-      const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
       const colors = getThemeColors(theme);
       const calendarData = getCalendarData(focusHistory);
 
