@@ -160,3 +160,28 @@ input[type="range"].slider::-moz-range-thumb:hover {
   transform: scale(1.1);
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
 }
+
+/* Remove all focus outlines and tap highlights from charts and interactive elements */
+svg,
+svg *,
+.recharts-wrapper,
+.recharts-surface,
+.recharts-layer,
+.recharts-pie,
+.recharts-bar,
+.recharts-sector {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Prevent focus rings on all focusable elements */
+*:focus,
+*:focus-visible {
+  outline: none !important;
+}
+
+/* Remove tap highlight color globally */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
