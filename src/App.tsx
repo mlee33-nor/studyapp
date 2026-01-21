@@ -216,7 +216,8 @@ const BACKGROUND_THEMES = {
       { color: 'rgba(200, 230, 255, 0.4)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(255, 220, 240, 0.4)', size: 420, x: '80%', y: '60%' }
     ],
-    isDark: false
+    isDark: false,
+    textMode: 'dark'
   },
   twilight: {
     name: 'Twilight',
@@ -228,7 +229,8 @@ const BACKGROUND_THEMES = {
       { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
     ],
-    isDark: true
+    isDark: true,
+    textMode: 'light'
   },
   golden: {
     name: 'Golden',
@@ -240,7 +242,8 @@ const BACKGROUND_THEMES = {
       { color: 'rgba(245, 158, 11, 0.4)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(251, 146, 60, 0.4)', size: 420, x: '80%', y: '60%' }
     ],
-    isDark: false
+    isDark: false,
+    textMode: 'dark'
   },
   midnight: {
     name: 'Midnight',
@@ -252,8 +255,56 @@ const BACKGROUND_THEMES = {
       { color: 'rgba(16, 185, 129, 0.3)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
     ],
-    isDark: true
+    isDark: true,
+    textMode: 'light'
   }
+};
+
+// Helper functions for theme-aware colors
+const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'tertiary') => {
+  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
+
+  const colorMap = {
+    dark: {
+      primary: 'rgba(15, 23, 42, 0.95)',     // slate-900
+      secondary: 'rgba(51, 65, 85, 0.8)',    // slate-700/80
+      tertiary: 'rgba(100, 116, 139, 0.7)'   // slate-500/70
+    },
+    light: {
+      primary: 'rgba(255, 255, 255, 0.9)',
+      secondary: 'rgba(255, 255, 255, 0.7)',
+      tertiary: 'rgba(255, 255, 255, 0.5)'
+    }
+  };
+
+  return isDarkText ? colorMap.dark[type] : colorMap.light[type];
+};
+
+const getBorderColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
+  return isDarkText ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)';
+};
+
+const getNavBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
+  return isDarkText ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.4)';
+};
+
+const getNavBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
+  return isDarkText ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+};
+
+const getNavShadow = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
+  return isDarkText
+    ? '0 8px 32px rgba(100, 116, 139, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.5)'
+    : '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)';
+};
+
+const getInactiveIconColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
+  return isDarkText ? 'rgba(100, 116, 139, 0.6)' : 'rgba(255, 255, 255, 0.6)';
 };
 
 // --- LIVING AURORA MESH BACKGROUND ---
@@ -312,7 +363,7 @@ const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperti
         WebkitBackdropFilter: 'blur(25px)',
         borderRadius: '32px',
         padding: '32px',
-        border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.2)',
+        border: `1px solid ${getBorderColor(theme)}`,
         boxShadow: isDark
           ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)'
           : '0 8px 32px rgba(147, 197, 253, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
@@ -523,7 +574,7 @@ const InteractiveTimerRing: React.FC<{
           style={{
             fontSize: '2.5rem',
             margin: 0,
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: 'rgba(139, 92, 246, 0.9)',
             fontFamily: "'Quicksand', sans-serif",
             fontWeight: 400,
             letterSpacing: '0.05em',
@@ -537,7 +588,7 @@ const InteractiveTimerRing: React.FC<{
             animate={{ opacity: 1, y: 0 }}
             style={{
               fontSize: '12px',
-              color: 'rgba(255, 255, 255, 0.5)',
+              color: 'rgba(139, 92, 246, 0.7)',
               marginTop: '4px',
               fontFamily: "'Quicksand', sans-serif",
               fontWeight: 500
@@ -552,7 +603,7 @@ const InteractiveTimerRing: React.FC<{
 };
 
 // --- XP PROGRESS BAR ---
-const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number }> = ({ currentXp, requiredXp }) => {
+const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ currentXp, requiredXp, theme }) => {
   const percentage = (currentXp / requiredXp) * 100;
 
   return (
@@ -562,7 +613,7 @@ const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number }> = ({ cu
         justifyContent: 'space-between',
         marginBottom: '8px',
         fontSize: '13px',
-        color: 'rgba(255, 255, 255, 0.7)',
+        color: getTextColor(theme, 'secondary'),
         fontWeight: 600,
         fontFamily: "'Quicksand', sans-serif"
       }}>
@@ -572,7 +623,7 @@ const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number }> = ({ cu
       <div style={{
         width: '100%',
         height: '12px',
-        background: 'rgba(200, 220, 255, 0.3)',
+        background: BACKGROUND_THEMES[theme].isDark ? 'rgba(200, 220, 255, 0.3)' : 'rgba(100, 116, 139, 0.2)',
         borderRadius: '100px',
         overflow: 'hidden'
       }}>
@@ -592,7 +643,7 @@ const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number }> = ({ cu
 };
 
 // --- EVOLUTION STAGES GRID ---
-const EvolutionStages: React.FC<{ currentLevel: number }> = ({ currentLevel }) => {
+const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ currentLevel, theme }) => {
   const stages = [
     { name: 'Seed', level: 1, emoji: '🌰' },
     { name: 'Sprout', level: 5, emoji: '🌱' },
@@ -635,7 +686,7 @@ const EvolutionStages: React.FC<{ currentLevel: number }> = ({ currentLevel }) =
             <div style={{
               fontSize: '14px',
               fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: getTextColor(theme, 'primary'),
               marginBottom: '4px',
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -643,7 +694,7 @@ const EvolutionStages: React.FC<{ currentLevel: number }> = ({ currentLevel }) =
             </div>
             <div style={{
               fontSize: '12px',
-              color: 'rgba(255, 255, 255, 0.5)',
+              color: getTextColor(theme, 'tertiary'),
               fontFamily: "'Quicksand', sans-serif"
             }}>
               Level {stage.level}+
@@ -656,7 +707,7 @@ const EvolutionStages: React.FC<{ currentLevel: number }> = ({ currentLevel }) =
 };
 
 // --- SOFT STATS CHART ---
-const SoftStatsChart: React.FC = () => {
+const SoftStatsChart: React.FC<{ theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ theme }) => {
   const data = [35, 50, 30, 45, 65, 55, 25];
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, gap: '12px' }}>
@@ -675,7 +726,7 @@ const SoftStatsChart: React.FC = () => {
               boxShadow: i % 2 === 0 ? '0 4px 15px rgba(167, 139, 250, 0.2)' : '0 4px 15px rgba(147, 197, 253, 0.2)',
             }}
           />
-          <span style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+          <span style={{ fontSize: '12px', color: getTextColor(theme, 'secondary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}
           </span>
         </div>
@@ -785,7 +836,7 @@ const CategorySelectionModal: React.FC<{
         <h2 style={{
           fontSize: '1.5rem',
           fontWeight: 600,
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: 'rgba(15, 23, 42, 0.95)',
           marginBottom: '24px',
           textAlign: 'center',
           fontFamily: "'Quicksand', sans-serif",
@@ -836,7 +887,7 @@ const CategorySelectionModal: React.FC<{
             display: 'block',
             fontSize: '13px',
             fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: 'rgba(51, 65, 85, 0.8)',
             marginBottom: '8px',
             fontFamily: "'Quicksand', sans-serif",
           }}>
@@ -861,7 +912,7 @@ const CategorySelectionModal: React.FC<{
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               fontSize: '15px',
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: 'rgba(15, 23, 42, 0.95)',
               fontFamily: "'Quicksand', sans-serif",
               fontWeight: 500,
               outline: 'none',
@@ -889,7 +940,7 @@ const CategorySelectionModal: React.FC<{
               borderRadius: '20px',
               padding: '14px 24px',
               cursor: 'pointer',
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: 'rgba(51, 65, 85, 0.8)',
               fontSize: '15px',
               fontWeight: 600,
               fontFamily: "'Quicksand', sans-serif",
@@ -1092,7 +1143,7 @@ export default function App() {
           <h1 style={{
             fontSize: '1.25rem',
             fontWeight: 500,
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: getTextColor(selectedTheme, 'primary'),
             margin: 0,
             letterSpacing: '0.05em',
             fontFamily: "'Quicksand', sans-serif"
@@ -1164,7 +1215,7 @@ export default function App() {
               </div>
 
               <div style={{
-                background: 'rgba(255, 255, 255, 0.5)',
+                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
                 padding: '4px 12px',
@@ -1172,7 +1223,7 @@ export default function App() {
                 boxShadow: '0 4px 15px rgba(147, 197, 253, 0.2)',
                 fontSize: '11px',
                 fontWeight: 600,
-                color: 'rgba(100, 100, 150, 1)',
+                color: getTextColor(selectedTheme, 'secondary'),
                 display: 'inline-block',
                 fontFamily: "'Quicksand', sans-serif",
                 textAlign: 'center',
@@ -1233,14 +1284,12 @@ export default function App() {
               animate={{ y: 0, opacity: 1 }}
               transition={SOFT_SPRING}
               style={{
-                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
+                background: getNavBackground(selectedTheme),
                 backdropFilter: 'blur(25px)',
                 WebkitBackdropFilter: 'blur(25px)',
-                border: BACKGROUND_THEMES[selectedTheme].isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.2)',
+                border: `1px solid ${getNavBorder(selectedTheme)}`,
                 borderRadius: '30px',
-                boxShadow: BACKGROUND_THEMES[selectedTheme].isDark
-                  ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)'
-                  : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                boxShadow: getNavShadow(selectedTheme),
                 display: 'flex',
                 gap: '8px',
                 padding: '10px 16px',
@@ -1270,7 +1319,7 @@ export default function App() {
                     }}
                   >
                     <tab.icon
-                      color={isActive ? colors.primary : (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(100, 100, 150, 0.5)')}
+                      color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
                       size={20}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
@@ -1293,7 +1342,7 @@ export default function App() {
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: getTextColor(selectedTheme, 'primary'),
           marginBottom: '32px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
@@ -1302,10 +1351,10 @@ export default function App() {
         </h1>
 
         <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
-          <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+          <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             Weekly Activity
           </h3>
-          <SoftStatsChart />
+          <SoftStatsChart theme={selectedTheme} />
         </GlassCard>
 
         <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
@@ -1323,10 +1372,10 @@ export default function App() {
               <User size={24} color="rgba(139, 92, 246, 0.8)" strokeWidth={2.5} />
             </div>
             <div>
-              <div style={{ fontSize: '18px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', sans-serif" }}>
+              <div style={{ fontSize: '18px', fontWeight: 600, color: getTextColor(selectedTheme, 'primary'), fontFamily: "'Quicksand', sans-serif" }}>
                 {userData.sessionsCompleted} Sessions
               </div>
-              <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', sans-serif" }}>
+              <div style={{ fontSize: '14px', color: getTextColor(selectedTheme, 'tertiary'), fontFamily: "'Quicksand', sans-serif" }}>
                 Total Completed
               </div>
             </div>
@@ -1334,14 +1383,14 @@ export default function App() {
         </GlassCard>
 
         <GlassCard theme={selectedTheme}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
             Recent Sessions
           </h3>
           {focusHistory.length === 0 ? (
             <div style={{
               textAlign: 'center',
               padding: '24px',
-              color: 'rgba(255, 255, 255, 0.5)',
+              color: getTextColor(selectedTheme, 'tertiary'),
               fontSize: '14px',
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -1368,14 +1417,14 @@ export default function App() {
                     <div style={{
                       fontSize: '14px',
                       fontWeight: 600,
-                      color: 'rgba(255, 255, 255, 0.9)',
+                      color: getTextColor(selectedTheme, 'primary'),
                       fontFamily: "'Quicksand', sans-serif"
                     }}>
                       📚 {session.category}
                     </div>
                     <div style={{
                       fontSize: '12px',
-                      color: 'rgba(255, 255, 255, 0.5)',
+                      color: getTextColor(selectedTheme, 'tertiary'),
                       marginTop: '2px',
                       fontFamily: "'Quicksand', sans-serif"
                     }}>
@@ -1436,7 +1485,7 @@ export default function App() {
           <h1 style={{
             fontSize: '1.5rem',
             fontWeight: 500,
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: getTextColor(selectedTheme, 'primary'),
             marginBottom: '32px',
             letterSpacing: '0.05em',
             fontFamily: "'Quicksand', sans-serif"
@@ -1446,7 +1495,7 @@ export default function App() {
 
           {/* Card 4: Pomodoro Record Calendar Grid (Always visible) */}
           <GlassCard theme={selectedTheme} style={{ marginBottom: selectedDate ? '20px' : '0' }}>
-            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
               Pomodoro Record ({format(new Date(), 'MMMM yyyy')})
             </h3>
             <div style={{
@@ -1459,7 +1508,7 @@ export default function App() {
                   textAlign: 'center',
                   fontSize: '11px',
                   fontWeight: 600,
-                  color: 'rgba(255, 255, 255, 0.5)',
+                  color: getTextColor(selectedTheme, 'tertiary'),
                   fontFamily: "'Quicksand', sans-serif",
                   padding: '8px 0'
                 }}>
@@ -1485,7 +1534,7 @@ export default function App() {
                         : day.hasSession
                           ? 'rgba(168, 85, 247, 0.4)'
                           : 'rgba(255, 255, 255, 0.1)',
-                      color: (day.hasSession || isSelected) ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                      color: (day.hasSession || isSelected) ? 'white' : getTextColor(selectedTheme, 'tertiary'),
                       fontSize: '14px',
                       fontWeight: 600,
                       fontFamily: "'Quicksand', sans-serif",
@@ -1526,7 +1575,7 @@ export default function App() {
                   textAlign: 'center',
                   fontSize: '14px',
                   fontWeight: 600,
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  color: getTextColor(selectedTheme, 'primary'),
                   fontFamily: "'Quicksand', sans-serif"
                 }}
               >
@@ -1547,14 +1596,14 @@ export default function App() {
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent'
               } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
                   Time Distribution - {format(selectedDate, 'MMM d')}
                 </h3>
                 {timeDistData.length === 0 ? (
                   <div style={{
                     textAlign: 'center',
                     padding: '48px 24px',
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    color: getTextColor(selectedTheme, 'tertiary'),
                     fontSize: '14px',
                     fontFamily: "'Quicksand', sans-serif"
                   }}>
@@ -1618,7 +1667,7 @@ export default function App() {
                           }}
                           formatter={(value: string, entry: any) => (
                             <span style={{
-                              color: 'rgba(255, 255, 255, 0.9)',
+                              color: getTextColor(selectedTheme, 'secondary'),
                               fontSize: '12px',
                               fontWeight: 600,
                               fontFamily: "'Quicksand', sans-serif"
@@ -1647,7 +1696,7 @@ export default function App() {
                 outline: 'none',
                 WebkitTapHighlightColor: 'transparent'
               } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
+                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
                   Weekly Context - {format(startOfWeek(selectedDate, { weekStartsOn: 0 }), 'MMM d')} to {format(addDays(startOfWeek(selectedDate, { weekStartsOn: 0 }), 6), 'MMM d')}
                 </h3>
                 <div style={{
@@ -1656,16 +1705,16 @@ export default function App() {
                 }}>
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={dailyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'} />
                       <XAxis
                         dataKey="day"
-                        tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke="rgba(255, 255, 255, 0.1)"
+                        tick={{ fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                        stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
                       />
                       <YAxis
-                        tick={{ fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke="rgba(255, 255, 255, 0.1)"
-                        label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: 'rgba(100, 100, 150, 0.7)', fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                        tick={{ fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
+                        stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
+                        label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
                       />
                       <Tooltip
                         contentStyle={{
@@ -1677,13 +1726,13 @@ export default function App() {
                           fontFamily: "'Quicksand', sans-serif",
                           fontSize: '13px',
                           fontWeight: 600,
-                          color: 'rgba(255, 255, 255, 0.9)',
+                          color: getTextColor(selectedTheme, 'primary'),
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                           outline: 'none'
                         }}
                         cursor={{ fill: 'transparent' }}
                         wrapperStyle={{ outline: 'none' }}
-                        labelStyle={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 600 }}
+                        labelStyle={{ color: getTextColor(selectedTheme, 'primary'), fontWeight: 600 }}
                       />
                       <Bar
                         dataKey="minutes"
@@ -1736,7 +1785,7 @@ export default function App() {
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: getTextColor(selectedTheme, 'primary'),
           marginBottom: '32px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
@@ -1750,7 +1799,7 @@ export default function App() {
           </div>
 
           <div style={{
-            background: 'rgba(255, 255, 255, 0.5)',
+            background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
             padding: '12px 24px',
@@ -1759,13 +1808,13 @@ export default function App() {
             boxShadow: '0 4px 15px rgba(167, 139, 250, 0.2)',
             display: 'inline-block'
           }}>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', sans-serif" }}>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: getTextColor(selectedTheme, 'primary'), fontFamily: "'Quicksand', sans-serif" }}>
               Level {userData.level}
             </div>
           </div>
 
-          <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} />
-          <EvolutionStages currentLevel={userData.level} />
+          <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
+          <EvolutionStages currentLevel={userData.level} theme={selectedTheme} />
         </GlassCard>
       </motion.div>
     );
@@ -1780,7 +1829,7 @@ export default function App() {
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: getTextColor(selectedTheme, 'primary'),
           marginBottom: '32px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
@@ -1802,11 +1851,11 @@ export default function App() {
                 display: 'flex',
                 alignItems: 'center',
                 padding: '20px 0',
-                borderBottom: i !== 2 ? '1px solid rgba(200, 220, 255, 0.2)' : 'none',
+                borderBottom: i !== 2 ? `1px solid ${getBorderColor(selectedTheme)}` : 'none',
               }}
             >
-              <item.icon size={20} color="rgba(100, 100, 150, 0.7)" strokeWidth={2.5} />
-              <span style={{ marginLeft: 16, flex: 1, color: 'rgba(255, 255, 255, 0.9)', fontSize: '16px', fontWeight: 500, fontFamily: "'Quicksand', sans-serif" }}>
+              <item.icon size={20} color={getTextColor(selectedTheme, 'secondary')} strokeWidth={2.5} />
+              <span style={{ marginLeft: 16, flex: 1, color: getTextColor(selectedTheme, 'primary'), fontSize: '16px', fontWeight: 500, fontFamily: "'Quicksand', sans-serif" }}>
                 {item.label}
               </span>
               <SoftToggle enabled={item.enabled} onToggle={item.toggle} />
@@ -1818,7 +1867,7 @@ export default function App() {
           <h3 style={{
             margin: '0 0 20px 0',
             fontSize: '16px',
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: getTextColor(selectedTheme, 'primary'),
             fontWeight: 600,
             fontFamily: "'Quicksand', sans-serif"
           }}>
@@ -1879,7 +1928,7 @@ export default function App() {
                   {/* Theme Label */}
                   <div style={{
                     padding: '8px 12px',
-                    background: 'rgba(255, 255, 255, 0.6)',
+                    background: themeData.isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
                     backdropFilter: 'blur(10px)',
                     WebkitBackdropFilter: 'blur(10px)',
                     textAlign: 'center'
@@ -1887,7 +1936,7 @@ export default function App() {
                     <div style={{
                       fontSize: '13px',
                       fontWeight: 600,
-                      color: 'rgba(255, 255, 255, 0.9)',
+                      color: getTextColor(themeKey, 'primary'),
                       fontFamily: "'Quicksand', sans-serif"
                     }}>
                       {themeData.emoji} {themeData.name}
@@ -1895,7 +1944,7 @@ export default function App() {
                     {!unlocked && (
                       <div style={{
                         fontSize: '11px',
-                        color: 'rgba(255, 255, 255, 0.5)',
+                        color: getTextColor(themeKey, 'tertiary'),
                         marginTop: '2px',
                         fontFamily: "'Quicksand', sans-serif"
                       }}>
@@ -1913,7 +1962,7 @@ export default function App() {
           <h3 style={{
             margin: '0 0 20px 0',
             fontSize: '16px',
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: getTextColor(selectedTheme, 'primary'),
             fontWeight: 600,
             fontFamily: "'Quicksand', sans-serif"
           }}>
@@ -1926,7 +1975,7 @@ export default function App() {
               justifyContent: 'space-between',
               marginBottom: '12px',
               fontSize: '14px',
-              color: 'rgba(255, 255, 255, 0.7)',
+              color: getTextColor(selectedTheme, 'secondary'),
               fontWeight: 600,
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -1954,7 +2003,7 @@ export default function App() {
 
           <div style={{
             fontSize: '12px',
-            color: 'rgba(255, 255, 255, 0.5)',
+            color: getTextColor(selectedTheme, 'tertiary'),
             textAlign: 'center',
             marginTop: '12px',
             fontFamily: "'Quicksand', sans-serif"
@@ -2011,14 +2060,12 @@ export default function App() {
             animate={{ y: 0, opacity: 1 }}
             transition={SOFT_SPRING}
             style={{
-              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
+              background: getNavBackground(selectedTheme),
               backdropFilter: 'blur(25px)',
               WebkitBackdropFilter: 'blur(25px)',
-              border: BACKGROUND_THEMES[selectedTheme].isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.2)',
+              border: `1px solid ${getNavBorder(selectedTheme)}`,
               borderRadius: '30px',
-              boxShadow: BACKGROUND_THEMES[selectedTheme].isDark
-                ? '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)'
-                : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+              boxShadow: getNavShadow(selectedTheme),
               display: 'flex',
               gap: '8px',
               padding: '12px 20px',
@@ -2049,7 +2096,7 @@ export default function App() {
                   }}
                 >
                   <tab.icon
-                    color={isActive ? colors.primary : (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(100, 100, 150, 0.5)')}
+                    color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
                     size={22}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
