@@ -154,11 +154,11 @@ const calculateXpForLevel = (level: number) => {
   return 100 * level;
 };
 
-const getCharacterStage = (level: number) => {
-  if (level < 10) return 0; // Cadet (Lvl 1-9)
-  if (level < 20) return 1; // Pilot (Lvl 10-19)
-  if (level < 30) return 2; // Commander (Lvl 20-29)
-  return 3; // Star-Walker (Lvl 30+)
+const getCharacterTitle = (level: number) => {
+  if (level >= 30) return 'Space Explorer';
+  if (level >= 20) return 'Astronaut';
+  if (level >= 10) return 'Cadet';
+  return 'Rookie';
 };
 
 // Theme unlock levels
@@ -642,17 +642,17 @@ const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number; theme: 'm
   );
 };
 
-// --- EVOLUTION STAGES GRID ---
+// --- MILESTONE STAGES GRID ---
 const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ currentLevel, theme }) => {
   const stages = [
-    { name: 'Cadet', level: 1, emoji: '📦' },
-    { name: 'Astronaut', level: 5, emoji: '🐱' },
-    { name: 'Pilot', level: 10, emoji: '🚀' },
-    { name: 'Navigator', level: 15, emoji: '🧭' },
-    { name: 'Commander', level: 20, emoji: '⚡' },
-    { name: 'Captain', level: 25, emoji: '🛸' },
-    { name: 'Star-Walker', level: 30, emoji: '⭐' },
-    { name: 'Cosmic', level: 33, emoji: '🌌' }
+    { name: 'Rookie', level: 1, emoji: '🐱' },
+    { name: 'Beginner', level: 5, emoji: '📚' },
+    { name: 'Cadet', level: 10, emoji: '🎓' },
+    { name: 'Scholar', level: 15, emoji: '📖' },
+    { name: 'Astronaut', level: 20, emoji: '🚀' },
+    { name: 'Ace', level: 25, emoji: '⭐' },
+    { name: 'Explorer', level: 30, emoji: '🌌' },
+    { name: 'Legend', level: 35, emoji: '✨' }
   ];
 
   return (
@@ -1236,11 +1236,7 @@ export default function App() {
                 textAlign: 'center',
                 marginTop: '8px'
               }}>
-                {getCharacterStage(userData.level) === 0 && 'Cadet'}
-                {getCharacterStage(userData.level) === 1 && 'Pilot'}
-                {getCharacterStage(userData.level) === 2 && 'Commander'}
-                {getCharacterStage(userData.level) === 3 && 'Star-Walker'}
-                {' · Lvl '}{userData.level}
+                {getCharacterTitle(userData.level)} · Lvl {userData.level}
               </div>
             </div>
           </GlassCard>
