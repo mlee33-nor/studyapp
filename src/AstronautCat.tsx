@@ -21,7 +21,7 @@ export const AstronautCat: React.FC<AstronautCatProps> = ({
       }}
     >
       <img
-        src="/astronaut-cat.gif"
+        src="/animation.gif"
         alt="Astronaut Cat"
         style={{
           width: '100%',
