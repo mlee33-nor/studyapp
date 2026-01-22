@@ -1,4 +1,5 @@
 import React from 'react';
+import animationGif from './assets/animation.gif';
 
 interface AstronautCatProps {
   size?: number;
@@ -21,7 +22,7 @@ export const AstronautCat: React.FC<AstronautCatProps> = ({
       }}
     >
       <img
-        src="/animation.gif"
+        src={animationGif}
         alt="Astronaut Cat"
         style={{
           width: '100%',
