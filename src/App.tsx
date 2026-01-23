@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
@@ -445,12 +445,13 @@ const InteractiveTimerRing: React.FC<{
   // SVG Constants - Define once for perfect mathematical alignment
   const size = 192;
   const strokeWidth = 5;
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = (size / 2) - (strokeWidth / 2);
+  const cx = size / 2; // Center X coordinate
+  const cy = size / 2; // Center Y coordinate
+  // Radius accounts for stroke width: position handle on centerline of stroke
+  // For stroke to fit within bounds: radius + (strokeWidth/2) <= size/2
+  const radius = (size / 2) - (strokeWidth / 2); // 96 - 2.5 = 93.5
   const circumference = radius * 2 * Math.PI;
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const progress = 1 - (timeLeft / totalSeconds);
   const dashOffset = circumference * (1 - progress);
@@ -463,85 +464,83 @@ const InteractiveTimerRing: React.FC<{
 
   // Calculate angle from minutes (0-360 degrees)
   const angleFromMinutes = (mins: number) => {
-    const normalized = (mins - 5) / (60 - 5);
-    return normalized * 360 - 90;
+    const normalized = (mins - 5) / (60 - 5); // Map 5-60 to 0-1
+    return normalized * 360 - 90; // -90 to start at top (12 o'clock position)
   };
 
-  // PERFECT CIRCLE PATH: Handle position calculated purely from angle
-  const handleAngle = angleFromMinutes(minutes);
-  const handleAngleRad = (handleAngle * Math.PI) / 180;
-  const handleX = cx + radius * Math.cos(handleAngleRad);
-  const handleY = cy + radius * Math.sin(handleAngleRad);
+  // POLAR COORDINATE SYSTEM: useMotionValue for angle
+  const angle = useMotionValue(angleFromMinutes(minutes));
 
-  // Calculate minutes from mouse/touch position
-  const updateMinutesFromPosition = (clientX: number, clientY: number) => {
-    if (!containerRef.current) return;
+  // Update angle when minutes prop changes externally
+  useEffect(() => {
+    angle.set(angleFromMinutes(minutes));
+  }, [minutes, angle]);
+
+  // POLAR TO CARTESIAN TRANSFORMATION: X = cx + R·cos(θ), Y = cy + R·sin(θ)
+  const handleX = useTransform(angle, (angleValue) => {
+    const angleRad = (angleValue * Math.PI) / 180;
+    return cx + radius * Math.cos(angleRad);
+  });
+
+  const handleY = useTransform(angle, (angleValue) => {
+    const angleRad = (angleValue * Math.PI) / 180;
+    return cy + radius * Math.sin(angleRad);
+  });
+
+  // CONSTRAINT PROJECTION: Lock handle to circular path
+  const handleDrag = (_event: any, info: any) => {
+    if (isRunning || !containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const containerCenterX = rect.left + rect.width / 2;
     const containerCenterY = rect.top + rect.height / 2;
 
-    const dx = clientX - containerCenterX;
-    const dy = clientY - containerCenterY;
-    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    // Calculate angle (θ) from center to mouse position using Math.atan2
+    const dx = info.point.x - containerCenterX;
+    const dy = info.point.y - containerCenterY;
+    let theta = Math.atan2(dy, dx) * (180 / Math.PI); // Convert to degrees
 
-    angle = (angle + 90 + 360) % 360;
+    // Normalize angle to 0-360
+    theta = (theta + 90 + 360) % 360;
 
-    const normalized = angle / 360;
+    // Update the motion value (this will automatically update handleX and handleY via useTransform)
+    angle.set(theta);
+
+    // Map angle to minutes (5-60) and update parent component
+    const normalized = theta / 360; // 0-1
     const newMinutes = Math.round(5 + normalized * (60 - 5));
     const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
 
     onMinutesChange(clampedMinutes);
   };
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (isRunning) return;
-    setIsDragging(true);
-    updateMinutesFromPosition(e.clientX, e.clientY);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging || isRunning) return;
-    updateMinutesFromPosition(e.clientX, e.clientY);
-  };
-
-  const handlePointerUp = () => {
-    setIsDragging(false);
-  };
-
+  // ZERO-SCROLL COMPATIBILITY: Prevent page scrolling during drag
   useEffect(() => {
-    const handleGlobalPointerMove = (e: PointerEvent) => {
-      if (isDragging && !isRunning) {
-        updateMinutesFromPosition(e.clientX, e.clientY);
+    const preventScroll = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).closest('[data-draggable-handle]')) {
+        e.preventDefault();
       }
     };
 
-    const handleGlobalPointerUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      window.addEventListener('pointermove', handleGlobalPointerMove);
-      window.addEventListener('pointerup', handleGlobalPointerUp);
-      window.addEventListener('pointercancel', handleGlobalPointerUp);
-    }
-
-    return () => {
-      window.removeEventListener('pointermove', handleGlobalPointerMove);
-      window.removeEventListener('pointerup', handleGlobalPointerUp);
-      window.removeEventListener('pointercancel', handleGlobalPointerUp);
-    };
-  }, [isDragging, isRunning]);
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    return () => document.removeEventListener('touchmove', preventScroll);
+  }, []);
 
   return (
     <div
       ref={containerRef}
-      style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
+      style={{
+        position: 'relative',
+        width: size,
+        height: size,
+        margin: '0 auto',
+        touchAction: 'none' // Prevent touch scrolling
+      }}
     >
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        {/* Background circle - uses cx, cy, and calculated radius */}
         <circle cx={cx} cy={cy} r={radius} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={strokeWidth} fill="none" />
+        {/* Progress circle - animated stroke offset */}
         <motion.circle
           cx={cx}
           cy={cy}
@@ -562,23 +561,25 @@ const InteractiveTimerRing: React.FC<{
         </defs>
       </svg>
 
-      {/* Handle - ALWAYS on perfect circle path */}
+      {/* Draggable Handle - LOCKED TO RING via Polar Coordinates */}
       {!isRunning && (
         <motion.div
-          onPointerDown={handlePointerDown}
-          animate={{
-            left: handleX,
-            top: handleY,
-            scale: isDragging ? 1.1 : 1
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          drag
+          dragMomentum={false}
+          onDrag={handleDrag}
+          dragElastic={0}
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} // Constrain to prevent drift
+          data-draggable-handle="true"
           style={{
             position: 'absolute',
-            transform: 'translate(-50%, -50%)',
-            cursor: isDragging ? 'grabbing' : 'grab',
-            touchAction: 'none',
+            x: handleX,
+            y: handleY,
+            transform: 'translate(-50%, -50%)', // Center the handle on calculated position
+            cursor: 'grab',
+            touchAction: 'none', // Zero-scroll compatibility
             pointerEvents: 'auto',
           }}
+          whileTap={{ scale: 1.1, cursor: 'grabbing' }}
         >
           <div style={{
             width: 36,
@@ -603,7 +604,7 @@ const InteractiveTimerRing: React.FC<{
       )}
 
       {/* Center Display */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
         <motion.h1
           key={isRunning ? timeLeft : minutes}
           initial={{ scale: 1 }}
@@ -1678,15 +1679,15 @@ export default function App() {
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
                             backdropFilter: 'blur(10px)',
                             borderRadius: '12px',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            border: `1px solid ${getBorderColor(selectedTheme)}`,
                             padding: '8px 12px',
                             fontFamily: "'Quicksand', sans-serif",
                             fontSize: '13px',
                             fontWeight: 600,
-                            color: 'white',
+                            color: getTextColor(selectedTheme, 'primary'),
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                             outline: 'none'
                           }}
@@ -1759,9 +1760,9 @@ export default function App() {
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
                           backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          border: `1px solid ${getBorderColor(selectedTheme)}`,
                           borderRadius: '12px',
                           padding: '8px 12px',
                           fontFamily: "'Quicksand', sans-serif",
@@ -1821,27 +1822,27 @@ export default function App() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={SOFT_SPRING}
-        style={{ padding: '16px 12px 100px', textAlign: 'center', position: 'relative', zIndex: 1 }}
+        style={{ padding: '20px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
       >
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
           color: getTextColor(selectedTheme, 'primary'),
-          marginBottom: '8px',
+          marginBottom: '12px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
         }}>
           Your Character
         </h1>
 
-        <GlassCard theme={selectedTheme} style={{ padding: '12px 10px' }}>
+        <GlassCard theme={selectedTheme} style={{ padding: '12px 20px 20px' }}>
           {/* Hero Mascot Section with Glow Effect - Tight Single Unit */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             width: '100%',
-            padding: '8px 0',
+            padding: '4px 0',
             position: 'relative'
           }}>
             {/* Glow Effect Behind Video */}
@@ -1864,11 +1865,11 @@ export default function App() {
 
             {/* Level Badge - Tight Below Mascot */}
             <div style={{
-              marginTop: '4px',
+              marginTop: '8px',
               background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              padding: '14px 32px',
+              padding: '12px 28px',
               borderRadius: '24px',
               boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
               display: 'inline-block'
@@ -1895,7 +1896,7 @@ export default function App() {
           </div>
 
           {/* XP Progress Bar - Compact Spacing */}
-          <div style={{ margin: '20px 0 16px' }}>
+          <div style={{ margin: '16px 0 12px' }}>
             <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
           </div>
 
