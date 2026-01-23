@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
@@ -468,12 +468,26 @@ const InteractiveTimerRing: React.FC<{
     return normalized * 360 - 90; // -90 to start at top (12 o'clock position)
   };
 
-  // Mathematical orbit calculation: x = cx + radius * cos(angle), y = cy + radius * sin(angle)
-  const handleAngle = angleFromMinutes(minutes);
-  const handleAngleRad = (handleAngle * Math.PI) / 180; // Convert to radians
-  const handleX = cx + radius * Math.cos(handleAngleRad);
-  const handleY = cy + radius * Math.sin(handleAngleRad);
+  // POLAR COORDINATE SYSTEM: useMotionValue for angle
+  const angle = useMotionValue(angleFromMinutes(minutes));
 
+  // Update angle when minutes prop changes externally
+  useEffect(() => {
+    angle.set(angleFromMinutes(minutes));
+  }, [minutes, angle]);
+
+  // POLAR TO CARTESIAN TRANSFORMATION: X = cx + R·cos(θ), Y = cy + R·sin(θ)
+  const handleX = useTransform(angle, (angleValue) => {
+    const angleRad = (angleValue * Math.PI) / 180;
+    return cx + radius * Math.cos(angleRad);
+  });
+
+  const handleY = useTransform(angle, (angleValue) => {
+    const angleRad = (angleValue * Math.PI) / 180;
+    return cy + radius * Math.sin(angleRad);
+  });
+
+  // CONSTRAINT PROJECTION: Lock handle to circular path
   const handleDrag = (_event: any, info: any) => {
     if (isRunning || !containerRef.current) return;
 
@@ -481,24 +495,48 @@ const InteractiveTimerRing: React.FC<{
     const containerCenterX = rect.left + rect.width / 2;
     const containerCenterY = rect.top + rect.height / 2;
 
-    // Calculate angle from center using mouse position
+    // Calculate angle (θ) from center to mouse position using Math.atan2
     const dx = info.point.x - containerCenterX;
     const dy = info.point.y - containerCenterY;
-    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    let theta = Math.atan2(dy, dx) * (180 / Math.PI); // Convert to degrees
 
     // Normalize angle to 0-360
-    angle = (angle + 90 + 360) % 360;
+    theta = (theta + 90 + 360) % 360;
 
-    // Map angle to minutes (5-60)
-    const normalized = angle / 360; // 0-1
+    // Update the motion value (this will automatically update handleX and handleY via useTransform)
+    angle.set(theta);
+
+    // Map angle to minutes (5-60) and update parent component
+    const normalized = theta / 360; // 0-1
     const newMinutes = Math.round(5 + normalized * (60 - 5));
     const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
 
     onMinutesChange(clampedMinutes);
   };
 
+  // ZERO-SCROLL COMPATIBILITY: Prevent page scrolling during drag
+  useEffect(() => {
+    const preventScroll = (e: TouchEvent) => {
+      if ((e.target as HTMLElement).closest('[data-draggable-handle]')) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    return () => document.removeEventListener('touchmove', preventScroll);
+  }, []);
+
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
+    <div
+      ref={containerRef}
+      style={{
+        position: 'relative',
+        width: size,
+        height: size,
+        margin: '0 auto',
+        touchAction: 'none' // Prevent touch scrolling
+      }}
+    >
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         {/* Background circle - uses cx, cy, and calculated radius */}
         <circle cx={cx} cy={cy} r={radius} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={strokeWidth} fill="none" />
@@ -523,21 +561,22 @@ const InteractiveTimerRing: React.FC<{
         </defs>
       </svg>
 
-      {/* Draggable Handle - positioned on orbit using mathematical formula */}
+      {/* Draggable Handle - LOCKED TO RING via Polar Coordinates */}
       {!isRunning && (
         <motion.div
           drag
           dragMomentum={false}
           onDrag={handleDrag}
           dragElastic={0}
-          key={`handle-${minutes}`} // Re-mount on minute change to reset position
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} // Constrain to prevent drift
+          data-draggable-handle="true"
           style={{
             position: 'absolute',
-            left: handleX,
-            top: handleY,
+            x: handleX,
+            y: handleY,
             transform: 'translate(-50%, -50%)', // Center the handle on calculated position
             cursor: 'grab',
-            touchAction: 'none',
+            touchAction: 'none', // Zero-scroll compatibility
             pointerEvents: 'auto',
           }}
           whileTap={{ scale: 1.1, cursor: 'grabbing' }}
