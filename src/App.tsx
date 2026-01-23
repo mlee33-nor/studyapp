@@ -572,8 +572,8 @@ const InteractiveTimerRing: React.FC<{
           data-draggable-handle="true"
           style={{
             position: 'absolute',
-            x: handleX,
-            y: handleY,
+            left: handleX,
+            top: handleY,
             transform: 'translate(-50%, -50%)', // Center the handle on calculated position
             cursor: 'grab',
             touchAction: 'none', // Zero-scroll compatibility
