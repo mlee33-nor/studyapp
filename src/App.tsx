@@ -1821,28 +1821,27 @@ export default function App() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={SOFT_SPRING}
-        style={{ padding: '40px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
+        style={{ padding: '32px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
       >
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
           color: getTextColor(selectedTheme, 'primary'),
-          marginBottom: '32px',
+          marginBottom: '16px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
         }}>
           Your Character
         </h1>
 
-        <GlassCard theme={selectedTheme}>
-          {/* Hero Mascot Section with Glow Effect */}
+        <GlassCard theme={selectedTheme} style={{ padding: '24px 20px' }}>
+          {/* Hero Mascot Section with Glow Effect - Tight Single Unit */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
             width: '100%',
-            margin: '32px 0',
+            padding: '16px 0',
             position: 'relative'
           }}>
             {/* Glow Effect Behind Video */}
@@ -1863,9 +1862,9 @@ export default function App() {
               <AstronautCat size={360} level={userData.level} isTimerActive={false} theme={selectedTheme} />
             </div>
 
-            {/* Level Badge Directly Below */}
+            {/* Level Badge - Tight Below Mascot */}
             <div style={{
-              marginTop: '24px',
+              marginTop: '8px',
               background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
@@ -1895,8 +1894,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* XP Progress Bar */}
-          <div style={{ margin: '32px 0' }}>
+          {/* XP Progress Bar - Compact Spacing */}
+          <div style={{ margin: '20px 0 16px' }}>
             <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
           </div>
 
