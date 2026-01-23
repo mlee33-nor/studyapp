@@ -1822,27 +1822,27 @@ export default function App() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={SOFT_SPRING}
-        style={{ padding: '32px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
+        style={{ padding: '20px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
       >
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
           color: getTextColor(selectedTheme, 'primary'),
-          marginBottom: '16px',
+          marginBottom: '12px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
         }}>
           Your Character
         </h1>
 
-        <GlassCard theme={selectedTheme} style={{ padding: '24px 20px' }}>
+        <GlassCard theme={selectedTheme} style={{ padding: '12px 20px 20px' }}>
           {/* Hero Mascot Section with Glow Effect - Tight Single Unit */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             width: '100%',
-            padding: '16px 0',
+            padding: '4px 0',
             position: 'relative'
           }}>
             {/* Glow Effect Behind Video */}
@@ -1869,7 +1869,7 @@ export default function App() {
               background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              padding: '14px 32px',
+              padding: '12px 28px',
               borderRadius: '24px',
               boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
               display: 'inline-block'
@@ -1896,7 +1896,7 @@ export default function App() {
           </div>
 
           {/* XP Progress Bar - Compact Spacing */}
-          <div style={{ margin: '20px 0 16px' }}>
+          <div style={{ margin: '16px 0 12px' }}>
             <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
           </div>
 
