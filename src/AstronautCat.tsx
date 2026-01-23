@@ -30,6 +30,7 @@ export const AstronautCat: React.FC<AstronautCatProps> = ({
           width: '100%',
           height: '100%',
           objectFit: 'contain',
+          objectPosition: 'center',
         }}
       />
     </div>
