@@ -18,17 +18,10 @@ export const AstronautCat: React.FC<AstronautCatProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        fontSize: size * 0.8,
       }}
     >
-      <img
-        src="https://storage.googleapis.com/catgif/animation.gif"
-        alt="Astronaut Cat"
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-        }}
-      />
+      🐱🚀
     </div>
   );
 };
