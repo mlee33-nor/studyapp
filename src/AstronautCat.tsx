@@ -20,9 +20,12 @@ export const AstronautCat: React.FC<AstronautCatProps> = ({
         justifyContent: 'center',
       }}
     >
-      <img
-        src="https://storage.googleapis.com/catgif/animation.gif"
-        alt="Astronaut Cat"
+      <video
+        src="https://storage.googleapis.com/catgif/cattest123.mov"
+        autoPlay
+        loop
+        muted
+        playsInline
         style={{
           width: '100%',
           height: '100%',
