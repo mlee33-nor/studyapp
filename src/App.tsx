@@ -697,8 +697,8 @@ const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twil
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '16px',
-      marginTop: '24px'
+      gap: '12px',
+      marginTop: '16px'
     }}>
       {stages.map((stage, i) => {
         const isUnlocked = currentLevel >= stage.level;
@@ -710,28 +710,28 @@ const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twil
               background: isUnlocked ? 'rgba(255, 255, 255, 0.5)' : 'rgba(200, 220, 255, 0.2)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              padding: '20px',
-              borderRadius: '20px',
+              padding: '14px',
+              borderRadius: '16px',
               textAlign: 'center',
               boxShadow: isUnlocked ? '0 4px 15px rgba(167, 139, 250, 0.2)' : '0 2px 10px rgba(147, 197, 253, 0.1)',
               opacity: isUnlocked ? 1 : 0.5,
               cursor: isUnlocked ? 'default' : 'not-allowed'
             }}
           >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>
+            <div style={{ fontSize: '24px', marginBottom: '6px' }}>
               {isUnlocked ? stage.emoji : '🔒'}
             </div>
             <div style={{
-              fontSize: '14px',
+              fontSize: '13px',
               fontWeight: 600,
               color: getTextColor(theme, 'primary'),
-              marginBottom: '4px',
+              marginBottom: '2px',
               fontFamily: "'Quicksand', sans-serif"
             }}>
               {stage.name}
             </div>
             <div style={{
-              fontSize: '12px',
+              fontSize: '11px',
               color: getTextColor(theme, 'tertiary'),
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -1835,26 +1835,72 @@ export default function App() {
         </h1>
 
         <GlassCard theme={selectedTheme}>
-          <div style={{ marginBottom: '32px' }}>
-            <AstronautCat size={160} level={userData.level} isTimerActive={false} theme={selectedTheme} />
-          </div>
-
+          {/* Hero Mascot Section with Glow Effect */}
           <div style={{
-            background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            padding: '12px 24px',
-            borderRadius: '24px',
-            marginBottom: '24px',
-            boxShadow: '0 4px 15px rgba(167, 139, 250, 0.2)',
-            display: 'inline-block'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            margin: '32px 0',
+            position: 'relative'
           }}>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: getTextColor(selectedTheme, 'primary'), fontFamily: "'Quicksand', sans-serif" }}>
-              Level {userData.level}
+            {/* Glow Effect Behind Video */}
+            <div style={{
+              position: 'absolute',
+              width: '320px',
+              height: '320px',
+              background: BACKGROUND_THEMES[selectedTheme].isDark
+                ? 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)'
+                : 'radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 70%)',
+              filter: 'blur(60px)',
+              pointerEvents: 'none',
+              zIndex: 0
+            }} />
+
+            {/* Large Centered Mascot Video */}
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <AstronautCat size={288} level={userData.level} isTimerActive={false} theme={selectedTheme} />
+            </div>
+
+            {/* Level Badge Directly Below */}
+            <div style={{
+              marginTop: '24px',
+              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              padding: '14px 32px',
+              borderRadius: '24px',
+              boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
+              display: 'inline-block'
+            }}>
+              <div style={{
+                fontSize: '28px',
+                fontWeight: 700,
+                color: getTextColor(selectedTheme, 'primary'),
+                fontFamily: "'Quicksand', sans-serif",
+                letterSpacing: '0.02em'
+              }}>
+                Level {userData.level}
+              </div>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: getTextColor(selectedTheme, 'secondary'),
+                fontFamily: "'Quicksand', sans-serif",
+                marginTop: '4px'
+              }}>
+                {getCharacterTitle(userData.level)}
+              </div>
             </div>
           </div>
 
-          <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
+          {/* XP Progress Bar */}
+          <div style={{ margin: '32px 0' }}>
+            <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
+          </div>
+
+          {/* Compact Evolution Stages Grid */}
           <EvolutionStages currentLevel={userData.level} theme={selectedTheme} />
         </GlassCard>
       </motion.div>
