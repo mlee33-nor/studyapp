@@ -1848,8 +1848,8 @@ export default function App() {
             {/* Glow Effect Behind Video */}
             <div style={{
               position: 'absolute',
-              width: '540px',
-              height: '540px',
+              width: '580px',
+              height: '580px',
               background: BACKGROUND_THEMES[selectedTheme].isDark
                 ? 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)'
                 : 'radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 70%)',
@@ -1860,7 +1860,7 @@ export default function App() {
 
             {/* Large Centered Mascot Video */}
             <div style={{ position: 'relative', zIndex: 1 }}>
-              <AstronautCat size={480} level={userData.level} isTimerActive={false} theme={selectedTheme} />
+              <AstronautCat size={520} level={userData.level} isTimerActive={false} theme={selectedTheme} />
             </div>
 
             {/* Level Badge - Tight Below Mascot */}
