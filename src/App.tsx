@@ -1679,15 +1679,15 @@ export default function App() {
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
                             backdropFilter: 'blur(10px)',
                             borderRadius: '12px',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            border: `1px solid ${getBorderColor(selectedTheme)}`,
                             padding: '8px 12px',
                             fontFamily: "'Quicksand', sans-serif",
                             fontSize: '13px',
                             fontWeight: 600,
-                            color: 'white',
+                            color: getTextColor(selectedTheme, 'primary'),
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                             outline: 'none'
                           }}
@@ -1760,9 +1760,9 @@ export default function App() {
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
                           backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          border: `1px solid ${getBorderColor(selectedTheme)}`,
                           borderRadius: '12px',
                           padding: '8px 12px',
                           fontFamily: "'Quicksand', sans-serif",
