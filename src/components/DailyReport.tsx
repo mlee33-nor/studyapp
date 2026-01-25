@@ -1,11 +1,27 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { format, parseISO, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
-import { X, Flame, Clock } from 'lucide-react';
+import { X, Flame, Clock, TrendingUp, Star } from 'lucide-react';
 import { useAnalytics } from '../hooks/useAnalytics';
 import type { CategoryStats as CategoryStatsType } from '../types/stats';
 
 type Theme = 'morning' | 'twilight' | 'golden' | 'midnight';
+
+// Calculate XP earned from session duration
+const calculateXP = (minutes: number): number => {
+  // Base XP: 10 XP per minute
+  // Bonus: +50% for sessions >= 25 min (Pomodoro)
+  // Bonus: +100% for sessions >= 50 min (Deep Work)
+  let xp = minutes * 10;
+
+  if (minutes >= 50) {
+    xp = Math.floor(xp * 2); // Double XP for deep work
+  } else if (minutes >= 25) {
+    xp = Math.floor(xp * 1.5); // 50% bonus for Pomodoro
+  }
+
+  return xp;
+};
 
 // Theme colors helper (same as StatsPage)
 const getThemeColors = (theme: Theme) => {
@@ -198,6 +214,95 @@ export const DailyReport: React.FC<{
         </div>
       </div>
 
+      {/* Focus Intensity Wave Chart */}
+      <div style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        borderRadius: '16px',
+        border: `1px solid ${colors.border}`,
+        padding: '16px',
+        marginBottom: '24px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <TrendingUp size={18} style={{ color: colors.text.primary }} />
+          <h3 style={{ margin: 0, fontSize: 'clamp(0.95rem, 3.5vw, 1.125rem)', fontWeight: 600, color: colors.text.primary }}>
+            Focus Intensity
+          </h3>
+        </div>
+
+        <div style={{ position: 'relative', height: '120px', paddingTop: '10px' }}>
+          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+            <defs>
+              <linearGradient id="focusGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgba(167, 139, 250, 0.6)" />
+                <stop offset="100%" stopColor="rgba(167, 139, 250, 0.05)" />
+              </linearGradient>
+            </defs>
+
+            {/* Generate smooth path for wave chart */}
+            {(() => {
+              const points = sessionsByHour.map((h, i) => ({
+                x: (i / 23) * 100,
+                y: 100 - ((h.minutes / maxMinutes) * 80)
+              }));
+
+              // Create smooth curve path using quadratic bezier
+              let path = `M 0 100 L 0 ${points[0].y}`;
+
+              for (let i = 0; i < points.length - 1; i++) {
+                const curr = points[i];
+                const next = points[i + 1];
+                const midX = (curr.x + next.x) / 2;
+
+                path += ` Q ${curr.x} ${curr.y}, ${midX} ${(curr.y + next.y) / 2}`;
+              }
+
+              const last = points[points.length - 1];
+              path += ` Q ${last.x} ${last.y}, ${last.x} ${last.y}`;
+              path += ` L ${last.x} 100 Z`;
+
+              return (
+                <>
+                  <path
+                    d={path}
+                    fill="url(#focusGradient)"
+                    stroke="rgba(167, 139, 250, 0.8)"
+                    strokeWidth="0.5"
+                  />
+                  {/* Data points */}
+                  {points.map((point, i) => (
+                    sessionsByHour[i].minutes > 0 && (
+                      <circle
+                        key={i}
+                        cx={point.x}
+                        cy={point.y}
+                        r="1"
+                        fill="rgba(139, 92, 246, 1)"
+                      />
+                    )
+                  ))}
+                </>
+              );
+            })()}
+          </svg>
+
+          {/* Time labels */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: '8px',
+            fontSize: '0.65rem',
+            color: colors.text.tertiary
+          }}>
+            <span>12am</span>
+            <span>6am</span>
+            <span>12pm</span>
+            <span>6pm</span>
+            <span>11pm</span>
+          </div>
+        </div>
+      </div>
+
       {/* Hourly Focus Timeline */}
       <div style={{
         background: colors.cardBg,
@@ -210,42 +315,69 @@ export const DailyReport: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
           <Clock size={18} style={{ color: colors.text.primary }} />
           <h3 style={{ margin: 0, fontSize: 'clamp(0.95rem, 3.5vw, 1.125rem)', fontWeight: 600, color: colors.text.primary }}>
-            Focus Timeline
+            24-Hour Distribution
           </h3>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '120px' }}>
-          {sessionsByHour.map(({ hour, minutes, count }) => (
-            <div
-              key={hour}
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '100px' }}>
+          {sessionsByHour.map(({ hour, minutes, count }) => {
+            // Get category colors for this hour
+            const hourSessions = daySessions.filter(s => {
+              const sessionHour = new Date(s.date).getHours();
+              return sessionHour === hour;
+            });
+            const hourColors = Array.from(new Set(hourSessions.map(s => s.themeColor)));
+
+            return (
               <div
+                key={hour}
                 style={{
-                  width: '100%',
-                  height: `${(minutes / maxMinutes) * 100}%`,
-                  background: minutes > 0
-                    ? 'linear-gradient(180deg, rgba(167, 139, 250, 0.8), rgba(139, 92, 246, 0.8))'
-                    : colors.heatmap.empty,
-                  borderRadius: '4px 4px 0 0',
-                  minHeight: '2px',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px',
                   position: 'relative'
                 }}
                 title={`${hour}:00 - ${minutes}min (${count} sessions)`}
-              />
-              {hour % 3 === 0 && (
-                <span style={{ fontSize: '0.625rem', color: colors.text.tertiary }}>
-                  {hour}
-                </span>
-              )}
-            </div>
-          ))}
+              >
+                <div style={{
+                  width: '100%',
+                  height: `${(minutes / maxMinutes) * 100}%`,
+                  minHeight: minutes > 0 ? '4px' : '2px',
+                  borderRadius: '2px 2px 0 0',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: minutes === 0 ? colors.heatmap.empty : 'transparent'
+                }}>
+                  {/* Multi-category bar */}
+                  {hourColors.length === 1 ? (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: hourColors[0]
+                    }} />
+                  ) : hourColors.length > 1 ? (
+                    hourColors.map((color, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          width: '100%',
+                          height: `${100 / hourColors.length}%`,
+                          background: color
+                        }}
+                      />
+                    ))
+                  ) : null}
+                </div>
+                {hour % 6 === 0 && (
+                  <span style={{ fontSize: '0.55rem', color: colors.text.tertiary }}>
+                    {hour}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -274,39 +406,62 @@ export const DailyReport: React.FC<{
           ) : (
             daySessions
               .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-              .map((session) => (
-                <div
-                  key={session.id}
-                  style={{
-                    background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                    borderRadius: '16px',
-                    padding: '16px',
-                    border: `1px solid ${colors.border}`
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '2rem' }}>{session.emoji}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '1rem', fontWeight: 600, color: colors.text.primary }}>
-                        {session.category}
+              .map((session) => {
+                const xpEarned = calculateXP(session.duration);
+                return (
+                  <div
+                    key={session.id}
+                    style={{
+                      background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      border: `2px solid ${session.themeColor}20`
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <span style={{ fontSize: '2rem', flexShrink: 0 }}>{session.emoji}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <div style={{ fontSize: '1rem', fontWeight: 600, color: colors.text.primary }}>
+                            {session.category}
+                          </div>
+                          <div style={{
+                            background: `${session.themeColor}30`,
+                            padding: '6px 12px',
+                            borderRadius: '10px',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: session.themeColor,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <Clock size={12} />
+                            {session.duration} min
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ fontSize: '0.875rem', color: colors.text.tertiary }}>
+                            {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '0.875rem',
+                            fontWeight: 600,
+                            color: '#FBBF24'
+                          }}>
+                            <Star size={14} fill="#FBBF24" />
+                            +{xpEarned} XP
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '0.875rem', color: colors.text.tertiary, marginTop: '2px' }}>
-                        {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
-                    <div style={{
-                      background: `${session.themeColor}30`,
-                      padding: '8px 16px',
-                      borderRadius: '12px',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      color: session.themeColor
-                    }}>
-                      {session.duration} min
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
           )}
         </div>
       </div>
