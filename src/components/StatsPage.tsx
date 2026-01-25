@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   format,
   startOfMonth,
@@ -8,16 +8,18 @@ import {
   getDay,
   isSameDay,
   startOfYear,
+  endOfYear,
   addMonths,
   subMonths,
   addYears,
   subYears,
-  isToday,
-  parseISO
+  isToday
 } from 'date-fns';
 import { useAnalytics } from '../hooks/useAnalytics';
 import type { ViewMode, DayData, CategoryStats as CategoryStatsType } from '../types/stats';
-import { TrendingUp, Award, Flame, Target, Calendar, Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { TrendingUp, Award, Flame, Target, Calendar, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { DailyReport } from './DailyReport';
+import { CategoryDetail } from './CategoryDetail';
 
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 
@@ -140,11 +142,14 @@ const getIntensity = (minutes: number): number => {
   return 5;
 };
 
+type NavigationView = 'main' | 'daily' | 'category';
+
 export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [navigationView, setNavigationView] = useState<NavigationView>('main');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryStatsType | null>(null);
   const { overallStats, categoryStats } = useAnalytics(viewMode, 60);
 
   const colors = getThemeColors(theme);
@@ -169,6 +174,39 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
     setCurrentDate(new Date());
   };
 
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+    setNavigationView('daily');
+  };
+
+  const handleCategoryClick = (category: CategoryStatsType) => {
+    setSelectedCategory(category);
+    setNavigationView('category');
+  };
+
+  const handleBackToMain = () => {
+    setNavigationView('main');
+    setSelectedDate(null);
+    setSelectedCategory(null);
+  };
+
+  // Render drill-down views
+  if (navigationView === 'daily' && selectedDate) {
+    return <DailyReport date={selectedDate} theme={theme} onClose={handleBackToMain} />;
+  }
+
+  if (navigationView === 'category' && selectedCategory) {
+    return (
+      <CategoryDetail
+        category={selectedCategory}
+        theme={theme}
+        onClose={handleBackToMain}
+        onDateClick={handleDateClick}
+      />
+    );
+  }
+
+  // Main view
   return (
     <div style={{
       minHeight: '100vh',
@@ -177,7 +215,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       padding: '24px 16px 120px',
       fontFamily: "'Quicksand', sans-serif",
       maxHeight: '100vh',
-      overflowY: expandedCategory || selectedDate ? 'hidden' : 'auto'
+      overflowY: 'auto'
     }}>
       {/* Header */}
       <motion.div
@@ -193,7 +231,8 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           background: colors.gradient,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
+          backgroundClip: 'text',
+          textShadow: !colors.isDark ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
         }}>
           Your Progress
         </h1>
@@ -217,14 +256,33 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         />
       )}
 
-      {/* Yearly View: Full Year Heatmap at Top */}
+      {/* Yearly View: Comprehensive High-Density View */}
       {viewMode === 'yearly' && (
-        <YearlyHeatmap
-          yearlyData={overallStats.yearlyData}
-          currentDate={currentDate}
-          colors={colors}
-          onDateClick={(date) => setSelectedDate(date)}
-        />
+        <>
+          {/* Overall Yearly Heatmap */}
+          <YearlyHeatmap
+            yearlyData={overallStats.yearlyData}
+            currentDate={currentDate}
+            colors={colors}
+            onDateClick={handleDateClick}
+          />
+
+          {/* Per-Category Yearly Heatmaps */}
+          {categoryStats.length > 0 && (
+            <CategoryYearlyHeatmaps
+              categoryStats={categoryStats}
+              colors={colors}
+              onDateClick={handleDateClick}
+              onCategoryClick={handleCategoryClick}
+            />
+          )}
+
+          {/* Yearly Summary Stats */}
+          <YearlySummaryStats
+            overallStats={overallStats}
+            colors={colors}
+          />
+        </>
       )}
 
       {/* Overall Dashboard */}
@@ -233,49 +291,18 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           stats={overallStats}
           currentDate={currentDate}
           colors={colors}
-          onDateClick={(date) => setSelectedDate(date)}
+          onDateClick={handleDateClick}
         />
       )}
 
-      {/* Category Habit Cards with Interactive Heatmaps */}
+      {/* Category Habit Cards (Colorful, Clean Design) */}
       {(viewMode === 'weekly' || viewMode === 'monthly') && categoryStats.length > 0 && (
         <CategoryHabitCards
           categoryStats={categoryStats}
           colors={colors}
-          expandedCategory={expandedCategory}
-          setExpandedCategory={setExpandedCategory}
-          currentDate={currentDate}
-          onDateClick={(date, categoryId) => {
-            setExpandedCategory(categoryId);
-            setSelectedDate(date);
-          }}
+          onCategoryClick={handleCategoryClick}
         />
       )}
-
-      {/* Expanded Category Heatmap Modal */}
-      <AnimatePresence>
-        {expandedCategory && (
-          <CategoryHeatmapModal
-            category={categoryStats.find(c => c.categoryId === expandedCategory)!}
-            colors={colors}
-            onClose={() => setExpandedCategory(null)}
-            onDateClick={(date) => setSelectedDate(date)}
-            currentDate={currentDate}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Daily Detail Drill-Down Modal */}
-      <AnimatePresence>
-        {selectedDate && (
-          <DailyDetailModal
-            date={selectedDate}
-            categoryId={expandedCategory}
-            colors={colors}
-            onClose={() => setSelectedDate(null)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -737,11 +764,8 @@ const MonthlyCalendarHeatmap: React.FC<{
 const CategoryHabitCards: React.FC<{
   categoryStats: CategoryStatsType[];
   colors: ReturnType<typeof getThemeColors>;
-  expandedCategory: string | null;
-  setExpandedCategory: (id: string | null) => void;
-  currentDate: Date;
-  onDateClick: (date: Date, categoryId: string) => void;
-}> = ({ categoryStats, colors, setExpandedCategory }) => {
+  onCategoryClick: (category: CategoryStatsType) => void;
+}> = ({ categoryStats, colors, onCategoryClick }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -765,7 +789,7 @@ const CategoryHabitCards: React.FC<{
             category={cat}
             delay={index * 0.05}
             colors={colors}
-            onExpand={() => setExpandedCategory(cat.categoryId)}
+            onClick={() => onCategoryClick(cat)}
           />
         ))}
       </div>
@@ -778,8 +802,8 @@ const CategoryCard: React.FC<{
   category: CategoryStatsType;
   delay: number;
   colors: ReturnType<typeof getThemeColors>;
-  onExpand: () => void;
-}> = ({ category, delay, colors, onExpand }) => {
+  onClick: () => void;
+}> = ({ category, delay, colors, onClick }) => {
   const hours = Math.floor(category.totalMinutes / 60);
   const minutes = category.totalMinutes % 60;
 
@@ -789,13 +813,14 @@ const CategoryCard: React.FC<{
       animate={{ opacity: 1, x: 0 }}
       transition={{ ...SOFT_SPRING, delay }}
       whileHover={{ scale: 1.02 }}
-      onClick={onExpand}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
       style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '20px',
-        border: `1px solid ${colors.border}`,
+        border: `2px solid ${category.themeColor}40`,
         padding: '20px',
         cursor: 'pointer'
       }}
@@ -825,7 +850,7 @@ const CategoryCard: React.FC<{
         </div>
       </div>
 
-      {/* Progress Bar - Clickable to expand */}
+      {/* Progress Bar */}
       <div style={{ marginBottom: '16px' }}>
         <div style={{
           display: 'flex',
@@ -834,14 +859,17 @@ const CategoryCard: React.FC<{
           fontSize: '0.75rem',
           color: colors.text.tertiary
         }}>
-          <span>Tap to view detailed heatmap →</span>
-          <span>{Math.round(category.weeklyProgress)}%</span>
+          <span>Weekly Goal (3h)</span>
+          <span style={{ fontWeight: 600, color: category.themeColor }}>
+            {Math.round(category.weeklyProgress)}%
+          </span>
         </div>
         <div style={{
           height: '8px',
           borderRadius: '999px',
           background: colors.heatmap.empty,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          border: `1px solid ${category.themeColor}20`
         }}>
           <motion.div
             initial={{ width: 0 }}
@@ -1035,341 +1063,233 @@ const YearlyHeatmap: React.FC<{
   );
 };
 
-// Category Heatmap Modal
-const CategoryHeatmapModal: React.FC<{
-  category: CategoryStatsType;
+// Category Yearly Heatmaps - Per-Category Yearly View
+const CategoryYearlyHeatmaps: React.FC<{
+  categoryStats: CategoryStatsType[];
   colors: ReturnType<typeof getThemeColors>;
-  onClose: () => void;
   onDateClick: (date: Date) => void;
-  currentDate: Date;
-}> = ({ category, colors, onClose, onDateClick, currentDate }) => {
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  const firstDayOfWeek = getDay(monthStart);
-
-  const calendarDays = [
-    ...Array(firstDayOfWeek).fill(null),
-    ...daysInMonth
-  ];
-
+  onCategoryClick: (category: CategoryStatsType) => void;
+}> = ({ categoryStats, colors, onDateClick, onCategoryClick }) => {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '20px',
-        overflowY: 'auto'
-      }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...SOFT_SPRING, delay: 0.2 }}
+      style={{ marginBottom: '32px' }}
     >
-      <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: colors.cardBg,
-          backdropFilter: 'blur(20px)',
-          borderRadius: '24px',
-          padding: '32px 24px',
-          border: `1px solid ${colors.border}`,
-          maxWidth: '500px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto'
-        }}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '2rem' }}>{category.emoji}</span>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
-              {category.title}
-            </h2>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: colors.text.secondary
-            }}
-          >
-            <X size={24} />
-          </motion.button>
-        </div>
+      <h2 style={{
+        fontSize: '1.25rem',
+        fontWeight: 600,
+        marginBottom: '16px',
+        color: colors.text.primary
+      }}>
+        Category Activity
+      </h2>
 
-        {/* Category Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '12px',
-          marginBottom: '24px'
-        }}>
-          <div style={{
-            background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-            borderRadius: '12px',
-            padding: '12px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
-              {category.currentStreak}d
-            </div>
-            <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
-              Streak
-            </div>
-          </div>
-          <div style={{
-            background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-            borderRadius: '12px',
-            padding: '12px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
-              {category.bestStreak}d
-            </div>
-            <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
-              Best
-            </div>
-          </div>
-          <div style={{
-            background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-            borderRadius: '12px',
-            padding: '12px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
-              {category.perfectDays}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
-              Days
-            </div>
-          </div>
-        </div>
-
-        {/* Category-Specific Heatmap */}
-        <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '12px', color: colors.text.primary }}>
-          Consistency Calendar
-        </h3>
-
-        {/* Week day labels */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '6px',
-          marginBottom: '6px'
-        }}>
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-            <div key={i} style={{
-              textAlign: 'center',
-              fontSize: '0.75rem',
-              color: colors.text.tertiary,
-              fontWeight: 600
-            }}>
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Heatmap Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '6px'
-        }}>
-          {calendarDays.map((day, index) => {
-            if (!day) {
-              return <div key={`empty-${index}`} />;
-            }
-
-            const dayData = category.monthlyData.find(d => isSameDay(d.date, day));
-            const hasSession = dayData?.hasSession || false;
-            const isTodayDate = isToday(day);
-
-            return (
-              <motion.div
-                key={index}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => hasSession && onDateClick(day)}
-                style={{
-                  aspectRatio: '1',
-                  borderRadius: '8px',
-                  background: hasSession ? `${category.themeColor}CC` : colors.heatmap.empty,
-                  border: isTodayDate
-                    ? `2px solid ${colors.heatmap.currentDayBorder}`
-                    : `1px solid ${hasSession ? category.themeColor : colors.heatmap.emptyBorder}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.75rem',
-                  fontWeight: isTodayDate ? 700 : 500,
-                  color: hasSession ? '#FFFFFF' : colors.text.tertiary,
-                  cursor: hasSession ? 'pointer' : 'default'
-                }}
-              >
-                {format(day, 'd')}
-              </motion.div>
-            );
-          })}
-        </div>
-      </motion.div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {categoryStats.map((category, index) => (
+          <CategoryYearlyCard
+            key={category.categoryId}
+            category={category}
+            colors={colors}
+            delay={index * 0.05}
+            onDateClick={onDateClick}
+            onCategoryClick={() => onCategoryClick(category)}
+          />
+        ))}
+      </div>
     </motion.div>
   );
 };
 
-// Daily Detail Modal
-const DailyDetailModal: React.FC<{
-  date: Date;
-  categoryId: string | null;
+// Category Yearly Card
+const CategoryYearlyCard: React.FC<{
+  category: CategoryStatsType;
   colors: ReturnType<typeof getThemeColors>;
-  onClose: () => void;
-}> = ({ date, categoryId, colors, onClose }) => {
-  const { sessions } = useAnalytics('monthly', 60);
+  delay: number;
+  onDateClick: (date: Date) => void;
+  onCategoryClick: () => void;
+}> = ({ category, colors, delay, onDateClick, onCategoryClick }) => {
+  const yearStart = startOfYear(new Date());
+  const yearEnd = endOfYear(new Date());
+  const yearlyDays = eachDayOfInterval({ start: yearStart, end: yearEnd });
 
-  const daySessions = sessions.filter(s =>
-    isSameDay(parseISO(s.date), date) &&
-    (!categoryId || s.categoryId === categoryId)
-  );
+  // Build weeks for GitHub-style heatmap
+  const weeks: any[][] = [];
+  let currentWeek: any[] = [];
+  const firstDayOfWeek = getDay(yearStart);
 
-  const totalMinutes = daySessions.reduce((sum, s) => sum + s.duration, 0);
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    currentWeek.push({});
+  }
+
+  yearlyDays.forEach((day) => {
+    const dayData = category.monthlyData.find(d => isSameDay(d.date, day));
+    currentWeek.push({
+      date: day,
+      hasSession: dayData?.hasSession || false,
+      minutes: dayData?.totalMinutes || 0
+    });
+
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+  });
+
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) {
+      currentWeek.push({});
+    }
+    weeks.push(currentWeek);
+  }
+
+  const hours = Math.floor(category.totalMinutes / 60);
+  const minutes = category.totalMinutes % 60;
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ ...SOFT_SPRING, delay }}
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.7)',
-        backdropFilter: 'blur(8px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 2000,
-        padding: '20px',
-        overflowY: 'auto'
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `2px solid ${category.themeColor}40`,
+        padding: '20px'
       }}
     >
+      {/* Header - Clickable to navigate to CategoryDetail */}
       <motion.div
-        initial={{ scale: 0.9, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 20 }}
-        onClick={(e) => e.stopPropagation()}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        onClick={onCategoryClick}
         style={{
-          background: colors.cardBg,
-          backdropFilter: 'blur(20px)',
-          borderRadius: '24px',
-          padding: '32px 24px',
-          border: `1px solid ${colors.border}`,
-          maxWidth: '500px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto'
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '16px',
+          cursor: 'pointer'
         }}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
-              {format(date, 'MMMM d, yyyy')}
-            </h2>
-            <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: colors.text.tertiary }}>
-              {totalMinutes} minutes · {daySessions.length} sessions
-            </p>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: colors.text.secondary
-            }}
-          >
-            <X size={24} />
-          </motion.button>
+        <div style={{
+          fontSize: '2rem',
+          width: '48px',
+          height: '48px',
+          borderRadius: '14px',
+          background: `${category.themeColor}20`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: `2px solid ${category.themeColor}60`
+        }}>
+          {category.emoji}
         </div>
-
-        {/* Sessions List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {daySessions.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '48px 24px',
-              color: colors.text.tertiary,
-              fontSize: '0.875rem'
-            }}>
-              No sessions recorded for this day
-            </div>
-          ) : (
-            daySessions.map((session) => (
-              <div
-                key={session.id}
-                style={{
-                  background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                  borderRadius: '16px',
-                  padding: '16px',
-                  border: `1px solid ${colors.border}`
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '2rem' }}>{session.emoji}</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '1rem', fontWeight: 600, color: colors.text.primary }}>
-                      {session.category}
-                    </div>
-                    <div style={{ fontSize: '0.875rem', color: colors.text.tertiary, marginTop: '2px' }}>
-                      {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                  <div style={{
-                    background: `${session.themeColor}30`,
-                    padding: '8px 16px',
-                    borderRadius: '12px',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: session.themeColor
-                  }}>
-                    {session.duration} min
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+        <div style={{ flex: 1 }}>
+          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
+            {category.title}
+          </h3>
+          <p style={{ margin: 0, fontSize: '0.875rem', color: colors.text.tertiary }}>
+            {hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`} · {category.sessionCount} sessions · Tap for details
+          </p>
         </div>
       </motion.div>
+
+      {/* Yearly Heatmap */}
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '4px', minWidth: 'fit-content' }}>
+          {weeks.map((week, weekIndex) => (
+            <div key={weekIndex} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {week.map((day: any, dayIndex: number) => {
+                if (!day.date) {
+                  return <div key={dayIndex} style={{ width: '12px', height: '12px' }} />;
+                }
+
+                const isTodayDate = isToday(day.date);
+
+                return (
+                  <motion.div
+                    key={dayIndex}
+                    whileHover={{ scale: 1.5, zIndex: 10 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => day.hasSession && onDateClick(day.date)}
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '2px',
+                      background: day.hasSession ? `${category.themeColor}CC` : colors.heatmap.empty,
+                      border: isTodayDate
+                        ? `2px solid ${category.themeColor}`
+                        : `1px solid ${day.hasSession ? category.themeColor : colors.heatmap.emptyBorder}`,
+                      cursor: day.hasSession ? 'pointer' : 'default'
+                    }}
+                    title={`${format(day.date, 'MMM d')}: ${day.minutes}min`}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Yearly Summary Stats
+const YearlySummaryStats: React.FC<{
+  overallStats: any;
+  colors: ReturnType<typeof getThemeColors>;
+}> = ({ overallStats, colors }) => {
+  const totalDaysWithSessions = new Set(
+    overallStats.yearlyData.filter((d: any) => d.hasSession).map((d: any) => d.date.toDateString())
+  ).size;
+
+  const totalDaysInYear = overallStats.yearlyData.length;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...SOFT_SPRING, delay: 0.3 }}
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '16px',
+        marginBottom: '32px'
+      }}
+    >
+      <div style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `1px solid ${colors.border}`,
+        padding: '24px',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '2.5rem', fontWeight: 700, color: colors.text.primary }}>
+          {Math.floor(overallStats.totalMinutes / 60)}h
+        </div>
+        <div style={{ fontSize: '0.875rem', color: colors.text.tertiary, marginTop: '4px' }}>
+          Total Study Time
+        </div>
+      </div>
+
+      <div style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `1px solid ${colors.border}`,
+        padding: '24px',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '2.5rem', fontWeight: 700, color: colors.text.primary }}>
+          {totalDaysWithSessions}/{totalDaysInYear}
+        </div>
+        <div style={{ fontSize: '0.875rem', color: colors.text.tertiary, marginTop: '4px' }}>
+          Active Days
+        </div>
+      </div>
     </motion.div>
   );
 };
