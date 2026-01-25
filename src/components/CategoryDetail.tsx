@@ -11,11 +11,13 @@ import {
   startOfMonth,
   endOfMonth,
   addMonths,
-  subMonths
+  subMonths,
+  parseISO
 } from 'date-fns';
 import { X, Flame, Award, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CategoryStats as CategoryStatsType } from '../types/stats';
 import { DailyReport } from './DailyReport';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 type Theme = 'morning' | 'twilight' | 'golden' | 'midnight';
 
@@ -94,6 +96,10 @@ export const CategoryDetail: React.FC<{
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const colors = getThemeColors(theme);
 
+  // Get all sessions for this category
+  const { sessions } = useAnalytics('monthly', 60);
+  const categorySessions = sessions.filter(s => s.categoryId === category.categoryId);
+
   const handlePrevious = () => {
     setCurrentDate(subMonths(currentDate, 1));
   };
@@ -129,7 +135,7 @@ export const CategoryDetail: React.FC<{
   const hours = Math.floor(category.totalMinutes / 60);
   const minutes = category.totalMinutes % 60;
 
-  // Yearly heatmap data
+  // Yearly heatmap data - generate from all sessions for this category
   const yearStart = startOfYear(new Date());
   const yearEnd = endOfYear(new Date());
   const yearlyDays = eachDayOfInterval({ start: yearStart, end: yearEnd });
@@ -143,11 +149,14 @@ export const CategoryDetail: React.FC<{
   }
 
   yearlyDays.forEach((day) => {
-    const dayData = category.monthlyData.find(d => isSameDay(d.date, day));
+    // Find sessions for this day
+    const daySessions = categorySessions.filter(s => isSameDay(parseISO(s.date), day));
+    const dayMinutes = daySessions.reduce((sum, s) => sum + s.duration, 0);
+
     currentWeek.push({
       date: day,
-      hasSession: dayData?.hasSession || false,
-      minutes: dayData?.totalMinutes || 0
+      hasSession: daySessions.length > 0,
+      minutes: dayMinutes
     });
 
     if (currentWeek.length === 7) {
@@ -412,6 +421,7 @@ export const CategoryDetail: React.FC<{
           category={category}
           colors={colors}
           onDateClick={handleDateClick}
+          categorySessions={categorySessions}
         />
       </div>
     </motion.div>
@@ -424,7 +434,8 @@ const MonthlyStreakGrid: React.FC<{
   category: CategoryStatsType;
   colors: ReturnType<typeof getThemeColors>;
   onDateClick: (date: Date) => void;
-}> = ({ currentDate, category, colors, onDateClick }) => {
+  categorySessions: any[];
+}> = ({ currentDate, category, colors, onDateClick, categorySessions }) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -467,8 +478,9 @@ const MonthlyStreakGrid: React.FC<{
             return <div key={`empty-${index}`} />;
           }
 
-          const dayData = category.monthlyData.find(d => isSameDay(d.date, day));
-          const hasSession = dayData?.hasSession || false;
+          // Find sessions for this day
+          const daySessions = categorySessions.filter(s => isSameDay(parseISO(s.date), day));
+          const hasSession = daySessions.length > 0;
           const isTodayDate = isToday(day);
 
           return (
