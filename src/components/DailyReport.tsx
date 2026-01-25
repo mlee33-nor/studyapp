@@ -78,12 +78,16 @@ export const DailyReport: React.FC<{
   date: Date;
   theme: Theme;
   onClose: () => void;
-}> = ({ date, theme, onClose }) => {
+  categoryId?: string; // Optional category filter
+}> = ({ date, theme, onClose, categoryId }) => {
   const { sessions, categoryStats } = useAnalytics('monthly', 60);
   const colors = getThemeColors(theme);
 
-  // Get sessions for this specific date
-  const daySessions = sessions.filter(s => isSameDay(parseISO(s.date), date));
+  // Get sessions for this specific date, optionally filtered by category
+  const daySessions = sessions.filter(s =>
+    isSameDay(parseISO(s.date), date) &&
+    (!categoryId || s.categoryId === categoryId)
+  );
   const totalMinutes = daySessions.reduce((sum, s) => sum + s.duration, 0);
 
   // Group by category

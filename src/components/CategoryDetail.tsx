@@ -15,6 +15,7 @@ import {
 } from 'date-fns';
 import { X, Flame, Award, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CategoryStats as CategoryStatsType } from '../types/stats';
+import { DailyReport } from './DailyReport';
 
 type Theme = 'morning' | 'twilight' | 'golden' | 'midnight';
 
@@ -88,9 +89,9 @@ export const CategoryDetail: React.FC<{
   category: CategoryStatsType;
   theme: Theme;
   onClose: () => void;
-  onDateClick?: (date: Date) => void;
-}> = ({ category, theme, onClose, onDateClick }) => {
+}> = ({ category, theme, onClose }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const colors = getThemeColors(theme);
 
   const handlePrevious = () => {
@@ -104,6 +105,26 @@ export const CategoryDetail: React.FC<{
   const handleToday = () => {
     setCurrentDate(new Date());
   };
+
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date);
+  };
+
+  const handleCloseDailyReport = () => {
+    setSelectedDate(null);
+  };
+
+  // Show DailyReport if a date is selected
+  if (selectedDate) {
+    return (
+      <DailyReport
+        date={selectedDate}
+        theme={theme}
+        onClose={handleCloseDailyReport}
+        categoryId={category.categoryId}
+      />
+    );
+  }
 
   const hours = Math.floor(category.totalMinutes / 60);
   const minutes = category.totalMinutes % 60;
@@ -293,7 +314,7 @@ export const CategoryDetail: React.FC<{
                     key={dayIndex}
                     whileHover={{ scale: 1.5, zIndex: 10 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => day.hasSession && onDateClick && onDateClick(day.date)}
+                    onClick={() => day.hasSession && handleDateClick(day.date)}
                     style={{
                       width: '14px',
                       height: '14px',
@@ -390,7 +411,7 @@ export const CategoryDetail: React.FC<{
           currentDate={currentDate}
           category={category}
           colors={colors}
-          onDateClick={onDateClick}
+          onDateClick={handleDateClick}
         />
       </div>
     </motion.div>
@@ -402,7 +423,7 @@ const MonthlyStreakGrid: React.FC<{
   currentDate: Date;
   category: CategoryStatsType;
   colors: ReturnType<typeof getThemeColors>;
-  onDateClick?: (date: Date) => void;
+  onDateClick: (date: Date) => void;
 }> = ({ currentDate, category, colors, onDateClick }) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -455,7 +476,7 @@ const MonthlyStreakGrid: React.FC<{
               key={index}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => hasSession && onDateClick && onDateClick(day)}
+              onClick={() => hasSession && onDateClick(day)}
               style={{
                 aspectRatio: '1',
                 borderRadius: '8px',

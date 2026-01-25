@@ -207,7 +207,6 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         category={selectedCategory}
         theme={theme}
         onClose={handleBackToMain}
-        onDateClick={handleDateClick}
       />
     );
   }
@@ -399,7 +398,7 @@ const WeeklyCalendarStrip: React.FC<{
               <div style={{
                 width: '48px',
                 height: '48px',
-                borderRadius: '50%',
+                borderRadius: '12px',
                 background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
                 border: isTodayDate
                   ? `3px solid ${colors.headerTextColor}`
@@ -411,55 +410,100 @@ const WeeklyCalendarStrip: React.FC<{
                 fontWeight: isTodayDate ? 700 : 500,
                 color: (hasSession ? '#FFFFFF' : colors.text.tertiary) as string,
                 position: 'relative',
-                overflow: 'hidden',
-                boxShadow: isTodayDate ? `0 0 0 2px ${colors.background}, 0 0 0 4px ${colors.headerTextColor}` : 'none'
+                overflow: 'hidden'
               }}>
                 {/* Pie chart background for multiple categories */}
-                {categoryColors.length > 0 && (
+                {categoryColors.length === 1 ? (
                   <div style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    right: 0,
-                    bottom: 0,
-                    borderRadius: '50%',
-                    overflow: 'hidden'
-                  }}>
-                    {categoryColors.length === 1 ? (
-                      <div style={{
-                        width: '100%',
-                        height: '100%',
-                        background: categoryColors[0] as string
-                      }} />
-                    ) : (
-                      <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
-                        {categoryColors.map((color, i) => {
-                          const segmentAngle = 360 / categoryColors.length;
-                          const startAngle = i * segmentAngle;
-                          const endAngle = startAngle + segmentAngle;
-
-                          const startRad = (startAngle - 90) * Math.PI / 180;
-                          const endRad = (endAngle - 90) * Math.PI / 180;
-
-                          const x1 = 50 + 50 * Math.cos(startRad);
-                          const y1 = 50 + 50 * Math.sin(startRad);
-                          const x2 = 50 + 50 * Math.cos(endRad);
-                          const y2 = 50 + 50 * Math.sin(endRad);
-
-                          const largeArc = segmentAngle > 180 ? 1 : 0;
-
-                          return (
-                            <path
-                              key={i}
-                              d={`M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                              fill={color as string}
-                            />
-                          );
-                        })}
-                      </svg>
-                    )}
-                  </div>
-                )}
+                    width: '100%',
+                    height: '100%',
+                    background: categoryColors[0] as string
+                  }} />
+                ) : categoryColors.length === 2 ? (
+                  <>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '50%',
+                      height: '100%',
+                      background: categoryColors[0] as string
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      width: '50%',
+                      height: '100%',
+                      background: categoryColors[1] as string
+                    }} />
+                  </>
+                ) : categoryColors.length === 3 ? (
+                  <>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '50%',
+                      height: '50%',
+                      background: categoryColors[0] as string
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      width: '50%',
+                      height: '50%',
+                      background: categoryColors[1] as string
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '50%',
+                      background: categoryColors[2] as string
+                    }} />
+                  </>
+                ) : categoryColors.length >= 4 ? (
+                  <>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '50%',
+                      height: '50%',
+                      background: categoryColors[0] as string
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      width: '50%',
+                      height: '50%',
+                      background: categoryColors[1] as string
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      width: '50%',
+                      height: '50%',
+                      background: categoryColors[2] as string
+                    }} />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      width: '50%',
+                      height: '50%',
+                      background: categoryColors[3] as string
+                    }} />
+                  </>
+                ) : null}
 
                 {/* Day number */}
                 <span style={{
