@@ -1498,7 +1498,7 @@ export default function App() {
     );
 
     if (activeTab === 'Reports') {
-      return <StatsPage />;
+      return <StatsPage theme={selectedTheme} />;
     }
 
     if (activeTab === 'Avatar') return (
