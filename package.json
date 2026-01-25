@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://drewpattersonschool.github.io/studybuddy",
+  "homepage": "https://mlee33-nor.github.io/studyapp",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

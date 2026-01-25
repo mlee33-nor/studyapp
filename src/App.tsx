@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
@@ -445,13 +445,13 @@ const InteractiveTimerRing: React.FC<{
   // SVG Constants - Define once for perfect mathematical alignment
   const size = 192;
   const strokeWidth = 5;
-  const cx = size / 2; // Center X coordinate
-  const cy = size / 2; // Center Y coordinate
-  // Radius accounts for stroke width: position handle on centerline of stroke
-  // For stroke to fit within bounds: radius + (strokeWidth/2) <= size/2
-  const radius = (size / 2) - (strokeWidth / 2); // 96 - 2.5 = 93.5
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = (size / 2) - (strokeWidth / 2); // Center of stroke for SVG circle
   const circumference = radius * 2 * Math.PI;
+  const handleRadius = size / 2; // Handle positioned on outer edge of stroke for perfect visual alignment
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const progress = 1 - (timeLeft / totalSeconds);
   const dashOffset = circumference * (1 - progress);
@@ -462,85 +462,88 @@ const InteractiveTimerRing: React.FC<{
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate angle from minutes (0-360 degrees)
+  // Calculate angle from minutes (0-360 degrees, starting at 12 o'clock)
   const angleFromMinutes = (mins: number) => {
-    const normalized = (mins - 5) / (60 - 5); // Map 5-60 to 0-1
-    return normalized * 360 - 90; // -90 to start at top (12 o'clock position)
+    const normalized = (mins - 5) / (60 - 5);
+    return normalized * 360 - 90;
   };
 
-  // POLAR COORDINATE SYSTEM: useMotionValue for angle
-  const angle = useMotionValue(angleFromMinutes(minutes));
+  // PERFECT CIRCLE PATH: Handle position calculated purely from angle
+  // Using handleRadius to position on outer edge of stroke for perfect alignment
+  const handleAngle = angleFromMinutes(minutes);
+  const handleAngleRad = (handleAngle * Math.PI) / 180;
+  const handleX = cx + handleRadius * Math.cos(handleAngleRad);
+  const handleY = cy + handleRadius * Math.sin(handleAngleRad);
 
-  // Update angle when minutes prop changes externally
-  useEffect(() => {
-    angle.set(angleFromMinutes(minutes));
-  }, [minutes, angle]);
-
-  // POLAR TO CARTESIAN TRANSFORMATION: X = cx + R·cos(θ), Y = cy + R·sin(θ)
-  const handleX = useTransform(angle, (angleValue) => {
-    const angleRad = (angleValue * Math.PI) / 180;
-    return cx + radius * Math.cos(angleRad);
-  });
-
-  const handleY = useTransform(angle, (angleValue) => {
-    const angleRad = (angleValue * Math.PI) / 180;
-    return cy + radius * Math.sin(angleRad);
-  });
-
-  // CONSTRAINT PROJECTION: Lock handle to circular path
-  const handleDrag = (_event: any, info: any) => {
-    if (isRunning || !containerRef.current) return;
+  // Calculate minutes from mouse/touch position
+  const updateMinutesFromPosition = (clientX: number, clientY: number) => {
+    if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const containerCenterX = rect.left + rect.width / 2;
     const containerCenterY = rect.top + rect.height / 2;
 
-    // Calculate angle (θ) from center to mouse position using Math.atan2
-    const dx = info.point.x - containerCenterX;
-    const dy = info.point.y - containerCenterY;
-    let theta = Math.atan2(dy, dx) * (180 / Math.PI); // Convert to degrees
+    const dx = clientX - containerCenterX;
+    const dy = clientY - containerCenterY;
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
-    // Normalize angle to 0-360
-    theta = (theta + 90 + 360) % 360;
+    angle = (angle + 90 + 360) % 360;
 
-    // Update the motion value (this will automatically update handleX and handleY via useTransform)
-    angle.set(theta);
-
-    // Map angle to minutes (5-60) and update parent component
-    const normalized = theta / 360; // 0-1
+    const normalized = angle / 360;
     const newMinutes = Math.round(5 + normalized * (60 - 5));
     const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
 
     onMinutesChange(clampedMinutes);
   };
 
-  // ZERO-SCROLL COMPATIBILITY: Prevent page scrolling during drag
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (isRunning) return;
+    setIsDragging(true);
+    updateMinutesFromPosition(e.clientX, e.clientY);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging || isRunning) return;
+    updateMinutesFromPosition(e.clientX, e.clientY);
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+  };
+
   useEffect(() => {
-    const preventScroll = (e: TouchEvent) => {
-      if ((e.target as HTMLElement).closest('[data-draggable-handle]')) {
-        e.preventDefault();
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      if (isDragging && !isRunning) {
+        updateMinutesFromPosition(e.clientX, e.clientY);
       }
     };
 
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    return () => document.removeEventListener('touchmove', preventScroll);
-  }, []);
+    const handleGlobalPointerUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('pointermove', handleGlobalPointerMove);
+      window.addEventListener('pointerup', handleGlobalPointerUp);
+      window.addEventListener('pointercancel', handleGlobalPointerUp);
+    }
+
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerUp);
+    };
+  }, [isDragging, isRunning]);
 
   return (
     <div
       ref={containerRef}
-      style={{
-        position: 'relative',
-        width: size,
-        height: size,
-        margin: '0 auto',
-        touchAction: 'none' // Prevent touch scrolling
-      }}
+      style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
     >
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        {/* Background circle - uses cx, cy, and calculated radius */}
         <circle cx={cx} cy={cy} r={radius} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={strokeWidth} fill="none" />
-        {/* Progress circle - animated stroke offset */}
         <motion.circle
           cx={cx}
           cy={cy}
@@ -561,25 +564,23 @@ const InteractiveTimerRing: React.FC<{
         </defs>
       </svg>
 
-      {/* Draggable Handle - LOCKED TO RING via Polar Coordinates */}
+      {/* Handle - ALWAYS on perfect circle path */}
       {!isRunning && (
         <motion.div
-          drag
-          dragMomentum={false}
-          onDrag={handleDrag}
-          dragElastic={0}
-          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} // Constrain to prevent drift
-          data-draggable-handle="true"
-          style={{
-            position: 'absolute',
+          onPointerDown={handlePointerDown}
+          animate={{
             left: handleX,
             top: handleY,
-            transform: 'translate(-50%, -50%)', // Center the handle on calculated position
-            cursor: 'grab',
-            touchAction: 'none', // Zero-scroll compatibility
+            scale: isDragging ? 1.1 : 1
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          style={{
+            position: 'absolute',
+            transform: 'translate(-50%, -50%)',
+            cursor: isDragging ? 'grabbing' : 'grab',
+            touchAction: 'none',
             pointerEvents: 'auto',
           }}
-          whileTap={{ scale: 1.1, cursor: 'grabbing' }}
         >
           <div style={{
             width: 36,
@@ -604,7 +605,7 @@ const InteractiveTimerRing: React.FC<{
       )}
 
       {/* Center Display */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
         <motion.h1
           key={isRunning ? timeLeft : minutes}
           initial={{ scale: 1 }}
@@ -698,8 +699,8 @@ const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twil
     <div style={{
       display: 'grid',
       gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '12px',
-      marginTop: '16px'
+      gap: '16px',
+      marginTop: '24px'
     }}>
       {stages.map((stage, i) => {
         const isUnlocked = currentLevel >= stage.level;
@@ -711,28 +712,28 @@ const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twil
               background: isUnlocked ? 'rgba(255, 255, 255, 0.5)' : 'rgba(200, 220, 255, 0.2)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              padding: '14px',
-              borderRadius: '16px',
+              padding: '20px',
+              borderRadius: '20px',
               textAlign: 'center',
               boxShadow: isUnlocked ? '0 4px 15px rgba(167, 139, 250, 0.2)' : '0 2px 10px rgba(147, 197, 253, 0.1)',
               opacity: isUnlocked ? 1 : 0.5,
               cursor: isUnlocked ? 'default' : 'not-allowed'
             }}
           >
-            <div style={{ fontSize: '24px', marginBottom: '6px' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>
               {isUnlocked ? stage.emoji : '🔒'}
             </div>
             <div style={{
-              fontSize: '13px',
+              fontSize: '14px',
               fontWeight: 600,
               color: getTextColor(theme, 'primary'),
-              marginBottom: '2px',
+              marginBottom: '4px',
               fontFamily: "'Quicksand', sans-serif"
             }}>
               {stage.name}
             </div>
             <div style={{
-              fontSize: '11px',
+              fontSize: '12px',
               color: getTextColor(theme, 'tertiary'),
               fontFamily: "'Quicksand', sans-serif"
             }}>
@@ -1679,15 +1680,15 @@ export default function App() {
                         </Pie>
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
                             backdropFilter: 'blur(10px)',
                             borderRadius: '12px',
-                            border: `1px solid ${getBorderColor(selectedTheme)}`,
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
                             padding: '8px 12px',
                             fontFamily: "'Quicksand', sans-serif",
                             fontSize: '13px',
                             fontWeight: 600,
-                            color: getTextColor(selectedTheme, 'primary'),
+                            color: 'white',
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                             outline: 'none'
                           }}
@@ -1760,9 +1761,9 @@ export default function App() {
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
                           backdropFilter: 'blur(10px)',
-                          border: `1px solid ${getBorderColor(selectedTheme)}`,
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
                           borderRadius: '12px',
                           padding: '8px 12px',
                           fontFamily: "'Quicksand', sans-serif",
@@ -1822,85 +1823,40 @@ export default function App() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={SOFT_SPRING}
-        style={{ padding: '20px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
+        style={{ padding: '40px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
       >
         <h1 style={{
           fontSize: '1.5rem',
           fontWeight: 500,
           color: getTextColor(selectedTheme, 'primary'),
-          marginBottom: '12px',
+          marginBottom: '32px',
           letterSpacing: '0.05em',
           fontFamily: "'Quicksand', sans-serif"
         }}>
           Your Character
         </h1>
 
-        <GlassCard theme={selectedTheme} style={{ padding: '8px 12px 20px' }}>
-          {/* Hero Mascot Section with Glow Effect - Tight Single Unit */}
+        <GlassCard theme={selectedTheme}>
+          <div style={{ marginBottom: '32px' }}>
+            <AstronautCat size={160} level={userData.level} isTimerActive={false} theme={selectedTheme} />
+          </div>
+
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-            padding: '0',
-            position: 'relative'
+            background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            padding: '12px 24px',
+            borderRadius: '24px',
+            marginBottom: '24px',
+            boxShadow: '0 4px 15px rgba(167, 139, 250, 0.2)',
+            display: 'inline-block'
           }}>
-            {/* Glow Effect Behind Video */}
-            <div style={{
-              position: 'absolute',
-              width: '580px',
-              height: '580px',
-              background: BACKGROUND_THEMES[selectedTheme].isDark
-                ? 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)'
-                : 'radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 70%)',
-              filter: 'blur(60px)',
-              pointerEvents: 'none',
-              zIndex: 0
-            }} />
-
-            {/* Large Centered Mascot Video */}
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <AstronautCat size={520} level={userData.level} isTimerActive={false} theme={selectedTheme} />
-            </div>
-
-            {/* Level Badge - Tight Below Mascot */}
-            <div style={{
-              marginTop: '4px',
-              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              padding: '12px 28px',
-              borderRadius: '24px',
-              boxShadow: '0 4px 20px rgba(167, 139, 250, 0.3)',
-              display: 'inline-block'
-            }}>
-              <div style={{
-                fontSize: '28px',
-                fontWeight: 700,
-                color: getTextColor(selectedTheme, 'primary'),
-                fontFamily: "'Quicksand', sans-serif",
-                letterSpacing: '0.02em'
-              }}>
-                Level {userData.level}
-              </div>
-              <div style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: getTextColor(selectedTheme, 'secondary'),
-                fontFamily: "'Quicksand', sans-serif",
-                marginTop: '4px'
-              }}>
-                {getCharacterTitle(userData.level)}
-              </div>
+            <div style={{ fontSize: '24px', fontWeight: 700, color: getTextColor(selectedTheme, 'primary'), fontFamily: "'Quicksand', sans-serif" }}>
+              Level {userData.level}
             </div>
           </div>
 
-          {/* XP Progress Bar - Compact Spacing */}
-          <div style={{ margin: '12px 0 12px' }}>
-            <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
-          </div>
-
-          {/* Compact Evolution Stages Grid */}
+          <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
           <EvolutionStages currentLevel={userData.level} theme={selectedTheme} />
         </GlassCard>
       </motion.div>
