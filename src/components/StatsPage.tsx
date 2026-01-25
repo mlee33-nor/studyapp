@@ -4,6 +4,8 @@ import {
   format,
   startOfMonth,
   endOfMonth,
+  startOfWeek,
+  endOfWeek,
   eachDayOfInterval,
   getDay,
   isSameDay,
@@ -32,6 +34,7 @@ const getThemeColors = (theme: Theme) => {
       background: '#FFFFFF',
       cardBg: 'rgba(255, 255, 255, 0.8)',
       border: 'rgba(100, 116, 139, 0.15)',
+      headerTextColor: '#000000',  // Solid black for morning theme
       text: {
         primary: 'rgba(15, 23, 42, 0.95)',
         secondary: 'rgba(51, 65, 85, 0.8)',
@@ -57,6 +60,7 @@ const getThemeColors = (theme: Theme) => {
       background: '#0A0A0A',
       cardBg: 'rgba(26, 26, 26, 0.95)',
       border: 'rgba(255, 255, 255, 0.1)',
+      headerTextColor: '#FFFFFF',  // White for twilight theme
       text: {
         primary: 'rgba(255, 255, 255, 0.95)',
         secondary: 'rgba(255, 255, 255, 0.7)',
@@ -82,6 +86,7 @@ const getThemeColors = (theme: Theme) => {
       background: '#0A0A0A',
       cardBg: 'rgba(26, 26, 26, 0.95)',
       border: 'rgba(255, 255, 255, 0.1)',
+      headerTextColor: '#FFFFFF',  // White for golden theme
       text: {
         primary: 'rgba(255, 255, 255, 0.95)',
         secondary: 'rgba(255, 255, 255, 0.7)',
@@ -107,6 +112,7 @@ const getThemeColors = (theme: Theme) => {
       background: '#0A0A0A',
       cardBg: 'rgba(26, 26, 26, 0.95)',
       border: 'rgba(255, 255, 255, 0.1)',
+      headerTextColor: '#FFFFFF',  // White for midnight theme
       text: {
         primary: 'rgba(255, 255, 255, 0.95)',
         secondary: 'rgba(255, 255, 255, 0.7)',
@@ -228,10 +234,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           fontSize: '2rem',
           fontWeight: 700,
           margin: '0 0 8px 0',
-          background: colors.gradient,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
+          color: colors.headerTextColor,
           textShadow: !colors.isDark ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
         }}>
           Your Progress
@@ -285,6 +288,16 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         </>
       )}
 
+      {/* Weekly View: 7-Day Calendar Strip */}
+      {viewMode === 'weekly' && (
+        <WeeklyCalendarStrip
+          currentDate={currentDate}
+          colors={colors}
+          stats={overallStats}
+          onDateClick={handleDateClick}
+        />
+      )}
+
       {/* Overall Dashboard */}
       {viewMode === 'monthly' && (
         <OverallDashboard
@@ -304,6 +317,164 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         />
       )}
     </div>
+  );
+};
+
+// Weekly Calendar Strip Component
+const WeeklyCalendarStrip: React.FC<{
+  currentDate: Date;
+  colors: ReturnType<typeof getThemeColors>;
+  stats: any;
+  onDateClick: (date: Date) => void;
+}> = ({ colors, stats, onDateClick }) => {
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 0 }); // Sunday
+  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 0 });
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SOFT_SPRING}
+      style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `1px solid ${colors.border}`,
+        padding: '20px',
+        marginBottom: '24px'
+      }}
+    >
+      <h2 style={{
+        fontSize: '1.25rem',
+        fontWeight: 600,
+        marginBottom: '16px',
+        color: colors.text.primary
+      }}>
+        This Week
+      </h2>
+
+      {/* Week day labels and squares */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, 1fr)',
+        gap: '12px'
+      }}>
+        {weekDays.map((day, index) => {
+          const dayData = stats.monthlyData.find((d: DayData) => isSameDay(d.date, day));
+          const hasSession = dayData?.hasSession || false;
+          const isTodayDate = isToday(day);
+
+          // Get category colors for this day
+          const categoryColors = dayData && dayData.sessions.length > 0
+            ? Array.from(new Set(dayData.sessions.map((s: any) => s.themeColor)))
+            : [];
+
+          return (
+            <motion.div
+              key={index}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => hasSession && onDateClick(day)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: hasSession ? 'pointer' : 'default'
+              }}
+            >
+              {/* Day label */}
+              <div style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: isTodayDate ? colors.headerTextColor : colors.text.tertiary,
+                textTransform: 'uppercase'
+              }}>
+                {format(day, 'EEE')[0]}
+              </div>
+
+              {/* Day square with pie chart */}
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
+                border: isTodayDate
+                  ? `3px solid ${colors.headerTextColor}`
+                  : `2px solid ${hasSession ? 'transparent' : colors.heatmap.emptyBorder}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1rem',
+                fontWeight: isTodayDate ? 700 : 500,
+                color: (hasSession ? '#FFFFFF' : colors.text.tertiary) as string,
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: isTodayDate ? `0 0 0 2px ${colors.background}, 0 0 0 4px ${colors.headerTextColor}` : 'none'
+              }}>
+                {/* Pie chart background for multiple categories */}
+                {categoryColors.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    borderRadius: '50%',
+                    overflow: 'hidden'
+                  }}>
+                    {categoryColors.length === 1 ? (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        background: categoryColors[0] as string
+                      }} />
+                    ) : (
+                      <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
+                        {categoryColors.map((color, i) => {
+                          const segmentAngle = 360 / categoryColors.length;
+                          const startAngle = i * segmentAngle;
+                          const endAngle = startAngle + segmentAngle;
+
+                          const startRad = (startAngle - 90) * Math.PI / 180;
+                          const endRad = (endAngle - 90) * Math.PI / 180;
+
+                          const x1 = 50 + 50 * Math.cos(startRad);
+                          const y1 = 50 + 50 * Math.sin(startRad);
+                          const x2 = 50 + 50 * Math.cos(endRad);
+                          const y2 = 50 + 50 * Math.sin(endRad);
+
+                          const largeArc = segmentAngle > 180 ? 1 : 0;
+
+                          return (
+                            <path
+                              key={i}
+                              d={`M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                              fill={color as string}
+                            />
+                          );
+                        })}
+                      </svg>
+                    )}
+                  </div>
+                )}
+
+                {/* Day number */}
+                <span style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  textShadow: hasSession ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none'
+                }}>
+                  {format(day, 'd')}
+                </span>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    </motion.div>
   );
 };
 
@@ -692,19 +863,9 @@ const MonthlyCalendarHeatmap: React.FC<{
           const isTodayDate = isToday(day);
 
           // Get category colors for this day
-          let dayColor = colors.heatmap.empty;
-          if (dayData && dayData.sessions.length > 0) {
-            // Get unique category colors for this day
-            const categoryColors = Array.from(new Set(dayData.sessions.map(s => s.themeColor)));
-
-            if (categoryColors.length === 1) {
-              // Single category - use its color
-              dayColor = categoryColors[0];
-            } else {
-              // Multiple categories - create gradient
-              dayColor = `linear-gradient(135deg, ${categoryColors.slice(0, 3).join(', ')})`;
-            }
-          }
+          const categoryColors = dayData && dayData.sessions.length > 0
+            ? Array.from(new Set(dayData.sessions.map(s => s.themeColor)))
+            : [];
 
           return (
             <motion.div
@@ -715,7 +876,7 @@ const MonthlyCalendarHeatmap: React.FC<{
               style={{
                 aspectRatio: '1',
                 borderRadius: '12px',
-                background: dayColor,
+                background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
                 border: isTodayDate
                   ? `2px solid ${colors.heatmap.currentDayBorder}`
                   : `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
@@ -727,10 +888,66 @@ const MonthlyCalendarHeatmap: React.FC<{
                 color: intensity > 0 ? '#FFFFFF' : colors.text.tertiary,
                 position: 'relative',
                 cursor: hasSession ? 'pointer' : 'default',
-                textShadow: intensity > 0 ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
+                overflow: 'hidden'
               }}
             >
-              {format(day, 'd')}
+              {/* Pie chart background for multiple categories */}
+              {categoryColors.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  borderRadius: '12px',
+                  overflow: 'hidden'
+                }}>
+                  {categoryColors.length === 1 ? (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: categoryColors[0]
+                    }} />
+                  ) : (
+                    <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
+                      {categoryColors.map((color, i) => {
+                        const segmentAngle = 360 / categoryColors.length;
+                        const startAngle = i * segmentAngle;
+                        const endAngle = startAngle + segmentAngle;
+
+                        const startRad = (startAngle - 90) * Math.PI / 180;
+                        const endRad = (endAngle - 90) * Math.PI / 180;
+
+                        const x1 = 50 + 50 * Math.cos(startRad);
+                        const y1 = 50 + 50 * Math.sin(startRad);
+                        const x2 = 50 + 50 * Math.cos(endRad);
+                        const y2 = 50 + 50 * Math.sin(endRad);
+
+                        const largeArc = segmentAngle > 180 ? 1 : 0;
+
+                        return (
+                          <path
+                            key={i}
+                            d={`M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArc} 1 ${x2} ${y2} Z`}
+                            fill={color}
+                          />
+                        );
+                      })}
+                    </svg>
+                  )}
+                </div>
+              )}
+
+              {/* Day number */}
+              <span style={{
+                position: 'relative',
+                zIndex: 1,
+                textShadow: intensity > 0 ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none'
+              }}>
+                {format(day, 'd')}
+              </span>
+
+              {/* Perfect day indicator */}
               {dayData?.isPerfectDay && (
                 <div style={{
                   position: 'absolute',
@@ -739,38 +956,13 @@ const MonthlyCalendarHeatmap: React.FC<{
                   width: '6px',
                   height: '6px',
                   borderRadius: '50%',
-                  background: '#10B981'
+                  background: '#10B981',
+                  zIndex: 2
                 }} />
               )}
             </motion.div>
           );
         })}
-      </div>
-
-      {/* Heatmap Legend */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        marginTop: '16px',
-        fontSize: '0.75rem',
-        color: colors.text.tertiary,
-        justifyContent: 'center'
-      }}>
-        <span>Less</span>
-        {[0, 1, 2, 3, 4, 5].map(level => (
-          <div
-            key={level}
-            style={{
-              width: '14px',
-              height: '14px',
-              borderRadius: '3px',
-              background: level === 0 ? colors.heatmap.empty : colors.heatmap.levels[level - 1],
-              border: `1px solid ${level === 0 ? colors.heatmap.emptyBorder : 'transparent'}`
-            }}
-          />
-        ))}
-        <span>More</span>
       </div>
     </div>
   );
@@ -1028,16 +1220,9 @@ const YearlyHeatmap: React.FC<{
               const isTodayDate = isToday(day.date);
 
               // Get category colors for this day
-              let dayColor = colors.heatmap.empty;
-              if (day.sessions && day.sessions.length > 0) {
-                const categoryColors = Array.from(new Set(day.sessions.map(s => s.themeColor)));
-
-                if (categoryColors.length === 1) {
-                  dayColor = categoryColors[0];
-                } else {
-                  dayColor = `linear-gradient(135deg, ${categoryColors.slice(0, 3).join(', ')})`;
-                }
-              }
+              const categoryColors = day.sessions && day.sessions.length > 0
+                ? Array.from(new Set(day.sessions.map(s => s.themeColor)))
+                : [];
 
               return (
                 <motion.div
@@ -1049,14 +1234,109 @@ const YearlyHeatmap: React.FC<{
                     width: '14px',
                     height: '14px',
                     borderRadius: '3px',
-                    background: dayColor,
+                    background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
                     border: isTodayDate
                       ? `2px solid ${colors.heatmap.currentDayBorder}`
                       : `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
-                    cursor: day.hasSession ? 'pointer' : 'default'
+                    cursor: day.hasSession ? 'pointer' : 'default',
+                    position: 'relative',
+                    overflow: 'hidden'
                   }}
                   title={`${format(day.date, 'MMM d')}: ${day.totalMinutes}min`}
-                />
+                >
+                  {/* Pie chart for multiple categories */}
+                  {categoryColors.length === 1 ? (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      background: categoryColors[0]
+                    }} />
+                  ) : categoryColors.length === 2 ? (
+                    <>
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '50%',
+                        height: '100%',
+                        background: categoryColors[0]
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: '50%',
+                        height: '100%',
+                        background: categoryColors[1]
+                      }} />
+                    </>
+                  ) : categoryColors.length === 3 ? (
+                    <>
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '50%',
+                        height: '50%',
+                        background: categoryColors[0]
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: '50%',
+                        height: '50%',
+                        background: categoryColors[1]
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '50%',
+                        background: categoryColors[2]
+                      }} />
+                    </>
+                  ) : categoryColors.length >= 4 ? (
+                    <>
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '50%',
+                        height: '50%',
+                        background: categoryColors[0]
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: '50%',
+                        height: '50%',
+                        background: categoryColors[1]
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        width: '50%',
+                        height: '50%',
+                        background: categoryColors[2]
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        right: 0,
+                        width: '50%',
+                        height: '50%',
+                        background: categoryColors[3]
+                      }} />
+                    </>
+                  ) : null}
+                </motion.div>
               );
             })}
           </div>
