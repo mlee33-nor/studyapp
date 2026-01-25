@@ -406,14 +406,19 @@ const InteractiveTimerRing: React.FC<{
   timeLeft: number;
   totalSeconds: number;
 }> = ({ minutes, onMinutesChange, isRunning, timeLeft, totalSeconds }) => {
-  // SVG Constants - Define once for perfect mathematical alignment
-  const size = 192;
-  const strokeWidth = 5;
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = (size / 2) - (strokeWidth / 2); // Center of stroke for SVG circle
-  const circumference = radius * 2 * Math.PI;
-  const handleRadius = size / 2; // Handle positioned on outer edge of stroke for perfect visual alignment
+  // STRICT MATHEMATICAL ALIGNMENT - Shared Constants
+  // Using viewBox coordinate system for perfect precision
+  const VIEWBOX_SIZE = 100; // Perfect square viewBox
+  const CX = 50; // Exact center X in viewBox coordinates
+  const CY = 50; // Exact center Y in viewBox coordinates
+  const STROKE_WIDTH = 3; // Stroke width in viewBox coordinates
+  const RADIUS = 45; // Circle radius in viewBox coordinates (leaves room for stroke)
+
+  // Physical display size (CSS)
+  const displaySize = 192;
+
+  // Derived values - all use the same RADIUS
+  const circumference = RADIUS * 2 * Math.PI;
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -432,27 +437,34 @@ const InteractiveTimerRing: React.FC<{
     return normalized * 360 - 90;
   };
 
-  // PERFECT CIRCLE PATH: Handle position calculated purely from angle
-  // Using handleRadius to position on outer edge of stroke for perfect alignment
+  // TRIGONOMETRY LOCKING: Handle position uses EXACT formula
+  // handleX = CX + RADIUS * cos(θ)
+  // handleY = CY + RADIUS * sin(θ)
   const handleAngle = angleFromMinutes(minutes);
   const handleAngleRad = (handleAngle * Math.PI) / 180;
-  const handleX = cx + handleRadius * Math.cos(handleAngleRad);
-  const handleY = cy + handleRadius * Math.sin(handleAngleRad);
+  const handleX = CX + RADIUS * Math.cos(handleAngleRad);
+  const handleY = CY + RADIUS * Math.sin(handleAngleRad);
 
   // Calculate minutes from mouse/touch position
+  // Uses strict center calculation with no offsets
   const updateMinutesFromPosition = (clientX: number, clientY: number) => {
     if (!containerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
-    const containerCenterX = rect.left + rect.width / 2;
-    const containerCenterY = rect.top + rect.height / 2;
 
+    // Exact center using the same CX, CY scaled to display size
+    const containerCenterX = rect.left + (CX * scale);
+    const containerCenterY = rect.top + (CY * scale);
+
+    // Calculate angle from center to mouse position
     const dx = clientX - containerCenterX;
     const dy = clientY - containerCenterY;
     let angle = Math.atan2(dy, dx) * (180 / Math.PI);
 
+    // Normalize angle to 0-360 range
     angle = (angle + 90 + 360) % 360;
 
+    // Map angle to minutes (5-60 range)
     const normalized = angle / 360;
     const newMinutes = Math.round(5 + normalized * (60 - 5));
     const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
@@ -499,21 +511,41 @@ const InteractiveTimerRing: React.FC<{
     };
   }, [isDragging, isRunning]);
 
+  // Convert viewBox coordinates to display pixels for handle positioning
+  const scale = displaySize / VIEWBOX_SIZE;
+  const handleXPixels = handleX * scale;
+  const handleYPixels = handleY * scale;
+
   return (
     <div
       ref={containerRef}
-      style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}
+      style={{ position: 'relative', width: displaySize, height: displaySize, margin: '0 auto' }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={cx} cy={cy} r={radius} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={strokeWidth} fill="none" />
+      {/* ViewBox Integrity: Perfect square viewBox with no distortion */}
+      <svg
+        width={displaySize}
+        height={displaySize}
+        viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
+        style={{ transform: 'rotate(-90deg)', display: 'block' }}
+      >
+        {/* Background circle - uses EXACT same CX, CY, RADIUS as handle */}
+        <circle
+          cx={CX}
+          cy={CY}
+          r={RADIUS}
+          stroke="rgba(255, 255, 255, 0.1)"
+          strokeWidth={STROKE_WIDTH}
+          fill="none"
+        />
+        {/* Progress circle - uses EXACT same CX, CY, RADIUS as handle */}
         <motion.circle
-          cx={cx}
-          cy={cy}
-          r={radius}
+          cx={CX}
+          cy={CY}
+          r={RADIUS}
           stroke="url(#lavenderGradient)"
-          strokeWidth={strokeWidth}
+          strokeWidth={STROKE_WIDTH}
           fill="none"
           strokeDasharray={circumference}
           animate={{ strokeDashoffset: isRunning ? dashOffset : 0 }}
@@ -528,13 +560,14 @@ const InteractiveTimerRing: React.FC<{
         </defs>
       </svg>
 
-      {/* Handle - ALWAYS on perfect circle path */}
+      {/* Handle - STRICT MATHEMATICAL ALIGNMENT - NO MANUAL OFFSETS */}
+      {/* Position calculated using: X = CX + RADIUS * cos(θ), Y = CY + RADIUS * sin(θ) */}
       {!isRunning && (
         <motion.div
           onPointerDown={handlePointerDown}
           animate={{
-            left: handleX,
-            top: handleY,
+            left: handleXPixels,
+            top: handleYPixels,
             scale: isDragging ? 1.1 : 1
           }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
