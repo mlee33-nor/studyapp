@@ -156,25 +156,29 @@ export const CategoryDetail: React.FC<{
         background: colors.background,
         zIndex: 3000,
         overflowY: 'auto',
-        padding: '24px 16px 120px',
-        fontFamily: "'Quicksand', sans-serif"
+        padding: '16px',
+        paddingBottom: '100px',
+        fontFamily: "'Quicksand', sans-serif",
+        maxWidth: '100%',
+        boxSizing: 'border-box'
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '2.5rem' }}>{category.emoji}</span>
-          <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 'clamp(2rem, 8vw, 2.5rem)', flexShrink: 0 }}>{category.emoji}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{
-              fontSize: '1.75rem',
+              fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
               fontWeight: 700,
               margin: '0 0 4px 0',
               color: colors.text.primary,
-              textShadow: !colors.isDark ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
+              textShadow: !colors.isDark ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none',
+              wordWrap: 'break-word'
             }}>
               {category.title}
             </h1>
-            <p style={{ margin: 0, color: colors.text.tertiary, fontSize: '0.875rem' }}>
+            <p style={{ margin: 0, color: colors.text.tertiary, fontSize: 'clamp(0.75rem, 3vw, 0.875rem)' }}>
               {hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`} · {category.sessionCount} sessions
             </p>
           </div>
@@ -188,7 +192,8 @@ export const CategoryDetail: React.FC<{
             cursor: 'pointer',
             padding: '8px',
             borderRadius: '8px',
-            color: colors.text.secondary
+            color: colors.text.secondary,
+            flexShrink: 0
           }}
         >
           <X size={24} />
@@ -198,23 +203,23 @@ export const CategoryDetail: React.FC<{
       {/* All-Time Stats */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '12px',
-        marginBottom: '32px'
+        gridTemplateColumns: 'repeat(auto-fit, minmax(90px, 1fr))',
+        gap: '10px',
+        marginBottom: '24px'
       }}>
         <div style={{
           background: colors.cardBg,
           backdropFilter: 'blur(20px)',
-          borderRadius: '16px',
+          borderRadius: '12px',
           border: `1px solid ${colors.border}`,
-          padding: '16px',
+          padding: '12px',
           textAlign: 'center'
         }}>
-          <Flame size={24} style={{ color: category.themeColor, margin: '0 auto 8px' }} />
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
+          <Flame size={20} style={{ color: category.themeColor, margin: '0 auto 6px' }} />
+          <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', fontWeight: 700, color: colors.text.primary }}>
             {category.currentStreak}d
           </div>
-          <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
+          <div style={{ fontSize: 'clamp(0.65rem, 2.5vw, 0.75rem)', color: colors.text.tertiary }}>
             Current Streak
           </div>
         </div>
@@ -222,16 +227,16 @@ export const CategoryDetail: React.FC<{
         <div style={{
           background: colors.cardBg,
           backdropFilter: 'blur(20px)',
-          borderRadius: '16px',
+          borderRadius: '12px',
           border: `1px solid ${colors.border}`,
-          padding: '16px',
+          padding: '12px',
           textAlign: 'center'
         }}>
-          <Award size={24} style={{ color: category.themeColor, margin: '0 auto 8px' }} />
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
+          <Award size={20} style={{ color: category.themeColor, margin: '0 auto 6px' }} />
+          <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', fontWeight: 700, color: colors.text.primary }}>
             {category.bestStreak}d
           </div>
-          <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
+          <div style={{ fontSize: 'clamp(0.65rem, 2.5vw, 0.75rem)', color: colors.text.tertiary }}>
             Best Streak
           </div>
         </div>
@@ -239,16 +244,16 @@ export const CategoryDetail: React.FC<{
         <div style={{
           background: colors.cardBg,
           backdropFilter: 'blur(20px)',
-          borderRadius: '16px',
+          borderRadius: '12px',
           border: `1px solid ${colors.border}`,
-          padding: '16px',
+          padding: '12px',
           textAlign: 'center'
         }}>
-          <TrendingUp size={24} style={{ color: category.themeColor, margin: '0 auto 8px' }} />
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
+          <TrendingUp size={20} style={{ color: category.themeColor, margin: '0 auto 6px' }} />
+          <div style={{ fontSize: 'clamp(1.25rem, 4vw, 1.5rem)', fontWeight: 700, color: colors.text.primary }}>
             {category.perfectDays}
           </div>
-          <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
+          <div style={{ fontSize: 'clamp(0.65rem, 2.5vw, 0.75rem)', color: colors.text.tertiary }}>
             Perfect Days
           </div>
         </div>
@@ -258,16 +263,16 @@ export const CategoryDetail: React.FC<{
       <div style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
-        borderRadius: '20px',
+        borderRadius: '16px',
         border: `1px solid ${colors.border}`,
-        padding: '20px',
-        marginBottom: '32px',
+        padding: '16px',
+        marginBottom: '24px',
         overflowX: 'auto'
       }}>
         <h2 style={{
-          fontSize: '1.25rem',
+          fontSize: 'clamp(1rem, 4vw, 1.25rem)',
           fontWeight: 600,
-          marginBottom: '16px',
+          marginBottom: '12px',
           color: colors.text.primary
         }}>
           {format(new Date(), 'yyyy')} Activity
@@ -312,9 +317,9 @@ export const CategoryDetail: React.FC<{
       <div style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
-        borderRadius: '20px',
+        borderRadius: '16px',
         border: `1px solid ${colors.border}`,
-        padding: '20px'
+        padding: '16px'
       }}>
         {/* Month Navigation */}
         <div style={{

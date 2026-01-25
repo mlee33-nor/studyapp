@@ -124,23 +124,27 @@ export const DailyReport: React.FC<{
         background: colors.background,
         zIndex: 3000,
         overflowY: 'auto',
-        padding: '24px 16px 120px',
-        fontFamily: "'Quicksand', sans-serif"
+        padding: '16px',
+        paddingBottom: '100px',
+        fontFamily: "'Quicksand', sans-serif",
+        maxWidth: '100%',
+        boxSizing: 'border-box'
       }}
     >
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', gap: '12px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <h1 style={{
-            fontSize: '1.75rem',
+            fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
             fontWeight: 700,
             margin: '0 0 4px 0',
             color: colors.text.primary,
-            textShadow: !colors.isDark ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
+            textShadow: !colors.isDark ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none',
+            wordWrap: 'break-word'
           }}>
             {format(date, 'MMMM d, yyyy')}
           </h1>
-          <p style={{ margin: 0, color: colors.text.tertiary, fontSize: '0.875rem' }}>
+          <p style={{ margin: 0, color: colors.text.tertiary, fontSize: 'clamp(0.75rem, 3vw, 0.875rem)' }}>
             {totalMinutes} minutes · {daySessions.length} sessions
           </p>
         </div>
@@ -153,7 +157,8 @@ export const DailyReport: React.FC<{
             cursor: 'pointer',
             padding: '8px',
             borderRadius: '8px',
-            color: colors.text.secondary
+            color: colors.text.secondary,
+            flexShrink: 0
           }}
         >
           <X size={24} />
@@ -161,11 +166,11 @@ export const DailyReport: React.FC<{
       </div>
 
       {/* Category Consistency Heatmaps */}
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: '24px' }}>
         <h2 style={{
-          fontSize: '1.25rem',
+          fontSize: 'clamp(1rem, 4vw, 1.25rem)',
           fontWeight: 600,
-          marginBottom: '16px',
+          marginBottom: '12px',
           color: colors.text.primary
         }}>
           Category Consistency
@@ -193,14 +198,14 @@ export const DailyReport: React.FC<{
       <div style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
-        borderRadius: '20px',
+        borderRadius: '16px',
         border: `1px solid ${colors.border}`,
-        padding: '20px',
-        marginBottom: '32px'
+        padding: '16px',
+        marginBottom: '24px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Clock size={20} style={{ color: colors.text.primary }} />
-          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+          <Clock size={18} style={{ color: colors.text.primary }} />
+          <h3 style={{ margin: 0, fontSize: 'clamp(0.95rem, 3.5vw, 1.125rem)', fontWeight: 600, color: colors.text.primary }}>
             Focus Timeline
           </h3>
         </div>
@@ -244,11 +249,11 @@ export const DailyReport: React.FC<{
       <div style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
-        borderRadius: '20px',
+        borderRadius: '16px',
         border: `1px solid ${colors.border}`,
-        padding: '20px'
+        padding: '16px'
       }}>
-        <h3 style={{ margin: '0 0 16px 0', fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
+        <h3 style={{ margin: '0 0 12px 0', fontSize: 'clamp(0.95rem, 3.5vw, 1.125rem)', fontWeight: 600, color: colors.text.primary }}>
           All Sessions
         </h3>
 

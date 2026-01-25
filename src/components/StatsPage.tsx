@@ -691,6 +691,21 @@ const MonthlyCalendarHeatmap: React.FC<{
           const hasSession = dayData?.hasSession || false;
           const isTodayDate = isToday(day);
 
+          // Get category colors for this day
+          let dayColor = colors.heatmap.empty;
+          if (dayData && dayData.sessions.length > 0) {
+            // Get unique category colors for this day
+            const categoryColors = Array.from(new Set(dayData.sessions.map(s => s.themeColor)));
+
+            if (categoryColors.length === 1) {
+              // Single category - use its color
+              dayColor = categoryColors[0];
+            } else {
+              // Multiple categories - create gradient
+              dayColor = `linear-gradient(135deg, ${categoryColors.slice(0, 3).join(', ')})`;
+            }
+          }
+
           return (
             <motion.div
               key={index}
@@ -700,7 +715,7 @@ const MonthlyCalendarHeatmap: React.FC<{
               style={{
                 aspectRatio: '1',
                 borderRadius: '12px',
-                background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
+                background: dayColor,
                 border: isTodayDate
                   ? `2px solid ${colors.heatmap.currentDayBorder}`
                   : `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
@@ -709,9 +724,10 @@ const MonthlyCalendarHeatmap: React.FC<{
                 justifyContent: 'center',
                 fontSize: '0.875rem',
                 fontWeight: isTodayDate ? 700 : 500,
-                color: intensity > 0 ? (colors.isDark ? '#FFFFFF' : '#FFFFFF') : colors.text.tertiary,
+                color: intensity > 0 ? '#FFFFFF' : colors.text.tertiary,
                 position: 'relative',
-                cursor: hasSession ? 'pointer' : 'default'
+                cursor: hasSession ? 'pointer' : 'default',
+                textShadow: intensity > 0 ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
               }}
             >
               {format(day, 'd')}
@@ -1011,6 +1027,18 @@ const YearlyHeatmap: React.FC<{
               const intensity = getIntensity(day.totalMinutes);
               const isTodayDate = isToday(day.date);
 
+              // Get category colors for this day
+              let dayColor = colors.heatmap.empty;
+              if (day.sessions && day.sessions.length > 0) {
+                const categoryColors = Array.from(new Set(day.sessions.map(s => s.themeColor)));
+
+                if (categoryColors.length === 1) {
+                  dayColor = categoryColors[0];
+                } else {
+                  dayColor = `linear-gradient(135deg, ${categoryColors.slice(0, 3).join(', ')})`;
+                }
+              }
+
               return (
                 <motion.div
                   key={dayIndex}
@@ -1021,7 +1049,7 @@ const YearlyHeatmap: React.FC<{
                     width: '14px',
                     height: '14px',
                     borderRadius: '3px',
-                    background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
+                    background: dayColor,
                     border: isTodayDate
                       ? `2px solid ${colors.heatmap.currentDayBorder}`
                       : `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
