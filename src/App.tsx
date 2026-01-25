@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Check } from 'lucide-react';
+import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { AstronautCat } from './AstronautCat';
+import { StatsPage } from './components/StatsPage';
+import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
+import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
 const getDarkMode = () => {
@@ -110,44 +111,7 @@ const saveSession = (category: string, duration: number) => {
   return newSession;
 };
 
-// --- CHART DATA HELPERS ---
-const getTimeDistributionForDate = (history: FocusSession[], date: Date) => {
-  const daysSessions = history.filter(session => isSameDay(parseISO(session.date), date));
-  const categoryMap: { [key: string]: number } = {};
-  daysSessions.forEach(session => {
-    categoryMap[session.category] = (categoryMap[session.category] || 0) + session.duration;
-  });
-  return Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
-};
-
-const getDailyFocusForDate = (history: FocusSession[], selectedDate: Date) => {
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-  return weekDays.map(day => {
-    const dayTotal = history
-      .filter(session => isSameDay(parseISO(session.date), day))
-      .reduce((sum, session) => sum + session.duration, 0);
-    const isSelected = isSameDay(day, selectedDate);
-    return {
-      day: format(day, 'EEE'),
-      minutes: dayTotal,
-      isSelected
-    };
-  });
-};
-
-const getCalendarData = (history: FocusSession[]) => {
-  const monthStart = startOfMonth(new Date());
-  const monthEnd = endOfMonth(new Date());
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  return daysInMonth.map(day => ({
-    date: day,
-    day: format(day, 'd'),
-    hasSession: history.some(session => isSameDay(parseISO(session.date), day))
-  }));
-};
+// --- CHART DATA HELPERS (removed - replaced by new stats system) ---
 
 // --- GAME LOGIC ---
 const calculateXpForLevel = (level: number) => {
@@ -813,7 +777,8 @@ const CategorySelectionModal: React.FC<{
   onSelectCategory: (category: string) => void;
 }> = ({ isOpen, onClose, onSelectCategory }) => {
   const [customInput, setCustomInput] = useState('');
-  const predefinedCategories = ['Accounting', 'Algebra', 'Science', 'Coding'];
+  const [allCategories] = useState<StudyCategory[]>(getCategories());
+  const [recentCategories] = useState<StudyCategory[]>(getRecentCategories());
 
   if (!isOpen) return null;
 
@@ -825,11 +790,16 @@ const CategorySelectionModal: React.FC<{
   const handleBeginSession = () => {
     if (customInput.trim()) {
       onSelectCategory(customInput.trim());
-    } else if (predefinedCategories.length > 0) {
-      onSelectCategory(predefinedCategories[0]);
+    } else if (recentCategories.length > 0) {
+      onSelectCategory(recentCategories[0].title);
     }
     setCustomInput('');
   };
+
+  // Display recent categories (last 4 used) or first 4 predefined if no history
+  const displayCategories = recentCategories.length > 0
+    ? recentCategories
+    : allCategories.slice(0, 4);
 
   return (
     <motion.div
@@ -885,26 +855,26 @@ const CategorySelectionModal: React.FC<{
           What are we focusing on?
         </h2>
 
-        {/* Quick Select Chips */}
+        {/* Quick Select Chips with Emojis */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '12px',
           marginBottom: '24px',
         }}>
-          {predefinedCategories.map((category) => (
+          {displayCategories.map((category) => (
             <motion.button
-              key={category}
+              key={category.id}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => handleCategoryClick(category)}
+              onClick={() => handleCategoryClick(category.title)}
               style={{
                 background: customInput === ''
-                  ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.6) 0%, rgba(139, 92, 246, 0.6) 100%)'
+                  ? `linear-gradient(135deg, ${category.themeColor}99 0%, ${category.accentColor}99 100%)`
                   : 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
+                border: `1px solid ${customInput === '' ? category.themeColor + '66' : 'rgba(255, 255, 255, 0.3)'}`,
                 borderRadius: '20px',
                 padding: '16px 20px',
                 cursor: 'pointer',
@@ -912,11 +882,16 @@ const CategorySelectionModal: React.FC<{
                 fontSize: '15px',
                 fontWeight: 600,
                 fontFamily: "'Quicksand', sans-serif",
-                boxShadow: '0 4px 15px rgba(147, 197, 253, 0.2)',
+                boxShadow: `0 4px 15px ${category.themeColor}33`,
                 transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
               }}
             >
-              {category}
+              <span style={{ fontSize: '1.25rem' }}>{category.emoji}</span>
+              <span>{category.title}</span>
             </motion.button>
           ))}
         </div>
@@ -1030,7 +1005,7 @@ export default function App() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
   const theme = selectedTheme;
 
@@ -1064,13 +1039,6 @@ export default function App() {
       handleCompleteSession();
     }
   }, [timeLeft, isRunning]);
-
-  // Reset selected date when navigating away from Reports tab
-  useEffect(() => {
-    if (activeTab !== 'Reports') {
-      setSelectedDate(null);
-    }
-  }, [activeTab]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -1114,9 +1082,12 @@ export default function App() {
     updateStreak();
     setIsRunning(false);
 
-    // Save session to focusHistory
+    // Save session to both old and enhanced storage
     const savedSession = saveSession(currentCategory || 'Uncategorized', timerMinutes);
     setFocusHistory(prev => [...prev, savedSession]);
+
+    // Also save to enhanced session storage with category metadata
+    saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
 
     // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
     const xpGained = timerMinutes * 10;
@@ -1494,328 +1465,7 @@ export default function App() {
     );
 
     if (activeTab === 'Reports') {
-      const colors = getThemeColors(theme);
-      const calendarData = getCalendarData(focusHistory);
-
-      // Only compute filtered data when a date is selected
-      const timeDistData = selectedDate ? getTimeDistributionForDate(focusHistory, selectedDate) : [];
-      const dailyData = selectedDate ? getDailyFocusForDate(focusHistory, selectedDate) : [];
-
-      const handleDayClick = (day: { date: Date; day: string; hasSession: boolean }) => {
-        if (day.hasSession) {
-          setSelectedDate(day.date);
-        }
-      };
-
-      // GlobalStyles component to permanently remove blue focus boxes
-      const GlobalStyles = () => (
-        <style dangerouslySetInnerHTML={{ __html: `
-          * { -webkit-tap-highlight-color: transparent !important; }
-          *:focus { outline: none !important; }
-          .recharts-wrapper, .recharts-surface { outline: none !important; border: none !important; }
-          svg, svg * { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
-        `}} />
-      );
-
-      return (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={SOFT_SPRING}
-          style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
-        >
-          <GlobalStyles />
-          <h1 style={{
-            fontSize: '1.5rem',
-            fontWeight: 500,
-            color: getTextColor(selectedTheme, 'primary'),
-            marginBottom: '32px',
-            letterSpacing: '0.05em',
-            fontFamily: "'Quicksand', sans-serif"
-          }}>
-            Detailed Report
-          </h1>
-
-          {/* Card 4: Pomodoro Record Calendar Grid (Always visible) */}
-          <GlassCard theme={selectedTheme} style={{ marginBottom: selectedDate ? '20px' : '0' }}>
-            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-              Pomodoro Record ({format(new Date(), 'MMMM yyyy')})
-            </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(7, 1fr)',
-              gap: '8px'
-            }}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} style={{
-                  textAlign: 'center',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: getTextColor(selectedTheme, 'tertiary'),
-                  fontFamily: "'Quicksand', sans-serif",
-                  padding: '8px 0'
-                }}>
-                  {day}
-                </div>
-              ))}
-              {calendarData.map((day, index) => {
-                const isSelected = selectedDate && isSameDay(day.date, selectedDate);
-                return (
-                  <motion.div
-                    key={index}
-                    onClick={() => handleDayClick(day)}
-                    whileHover={{ scale: day.hasSession ? 1.1 : 1 }}
-                    whileTap={{ scale: day.hasSession ? 0.95 : 1 }}
-                    style={{
-                      aspectRatio: '1',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: isSelected
-                        ? colors.primary
-                        : day.hasSession
-                          ? 'rgba(168, 85, 247, 0.4)'
-                          : 'rgba(255, 255, 255, 0.1)',
-                      color: (day.hasSession || isSelected) ? 'white' : getTextColor(selectedTheme, 'tertiary'),
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      fontFamily: "'Quicksand', sans-serif",
-                      position: 'relative',
-                      cursor: day.hasSession ? 'pointer' : 'default',
-                      boxShadow: isSelected
-                        ? '0 0 15px rgba(244, 114, 182, 0.5), 0 0 30px rgba(244, 114, 182, 0.3)'
-                        : day.hasSession
-                          ? '0 2px 10px rgba(168, 85, 247, 0.3)'
-                          : 'none',
-                      outline: 'none',
-                      border: isSelected ? '2px solid rgba(255, 255, 255, 0.8)' : 'none',
-                      WebkitTapHighlightColor: 'transparent',
-                      transition: 'all 0.3s ease'
-                    } as React.CSSProperties}
-                  >
-                    {day.hasSession ? (
-                      <div style={{ position: 'relative' }}>
-                        <Check size={16} strokeWidth={3} />
-                      </div>
-                    ) : (
-                      day.day
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-            {selectedDate && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={SOFT_SPRING}
-                style={{
-                  marginTop: '20px',
-                  padding: '12px 16px',
-                  background: 'rgba(167, 139, 250, 0.1)',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: getTextColor(selectedTheme, 'primary'),
-                  fontFamily: "'Quicksand', sans-serif"
-                }}
-              >
-                📅 Selected: {format(selectedDate, 'MMMM d, yyyy')}
-              </motion.div>
-            )}
-          </GlassCard>
-
-          {/* Card 1: Time Distribution (Only visible when date selected) */}
-          {selectedDate && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={SOFT_SPRING}
-            >
-              <GlassCard theme={selectedTheme} style={{
-                marginBottom: '20px',
-                outline: 'none',
-                WebkitTapHighlightColor: 'transparent'
-              } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-                  Time Distribution - {format(selectedDate, 'MMM d')}
-                </h3>
-                {timeDistData.length === 0 ? (
-                  <div style={{
-                    textAlign: 'center',
-                    padding: '48px 24px',
-                    color: getTextColor(selectedTheme, 'tertiary'),
-                    fontSize: '14px',
-                    fontFamily: "'Quicksand', sans-serif"
-                  }}>
-                    No sessions recorded for this day.
-                  </div>
-                ) : (
-                  <div style={{
-                    outline: 'none',
-                    WebkitTapHighlightColor: 'transparent',
-                    padding: '20px 20px 10px'
-                  }}>
-                    <ResponsiveContainer width="100%" height={360}>
-                      <PieChart>
-                        <Pie
-                          data={timeDistData}
-                          cx="50%"
-                          cy="45%"
-                          labelLine={false}
-                          outerRadius="85%"
-                          paddingAngle={0}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {timeDistData.map((_, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={colors.pastels[index % colors.pastels.length]}
-                              stroke="none"
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: '12px',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            padding: '8px 12px',
-                            fontFamily: "'Quicksand', sans-serif",
-                            fontSize: '13px',
-                            fontWeight: 600,
-                            color: 'white',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                            outline: 'none'
-                          }}
-                          wrapperStyle={{ outline: 'none' }}
-                          formatter={(value: any) => {
-                            if (!value) return '';
-                            const hours = Math.floor(value / 60);
-                            const mins = value % 60;
-                            return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-                          }}
-                        />
-                        <Legend
-                          verticalAlign="bottom"
-                          align="center"
-                          iconType="circle"
-                          wrapperStyle={{
-                            paddingTop: '15px',
-                            fontFamily: "'Quicksand', sans-serif"
-                          }}
-                          formatter={(value: string, entry: any) => (
-                            <span style={{
-                              color: getTextColor(selectedTheme, 'secondary'),
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              fontFamily: "'Quicksand', sans-serif"
-                            }}>
-                              {value}: {entry.payload.value}m
-                            </span>
-                          )}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </GlassCard>
-            </motion.div>
-          )}
-
-          {/* Card 2: Daily Focus (Only visible when date selected) */}
-          {selectedDate && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...SOFT_SPRING, delay: 0.1 }}
-            >
-              <GlassCard theme={selectedTheme} style={{
-                marginBottom: '20px',
-                outline: 'none',
-                WebkitTapHighlightColor: 'transparent'
-              } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-                  Weekly Context - {format(startOfWeek(selectedDate, { weekStartsOn: 0 }), 'MMM d')} to {format(addDays(startOfWeek(selectedDate, { weekStartsOn: 0 }), 6), 'MMM d')}
-                </h3>
-                <div style={{
-                  outline: 'none',
-                  WebkitTapHighlightColor: 'transparent'
-                }}>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={dailyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'} />
-                      <XAxis
-                        dataKey="day"
-                        tick={{ fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
-                      />
-                      <YAxis
-                        tick={{ fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
-                        label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                          borderRadius: '12px',
-                          padding: '8px 12px',
-                          fontFamily: "'Quicksand', sans-serif",
-                          fontSize: '13px',
-                          fontWeight: 600,
-                          color: getTextColor(selectedTheme, 'primary'),
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                          outline: 'none'
-                        }}
-                        cursor={{ fill: 'transparent' }}
-                        wrapperStyle={{ outline: 'none' }}
-                        labelStyle={{ color: getTextColor(selectedTheme, 'primary'), fontWeight: 600 }}
-                      />
-                      <Bar
-                        dataKey="minutes"
-                        fill={colors.primary}
-                        radius={[8, 8, 0, 0]}
-                        isAnimationActive={false}
-                        shape={(props: any) => {
-                          const { x, y, width, height, payload } = props;
-                          const isSelected = payload.isSelected;
-                          const [isHovered, setIsHovered] = React.useState(false);
-
-                          return (
-                            <rect
-                              x={x}
-                              y={y}
-                              width={width}
-                              height={height}
-                              fill={isSelected ? colors.primary : 'rgba(167, 139, 250, 0.4)'}
-                              fillOpacity={isHovered ? 0.8 : 1}
-                              rx={8}
-                              ry={8}
-                              onMouseEnter={() => setIsHovered(true)}
-                              onMouseLeave={() => setIsHovered(false)}
-                              style={{
-                                outline: 'none',
-                                transition: 'fill-opacity 0.2s ease',
-                                cursor: 'pointer'
-                              }}
-                            />
-                          );
-                        }}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </GlassCard>
-            </motion.div>
-          )}
-        </motion.div>
-      );
+      return <StatsPage />;
     }
 
     if (activeTab === 'Avatar') return (
