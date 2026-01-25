@@ -12,7 +12,11 @@ import {
   endOfMonth,
   addMonths,
   subMonths,
-  parseISO
+  parseISO,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
+  subWeeks
 } from 'date-fns';
 import { X, Flame, Award, TrendingUp, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CategoryStats as CategoryStatsType } from '../types/stats';
@@ -90,8 +94,9 @@ const getThemeColors = (theme: Theme) => {
 export const CategoryDetail: React.FC<{
   category: CategoryStatsType;
   theme: Theme;
+  viewMode: 'weekly' | 'monthly' | 'yearly';
   onClose: () => void;
-}> = ({ category, theme, onClose }) => {
+}> = ({ category, theme, viewMode, onClose }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const colors = getThemeColors(theme);
@@ -101,11 +106,19 @@ export const CategoryDetail: React.FC<{
   const categorySessions = sessions.filter(s => s.categoryId === category.categoryId);
 
   const handlePrevious = () => {
-    setCurrentDate(subMonths(currentDate, 1));
+    if (viewMode === 'weekly') {
+      setCurrentDate(subWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(subMonths(currentDate, 1));
+    }
   };
 
   const handleNext = () => {
-    setCurrentDate(addMonths(currentDate, 1));
+    if (viewMode === 'weekly') {
+      setCurrentDate(addWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(addMonths(currentDate, 1));
+    }
   };
 
   const handleToday = () => {
@@ -289,141 +302,229 @@ export const CategoryDetail: React.FC<{
         </div>
       </div>
 
-      {/* Yearly Heatmap */}
-      <div style={{
-        background: colors.cardBg,
-        backdropFilter: 'blur(20px)',
-        borderRadius: '16px',
-        border: `1px solid ${colors.border}`,
-        padding: '16px',
-        marginBottom: '24px',
-        overflowX: 'auto'
-      }}>
-        <h2 style={{
-          fontSize: 'clamp(1rem, 4vw, 1.25rem)',
-          fontWeight: 600,
-          marginBottom: '12px',
-          color: colors.text.primary
-        }}>
-          {format(new Date(), 'yyyy')} Activity
-        </h2>
-
-        <div style={{ display: 'flex', gap: '4px', minWidth: 'fit-content' }}>
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {week.map((day: any, dayIndex: number) => {
-                if (!day.date) {
-                  return <div key={dayIndex} style={{ width: '14px', height: '14px' }} />;
-                }
-
-                const isTodayDate = isToday(day.date);
-
-                return (
-                  <motion.div
-                    key={dayIndex}
-                    whileHover={{ scale: 1.5, zIndex: 10 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => day.hasSession && handleDateClick(day.date)}
-                    style={{
-                      width: '14px',
-                      height: '14px',
-                      borderRadius: '3px',
-                      background: day.hasSession ? `${category.themeColor}CC` : colors.heatmap.empty,
-                      border: isTodayDate
-                        ? `2px solid ${category.themeColor}`
-                        : `1px solid ${day.hasSession ? category.themeColor : colors.heatmap.emptyBorder}`,
-                      cursor: day.hasSession ? 'pointer' : 'default'
-                    }}
-                    title={`${format(day.date, 'MMM d')}: ${day.minutes}min`}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Monthly Streak Calendar */}
-      <div style={{
-        background: colors.cardBg,
-        backdropFilter: 'blur(20px)',
-        borderRadius: '16px',
-        border: `1px solid ${colors.border}`,
-        padding: '16px'
-      }}>
-        {/* Month Navigation */}
+      {/* Yearly Heatmap - Only show in yearly mode */}
+      {viewMode === 'yearly' && (
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '16px'
+          background: colors.cardBg,
+          backdropFilter: 'blur(20px)',
+          borderRadius: '16px',
+          border: `1px solid ${colors.border}`,
+          padding: '16px',
+          marginBottom: '24px',
+          overflowX: 'auto'
         }}>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handlePrevious}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '8px',
-              color: colors.text.secondary
-            }}
-          >
-            <ChevronLeft size={20} />
-          </motion.button>
+          <h2 style={{
+            fontSize: 'clamp(1rem, 4vw, 1.25rem)',
+            fontWeight: 600,
+            marginBottom: '12px',
+            color: colors.text.primary
+          }}>
+            {format(new Date(), 'yyyy')} Activity
+          </h2>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Clock size={20} style={{ color: category.themeColor }} />
-            <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
-              {format(currentDate, 'MMMM yyyy')}
-            </h3>
-            {!isSameDay(startOfMonth(currentDate), startOfMonth(new Date())) && (
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={handleToday}
-                style={{
-                  background: `${category.themeColor}30`,
-                  border: 'none',
-                  padding: '4px 10px',
-                  borderRadius: '8px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  color: category.themeColor,
-                  fontFamily: "'Quicksand', sans-serif"
-                }}
-              >
-                Today
-              </motion.button>
-            )}
+          <div style={{ display: 'flex', gap: '2px', minWidth: 'fit-content' }}>
+            {weeks.map((week, weekIndex) => (
+              <div key={weekIndex} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {week.map((day: any, dayIndex: number) => {
+                  if (!day.date) {
+                    return <div key={dayIndex} style={{ width: '9px', height: '9px' }} />;
+                  }
+
+                  const isTodayDate = isToday(day.date);
+
+                  return (
+                    <motion.div
+                      key={dayIndex}
+                      whileHover={{ scale: 1.5, zIndex: 10 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => day.hasSession && handleDateClick(day.date)}
+                      style={{
+                        width: '9px',
+                        height: '9px',
+                        borderRadius: '2px',
+                        background: day.hasSession ? `${category.themeColor}CC` : colors.heatmap.empty,
+                        border: isTodayDate
+                          ? `1.5px solid ${category.themeColor}`
+                          : `0.5px solid ${day.hasSession ? category.themeColor : colors.heatmap.emptyBorder}`,
+                        cursor: day.hasSession ? 'pointer' : 'default'
+                      }}
+                      title={`${format(day.date, 'MMM d')}: ${day.minutes}min`}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Calendar Strip - Only show in weekly mode */}
+      {viewMode === 'weekly' && (
+        <div style={{
+          background: colors.cardBg,
+          backdropFilter: 'blur(20px)',
+          borderRadius: '16px',
+          border: `1px solid ${colors.border}`,
+          padding: '16px'
+        }}>
+          {/* Week Navigation */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '16px'
+          }}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePrevious}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '8px',
+                color: colors.text.secondary
+              }}
+            >
+              <ChevronLeft size={20} />
+            </motion.button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Clock size={20} style={{ color: category.themeColor }} />
+              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
+                Week of {format(startOfWeek(currentDate), 'MMM d')}
+              </h3>
+              {!isSameDay(startOfWeek(currentDate), startOfWeek(new Date())) && (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleToday}
+                  style={{
+                    background: `${category.themeColor}30`,
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    color: category.themeColor,
+                    fontFamily: "'Quicksand', sans-serif"
+                  }}
+                >
+                  Today
+                </motion.button>
+              )}
+            </div>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleNext}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '8px',
+                color: colors.text.secondary
+              }}
+            >
+              <ChevronRight size={20} />
+            </motion.button>
           </div>
 
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={handleNext}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '8px',
-              color: colors.text.secondary
-            }}
-          >
-            <ChevronRight size={20} />
-          </motion.button>
+          {/* 7-Day Calendar Strip */}
+          <WeeklyCalendarStrip
+            currentDate={currentDate}
+            category={category}
+            colors={colors}
+            onDateClick={handleDateClick}
+            categorySessions={categorySessions}
+          />
         </div>
+      )}
 
-        {/* Month Calendar */}
-        <MonthlyStreakGrid
-          currentDate={currentDate}
-          category={category}
-          colors={colors}
-          onDateClick={handleDateClick}
-          categorySessions={categorySessions}
-        />
-      </div>
+      {/* Monthly Streak Calendar - Only show in monthly mode */}
+      {viewMode === 'monthly' && (
+        <div style={{
+          background: colors.cardBg,
+          backdropFilter: 'blur(20px)',
+          borderRadius: '16px',
+          border: `1px solid ${colors.border}`,
+          padding: '16px'
+        }}>
+          {/* Month Navigation */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '16px'
+          }}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handlePrevious}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '8px',
+                color: colors.text.secondary
+              }}
+            >
+              <ChevronLeft size={20} />
+            </motion.button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Clock size={20} style={{ color: category.themeColor }} />
+              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
+                {format(currentDate, 'MMMM yyyy')}
+              </h3>
+              {!isSameDay(startOfMonth(currentDate), startOfMonth(new Date())) && (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleToday}
+                  style={{
+                    background: `${category.themeColor}30`,
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    color: category.themeColor,
+                    fontFamily: "'Quicksand', sans-serif"
+                  }}
+                >
+                  Today
+                </motion.button>
+              )}
+            </div>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleNext}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '8px',
+                color: colors.text.secondary
+              }}
+            >
+              <ChevronRight size={20} />
+            </motion.button>
+          </div>
+
+          {/* Month Calendar */}
+          <MonthlyStreakGrid
+            currentDate={currentDate}
+            category={category}
+            colors={colors}
+            onDateClick={handleDateClick}
+            categorySessions={categorySessions}
+          />
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -511,5 +612,186 @@ const MonthlyStreakGrid: React.FC<{
         })}
       </div>
     </>
+  );
+};
+
+// Weekly Calendar Strip Component
+const WeeklyCalendarStrip: React.FC<{
+  currentDate: Date;
+  category: CategoryStatsType;
+  colors: ReturnType<typeof getThemeColors>;
+  onDateClick: (date: Date) => void;
+  categorySessions: any[];
+}> = ({ currentDate, category, colors, onDateClick, categorySessions }) => {
+  const weekStart = startOfWeek(currentDate);
+  const weekEnd = endOfWeek(currentDate);
+  const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd });
+
+  return (
+    <div style={{
+      display: 'flex',
+      gap: '8px',
+      justifyContent: 'space-around',
+      flexWrap: 'wrap'
+    }}>
+      {weekDays.map((day, index) => {
+        // Find sessions for this day
+        const daySessions = categorySessions.filter(s => isSameDay(parseISO(s.date), day));
+        const hasSession = daySessions.length > 0;
+        const isTodayDate = isToday(day);
+
+        // Get category colors for quadrant display
+        const uniqueCategories = Array.from(new Set(daySessions.map(s => s.categoryId)));
+        const categoryColors = uniqueCategories.map(catId => {
+          const session = daySessions.find(s => s.categoryId === catId);
+          return session?.themeColor || category.themeColor;
+        });
+
+        return (
+          <motion.div
+            key={index}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => hasSession && onDateClick(day)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '6px',
+              flex: '1 1 auto',
+              minWidth: '60px'
+            }}
+          >
+            {/* Day label */}
+            <div style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              color: isTodayDate ? category.themeColor : colors.text.tertiary,
+              textTransform: 'uppercase'
+            }}>
+              {format(day, 'EEE')[0]}
+            </div>
+
+            {/* Day square with quadrant colors */}
+            <div style={{
+              width: 'clamp(40px, 12vw, 56px)',
+              height: 'clamp(40px, 12vw, 56px)',
+              borderRadius: '12px',
+              background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
+              border: isTodayDate
+                ? `3px solid ${category.themeColor}`
+                : `2px solid ${hasSession ? 'transparent' : colors.heatmap.emptyBorder}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+              fontWeight: isTodayDate ? 700 : 500,
+              color: (hasSession ? '#FFFFFF' : colors.text.tertiary) as string,
+              position: 'relative',
+              overflow: 'hidden',
+              cursor: hasSession ? 'pointer' : 'default'
+            }}>
+              {/* Quadrant-based color fill */}
+              {categoryColors.length === 1 ? (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  background: categoryColors[0] as string
+                }} />
+              ) : categoryColors.length === 2 ? (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '100%',
+                    background: categoryColors[0] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '100%',
+                    background: categoryColors[1] as string
+                  }} />
+                </>
+              ) : categoryColors.length === 3 ? (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[0] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[1] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '50%',
+                    background: categoryColors[2] as string
+                  }} />
+                </>
+              ) : categoryColors.length >= 4 ? (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[0] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[1] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[2] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[3] as string
+                  }} />
+                </>
+              ) : null}
+
+              {/* Date number */}
+              <span style={{ position: 'relative', zIndex: 1 }}>
+                {format(day, 'd')}
+              </span>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
   );
 };

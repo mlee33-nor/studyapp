@@ -156,6 +156,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   const [navigationView, setNavigationView] = useState<NavigationView>('main');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryStatsType | null>(null);
+  const [selectedViewMode, setSelectedViewMode] = useState<ViewMode>('monthly');
   const { overallStats, categoryStats } = useAnalytics(viewMode, 60);
 
   const colors = getThemeColors(theme);
@@ -187,6 +188,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
 
   const handleCategoryClick = (category: CategoryStatsType) => {
     setSelectedCategory(category);
+    setSelectedViewMode(viewMode); // Save the current viewMode
     setNavigationView('category');
   };
 
@@ -206,6 +208,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       <CategoryDetail
         category={selectedCategory}
         theme={theme}
+        viewMode={selectedViewMode}
         onClose={handleBackToMain}
       />
     );
@@ -396,8 +399,8 @@ const WeeklyCalendarStrip: React.FC<{
 
               {/* Day square with pie chart */}
               <div style={{
-                width: '48px',
-                height: '48px',
+                width: 'clamp(40px, 12vw, 56px)',
+                height: 'clamp(40px, 12vw, 56px)',
                 borderRadius: '12px',
                 background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
                 border: isTodayDate
@@ -406,7 +409,7 @@ const WeeklyCalendarStrip: React.FC<{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '1rem',
+                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
                 fontWeight: isTodayDate ? 700 : 500,
                 color: (hasSession ? '#FFFFFF' : colors.text.tertiary) as string,
                 position: 'relative',
@@ -935,52 +938,98 @@ const MonthlyCalendarHeatmap: React.FC<{
                 overflow: 'hidden'
               }}
             >
-              {/* Pie chart background for multiple categories */}
-              {categoryColors.length > 0 && (
+              {/* Quadrant-based color fill for categories */}
+              {categoryColors.length === 1 ? (
                 <div style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
-                  right: 0,
-                  bottom: 0,
-                  borderRadius: '12px',
-                  overflow: 'hidden'
-                }}>
-                  {categoryColors.length === 1 ? (
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      background: categoryColors[0]
-                    }} />
-                  ) : (
-                    <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
-                      {categoryColors.map((color, i) => {
-                        const segmentAngle = 360 / categoryColors.length;
-                        const startAngle = i * segmentAngle;
-                        const endAngle = startAngle + segmentAngle;
-
-                        const startRad = (startAngle - 90) * Math.PI / 180;
-                        const endRad = (endAngle - 90) * Math.PI / 180;
-
-                        const x1 = 50 + 50 * Math.cos(startRad);
-                        const y1 = 50 + 50 * Math.sin(startRad);
-                        const x2 = 50 + 50 * Math.cos(endRad);
-                        const y2 = 50 + 50 * Math.sin(endRad);
-
-                        const largeArc = segmentAngle > 180 ? 1 : 0;
-
-                        return (
-                          <path
-                            key={i}
-                            d={`M 50 50 L ${x1} ${y1} A 50 50 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                            fill={color}
-                          />
-                        );
-                      })}
-                    </svg>
-                  )}
-                </div>
-              )}
+                  width: '100%',
+                  height: '100%',
+                  background: categoryColors[0]
+                }} />
+              ) : categoryColors.length === 2 ? (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '100%',
+                    background: categoryColors[0]
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '100%',
+                    background: categoryColors[1]
+                  }} />
+                </>
+              ) : categoryColors.length === 3 ? (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[0]
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[1]
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '50%',
+                    background: categoryColors[2]
+                  }} />
+                </>
+              ) : categoryColors.length >= 4 ? (
+                <>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[0]
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[1]
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[2]
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: '50%',
+                    height: '50%',
+                    background: categoryColors[3]
+                  }} />
+                </>
+              ) : null}
 
               {/* Day number */}
               <span style={{
