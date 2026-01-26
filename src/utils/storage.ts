@@ -158,3 +158,14 @@ export const getWeeklyData = (): number[] => {
 
   return weekData;
 };
+
+// Reset all stats while keeping user settings
+export const resetAllStats = (): UserData => {
+  const currentData = getUserData();
+  const newData: UserData = {
+    ...DEFAULT_USER_DATA,
+    settings: currentData.settings, // Preserve settings
+  };
+  saveUserData(newData);
+  return newData;
+};

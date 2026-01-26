@@ -140,3 +140,18 @@ export const saveEnhancedSession = (categoryTitle: string, duration: number): En
 
   return newSession;
 };
+
+// Reset all sessions and categories
+export const resetAllSessionsAndCategories = () => {
+  // Clear all sessions
+  localStorage.removeItem(ENHANCED_SESSIONS_KEY);
+  localStorage.removeItem('focusHistory');
+
+  // Reset categories to predefined only
+  const initialCategories = PREDEFINED_CATEGORIES.map(cat => ({
+    ...cat,
+    createdAt: new Date().toISOString(),
+    lastUsed: new Date().toISOString()
+  }));
+  saveCategories(initialCategories);
+};
