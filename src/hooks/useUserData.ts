@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { UserData, UserSettings } from '../types';
-import { getUserData, updateSettings as updateStorageSettings, addCompletedSession, resetAllStats as resetStorageStats } from '../utils/storage';
+import { getUserData, updateSettings as updateStorageSettings, addCompletedSession, resetAllStats as resetStorageStats, saveUserData } from '../utils/storage';
 import { resetAllSessionsAndCategories } from '../utils/categoryManager';
 
 interface UseUserDataReturn {
   userData: UserData;
+  setUserData: (data: UserData) => void;
   updateSettings: (settings: Partial<UserSettings>) => void;
   completeSession: (minutes: number) => void;
   refreshData: () => void;
@@ -41,8 +42,14 @@ export const useUserData = (): UseUserDataReturn => {
     setUserData(newData);
   }, []);
 
+  const updateUserDataWrapper = useCallback((data: UserData) => {
+    saveUserData(data);
+    setUserData(data);
+  }, []);
+
   return {
     userData,
+    setUserData: updateUserDataWrapper,
     updateSettings,
     completeSession,
     refreshData,

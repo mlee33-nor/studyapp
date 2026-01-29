@@ -1,11 +1,22 @@
+export interface MeadowAnimal {
+  id: string;
+  lottieUrl: string;
+  x: number;
+  y: number;
+  flipped?: boolean;
+}
+
 export interface UserData {
   totalCompletedSessions: number;
-  currentStage: number;
   dailyStats: DailyStats;
   weeklyStats: WeeklyStats;
   studyStreak: number;
   lastStudyDate: string | null;
   settings: UserSettings;
+  meadowAnimals: MeadowAnimal[];
+  lastResetDate: string | null;
+  // Legacy fields (for compatibility with unused screen files)
+  currentStage: number;
   xp: number;
   level: number;
 }
@@ -32,6 +43,7 @@ export type ThemeColor = 'blue' | 'green' | 'purple' | 'peach' | 'beige';
 
 export type TimerMode = 'study' | 'shortBreak' | 'longBreak';
 
+// Legacy compatibility (not used in main app)
 export interface CharacterStage {
   stage: number;
   name: string;
