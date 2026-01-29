@@ -426,24 +426,20 @@ const InteractiveTimerRing: React.FC<{
   timeLeft: number;
   totalSeconds: number;
 }> = ({ minutes, onMinutesChange, isRunning, timeLeft, totalSeconds }) => {
-  // STRICT MATHEMATICAL ALIGNMENT - Shared Constants
-  // Using viewBox coordinate system for perfect precision
-  const VIEWBOX_SIZE = 100; // Perfect square viewBox
-  const CX = 50; // Exact center X in viewBox coordinates
-  const CY = 50; // Exact center Y in viewBox coordinates
-  const STROKE_WIDTH = 3; // Stroke width in viewBox coordinates
-  const RADIUS = 45; // Circle radius in viewBox coordinates (leaves room for stroke)
+  // === GLOBAL CONSTANTS — Single Source of Truth ===
+  const SVG_SIZE = 100;
+  const CX = SVG_SIZE / 2;
+  const CY = SVG_SIZE / 2;
+  const STROKE_WIDTH = 3;
+  const RADIUS = (SVG_SIZE - STROKE_WIDTH) / 2 - 2; // 45.5 — fits inside viewBox with stroke
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-  // Physical display size (CSS)
   const displaySize = 192;
-
-  // Derived values - all use the same RADIUS
-  const circumference = RADIUS * 2 * Math.PI;
-  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   const progress = 1 - (timeLeft / totalSeconds);
-  const dashOffset = circumference * (1 - progress);
+  const dashOffset = CIRCUMFERENCE * (1 - progress);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -451,50 +447,38 @@ const InteractiveTimerRing: React.FC<{
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate angle from minutes (0-360 degrees, starting at 12 o'clock)
-  const angleFromMinutes = (mins: number) => {
-    const normalized = (mins - 5) / (60 - 5);
-    return normalized * 360 - 90;
-  };
+  // === HANDLE POSITION — Pure Trigonometry ===
+  // Angle: map minutes (5–60) to radians, starting at 12 o'clock (-π/2)
+  const durationFraction = (minutes - 5) / (60 - 5);
+  const handleAngle = durationFraction * 2 * Math.PI - Math.PI / 2;
+  const handleX = CX + RADIUS * Math.cos(handleAngle);
+  const handleY = CY + RADIUS * Math.sin(handleAngle);
 
-  // TRIGONOMETRY LOCKING: Handle position uses EXACT formula
-  // handleX = CX + RADIUS * cos(θ)
-  // handleY = CY + RADIUS * sin(θ)
-  const handleAngle = angleFromMinutes(minutes);
-  const handleAngleRad = (handleAngle * Math.PI) / 180;
-  const handleX = CX + RADIUS * Math.cos(handleAngleRad);
-  const handleY = CY + RADIUS * Math.sin(handleAngleRad);
+  // Handle radius in SVG units (for the visible knob and hit area)
+  const HANDLE_RADIUS = 4.5;
+  const HANDLE_HIT_RADIUS = 8;
 
-  // Calculate minutes from mouse/touch position
-  // Uses strict center calculation with no offsets
+  // === DRAG — Convert screen coords to angle ===
   const updateMinutesFromPosition = (clientX: number, clientY: number) => {
-    if (!containerRef.current) return;
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-    const rect = containerRef.current.getBoundingClientRect();
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    // atan2(dx, -dy) gives clockwise angle from 12 o'clock
+    let angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+    if (angle < 0) angle += 360;
 
-    // Exact center using the same CX, CY scaled to display size
-    const containerCenterX = rect.left + (CX * scale);
-    const containerCenterY = rect.top + (CY * scale);
-
-    // Calculate angle from center to mouse position
-    const dx = clientX - containerCenterX;
-    const dy = clientY - containerCenterY;
-    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
-
-    // Normalize angle to 0-360 range
-    angle = (angle + 90 + 360) % 360;
-
-    // Map angle to minutes (5-60 range)
-    const normalized = angle / 360;
-    const newMinutes = Math.round(5 + normalized * (60 - 5));
-    const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
-
-    onMinutesChange(clampedMinutes);
+    const newMinutes = Math.round((angle / 360) * (60 - 5) + 5);
+    onMinutesChange(Math.max(5, Math.min(60, newMinutes)));
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if (isRunning) return;
     setIsDragging(true);
+    (e.target as Element).setPointerCapture?.(e.pointerId);
     updateMinutesFromPosition(e.clientX, e.clientY);
   };
 
@@ -531,26 +515,29 @@ const InteractiveTimerRing: React.FC<{
     };
   }, [isDragging, isRunning]);
 
-  // Convert viewBox coordinates to display pixels for handle positioning
-  const scale = displaySize / VIEWBOX_SIZE;
-  const handleXPixels = handleX * scale;
-  const handleYPixels = handleY * scale;
-
   return (
     <div
-      ref={containerRef}
       style={{ position: 'relative', width: displaySize, height: displaySize, margin: '0 auto' }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      {/* ViewBox Integrity: Perfect square viewBox with no distortion */}
+      {/* Single SVG — handle lives INSIDE, sharing exact same coordinate space */}
       <svg
+        ref={svgRef}
         width={displaySize}
         height={displaySize}
-        viewBox={`0 0 ${VIEWBOX_SIZE} ${VIEWBOX_SIZE}`}
-        style={{ transform: 'rotate(-90deg)', display: 'block' }}
+        viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
+        overflow="visible"
+        style={{ display: 'block' }}
       >
-        {/* Background circle - uses EXACT same CX, CY, RADIUS as handle */}
+        <defs>
+          <linearGradient id="lavenderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(167, 139, 250, 0.8)" />
+            <stop offset="100%" stopColor="rgba(139, 92, 246, 0.8)" />
+          </linearGradient>
+        </defs>
+
+        {/* Background circle — uses CX, CY, RADIUS */}
         <circle
           cx={CX}
           cy={CY}
@@ -559,7 +546,8 @@ const InteractiveTimerRing: React.FC<{
           strokeWidth={STROKE_WIDTH}
           fill="none"
         />
-        {/* Progress circle - uses EXACT same CX, CY, RADIUS as handle */}
+
+        {/* Progress arc — uses CX, CY, RADIUS, rotated -90° so 0% starts at 12 o'clock */}
         <motion.circle
           cx={CX}
           cy={CY}
@@ -567,59 +555,52 @@ const InteractiveTimerRing: React.FC<{
           stroke="url(#lavenderGradient)"
           strokeWidth={STROKE_WIDTH}
           fill="none"
-          strokeDasharray={circumference}
+          strokeDasharray={CIRCUMFERENCE}
           animate={{ strokeDashoffset: isRunning ? dashOffset : 0 }}
           strokeLinecap="round"
           transition={{ duration: 1, ease: "easeInOut" }}
+          transform={`rotate(-90 ${CX} ${CY})`}
         />
-        <defs>
-          <linearGradient id="lavenderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(167, 139, 250, 0.8)" />
-            <stop offset="100%" stopColor="rgba(139, 92, 246, 0.8)" />
-          </linearGradient>
-        </defs>
-      </svg>
 
-      {/* Handle - STRICT MATHEMATICAL ALIGNMENT - NO MANUAL OFFSETS */}
-      {/* Position calculated using: X = CX + RADIUS * cos(θ), Y = CY + RADIUS * sin(θ) */}
-      {!isRunning && (
-        <motion.div
-          onPointerDown={handlePointerDown}
-          animate={{
-            left: handleXPixels,
-            top: handleYPixels,
-            scale: isDragging ? 1.1 : 1
-          }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          style={{
-            position: 'absolute',
-            transform: 'translate(-50%, -50%)',
-            cursor: isDragging ? 'grabbing' : 'grab',
-            touchAction: 'none',
-            pointerEvents: 'auto',
-          }}
-        >
-          <div style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '2.5px solid rgba(167, 139, 250, 0.6)',
-            boxShadow: '0 4px 20px rgba(167, 139, 250, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            fontWeight: 700,
-            color: 'rgba(139, 92, 246, 0.9)',
-            fontFamily: "'Quicksand', sans-serif"
-          }}>
-            {minutes}
-          </div>
-        </motion.div>
-      )}
+        {/* Handle — rendered as SVG elements INSIDE the same coordinate space */}
+        {!isRunning && (
+          <g style={{ cursor: isDragging ? 'grabbing' : 'grab' }}>
+            {/* Invisible larger hit area */}
+            <circle
+              cx={handleX}
+              cy={handleY}
+              r={HANDLE_HIT_RADIUS}
+              fill="transparent"
+              onPointerDown={handlePointerDown}
+              style={{ touchAction: 'none' }}
+            />
+            {/* Visible handle knob */}
+            <circle
+              cx={handleX}
+              cy={handleY}
+              r={HANDLE_RADIUS}
+              fill="rgba(255, 255, 255, 0.9)"
+              stroke="rgba(167, 139, 250, 0.6)"
+              strokeWidth="0.5"
+              className="pointer-events-none"
+            />
+            {/* Minutes label inside handle */}
+            <text
+              x={handleX}
+              y={handleY}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="rgba(139, 92, 246, 0.9)"
+              fontSize="3.5"
+              fontWeight="700"
+              fontFamily="'Quicksand', sans-serif"
+              className="pointer-events-none"
+            >
+              {minutes}
+            </text>
+          </g>
+        )}
+      </svg>
 
       {/* Center Display */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
