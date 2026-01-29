@@ -191,7 +191,7 @@ const GENTLE_PRESS = { scale: 0.96 };
 // --- BACKGROUND THEMES - 4 Distinct Palettes ---
 const BACKGROUND_THEMES = {
   morning: {
-    name: 'Morning',
+    name: 'Daylight',
     emoji: '🌅',
     gradient: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
     orbs: [
