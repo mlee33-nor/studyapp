@@ -63,12 +63,6 @@ const getStoredStreak = () => {
   return { streak: 0, lastStudyDate: null };
 };
 
-// --- MEADOW STORAGE ---
-const ANIMAL_LOTTIE_URLS = [
-  'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json', // Bunny (transparent, idle)
-  'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json', // Cat (idle)
-  'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json', // Dog (full body corgi)
-];
 
 const checkAndResetMeadow = () => {
   const data = getUserData();
@@ -82,15 +76,6 @@ const checkAndResetMeadow = () => {
   return data;
 };
 
-const spawnMeadowAnimal = (currentData: any, animalIndex: number) => {
-  const newAnimal = {
-    id: `${Date.now()}-${Math.random()}`,
-    lottieUrl: ANIMAL_LOTTIE_URLS[animalIndex],
-    x: 50 + Math.random() * 250, // Center area with some randomness
-    y: 100 + Math.random() * 300,
-  };
-  return [...(currentData.meadowAnimals || []), newAnimal];
-};
 
 const updateStreak = () => {
   const today = new Date().toDateString();
@@ -159,12 +144,6 @@ const calculateXpForLevel = (level: number) => {
   return 100 * level;
 };
 
-const getCharacterTitle = (level: number) => {
-  if (level >= 30) return 'Space Explorer';
-  if (level >= 20) return 'Astronaut';
-  if (level >= 10) return 'Cadet';
-  return 'Rookie';
-};
 
 // Theme unlock levels
 const THEME_UNLOCK_LEVELS = {
@@ -1062,127 +1041,6 @@ const CategorySelectionModal: React.FC<{
           </motion.button>
         </div>
       </motion.div>
-    </motion.div>
-  );
-};
-
-// --- MEADOW ANIMAL COMPONENT ---
-const MeadowAnimalComponent = ({ animal, loadedAnimation, onDelete, onMove }: {
-  animal: any;
-  loadedAnimation: any;
-  onDelete: (id: string) => void;
-  onMove: (id: string, x: number, y: number) => void;
-}) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <motion.div
-      drag
-      dragMomentum={false}
-      dragElastic={0.1}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        position: 'absolute',
-        left: animal.x,
-        top: animal.y,
-        width: '110px',
-        height: '110px',
-        zIndex: isHovered ? 100 : 5,
-        cursor: 'grab',
-        transformStyle: 'preserve-3d',
-        perspective: '1000px'
-      }}
-      onDragEnd={(_e, info) => {
-        const newX = Math.max(0, Math.min(290, animal.x + info.offset.x));
-        const newY = Math.max(0, Math.min(340, animal.y + info.offset.y));
-        onMove(animal.id, newX, newY);
-      }}
-      whileHover={{
-        scale: 1.2,
-        rotateY: 15,
-        transition: { duration: 0.3 }
-      }}
-      whileTap={{
-        scale: 0.95,
-        cursor: 'grabbing'
-      }}
-    >
-      {/* Delete button - appears on hover */}
-      {isHovered && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            onDelete(animal.id);
-          }}
-          onMouseDown={(e) => {
-            e.stopPropagation();
-          }}
-          style={{
-            position: 'absolute',
-            top: '-10px',
-            right: '-10px',
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)',
-            border: '2px solid white',
-            color: 'white',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 200,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            fontFamily: "'Quicksand', sans-serif",
-            transition: 'transform 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.15)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-        >
-          ×
-        </button>
-      )}
-
-      {/* Animal with 3D transform */}
-      <div style={{
-        width: '100%',
-        height: '100%',
-        filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
-        transformStyle: 'preserve-3d',
-        transform: 'translateZ(20px)'
-      }}>
-        {loadedAnimation ? (
-          <Lottie
-            animationData={loadedAnimation}
-            loop={true}
-            style={{
-              width: '100%',
-              height: '100%',
-              pointerEvents: 'none'
-            }}
-          />
-        ) : (
-          <div style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '58px',
-            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-          }}>
-            🐾
-          </div>
-        )}
-      </div>
     </motion.div>
   );
 };
