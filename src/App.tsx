@@ -3,9 +3,12 @@ import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import Lottie from 'lottie-react';
 import { AstronautCat } from './AstronautCat';
 import { StatsPage } from './components/StatsPage';
+import MeadowScreen from './screens/MeadowScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
+import { addCompletedSession } from './utils/storage';
 import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
@@ -33,12 +36,21 @@ const setSelectedTheme = (theme: 'morning' | 'twilight' | 'golden' | 'midnight')
 const getUserData = () => {
   const data = localStorage.getItem('userData');
   if (data) {
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Ensure meadow fields exist
+    return {
+      level: 1,
+      xp: 0,
+      sessionsCompleted: 0,
+      meadowAnimals: [],
+      lastMeadowReset: null,
+      ...parsed
+    };
   }
-  return { level: 1, xp: 0, sessionsCompleted: 0 };
+  return { level: 1, xp: 0, sessionsCompleted: 0, meadowAnimals: [], lastMeadowReset: null };
 };
 
-const saveUserData = (data: { level: number; xp: number; sessionsCompleted: number }) => {
+const saveUserData = (data: { level: number; xp: number; sessionsCompleted: number; meadowAnimals?: any[]; lastMeadowReset?: string | null }) => {
   localStorage.setItem('userData', JSON.stringify(data));
 };
 
@@ -49,6 +61,35 @@ const getStoredStreak = () => {
     return parsed;
   }
   return { streak: 0, lastStudyDate: null };
+};
+
+// --- MEADOW STORAGE ---
+const ANIMAL_LOTTIE_URLS = [
+  'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json', // Bunny (transparent, idle)
+  'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json', // Cat (idle)
+  'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json', // Dog (full body corgi)
+];
+
+const checkAndResetMeadow = () => {
+  const data = getUserData();
+  const today = new Date().toISOString().split('T')[0];
+
+  if (data.lastMeadowReset !== today) {
+    const newData = { ...data, meadowAnimals: [], lastMeadowReset: today };
+    saveUserData(newData);
+    return newData;
+  }
+  return data;
+};
+
+const spawnMeadowAnimal = (currentData: any, animalIndex: number) => {
+  const newAnimal = {
+    id: `${Date.now()}-${Math.random()}`,
+    lottieUrl: ANIMAL_LOTTIE_URLS[animalIndex],
+    x: 50 + Math.random() * 250, // Center area with some randomness
+    y: 100 + Math.random() * 300,
+  };
+  return [...(currentData.meadowAnimals || []), newAnimal];
 };
 
 const updateStreak = () => {
@@ -1025,6 +1066,127 @@ const CategorySelectionModal: React.FC<{
   );
 };
 
+// --- MEADOW ANIMAL COMPONENT ---
+const MeadowAnimalComponent = ({ animal, loadedAnimation, onDelete, onMove }: {
+  animal: any;
+  loadedAnimation: any;
+  onDelete: (id: string) => void;
+  onMove: (id: string, x: number, y: number) => void;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      drag
+      dragMomentum={false}
+      dragElastic={0.1}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        position: 'absolute',
+        left: animal.x,
+        top: animal.y,
+        width: '110px',
+        height: '110px',
+        zIndex: isHovered ? 100 : 5,
+        cursor: 'grab',
+        transformStyle: 'preserve-3d',
+        perspective: '1000px'
+      }}
+      onDragEnd={(_e, info) => {
+        const newX = Math.max(0, Math.min(290, animal.x + info.offset.x));
+        const newY = Math.max(0, Math.min(340, animal.y + info.offset.y));
+        onMove(animal.id, newX, newY);
+      }}
+      whileHover={{
+        scale: 1.2,
+        rotateY: 15,
+        transition: { duration: 0.3 }
+      }}
+      whileTap={{
+        scale: 0.95,
+        cursor: 'grabbing'
+      }}
+    >
+      {/* Delete button - appears on hover */}
+      {isHovered && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onDelete(animal.id);
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
+          style={{
+            position: 'absolute',
+            top: '-10px',
+            right: '-10px',
+            width: '30px',
+            height: '30px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)',
+            border: '2px solid white',
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 200,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            fontFamily: "'Quicksand', sans-serif",
+            transition: 'transform 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+        >
+          ×
+        </button>
+      )}
+
+      {/* Animal with 3D transform */}
+      <div style={{
+        width: '100%',
+        height: '100%',
+        filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
+        transformStyle: 'preserve-3d',
+        transform: 'translateZ(20px)'
+      }}>
+        {loadedAnimation ? (
+          <Lottie
+            animationData={loadedAnimation}
+            loop={true}
+            style={{
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none'
+            }}
+          />
+        ) : (
+          <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '58px',
+            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+          }}>
+            🐾
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
 // --- MAIN APP ---
 export default function App() {
   const [activeTab, setActiveTab] = useState('Timer');
@@ -1039,14 +1201,75 @@ export default function App() {
   const [currentCategory, setCurrentCategory] = useState<string>('');
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
+  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
+  const [selectedAnimal, setSelectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Panda
+  const [showAnimalSelector, setShowAnimalSelector] = useState(false);
 
   const theme = selectedTheme;
+
+  const ANIMALS = [
+    { name: 'Bunny', emoji: '🐰', url: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json' },
+    { name: 'Cat', emoji: '🐱', url: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json' },
+    { name: 'Corgi', emoji: '🐶', url: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json' },
+  ];
 
   // Persistence Engine: Load saved data on mount
   useEffect(() => {
     const savedHistory = getFocusHistory();
     setFocusHistory(savedHistory);
+    // Check and reset meadow daily
+    const resetData = checkAndResetMeadow();
+    setUserData(resetData);
   }, []);
+
+  // Load all animal animations for selector and timer display
+  useEffect(() => {
+    const loadAllAnimals = async () => {
+      for (let i = 0; i < ANIMALS.length; i++) {
+        const animalKey = `selected-${i}`;
+        if (!loadedAnimations[animalKey]) {
+          try {
+            const response = await fetch(ANIMALS[i].url);
+            const data = await response.json();
+            setLoadedAnimations(prev => ({ ...prev, [animalKey]: data }));
+          } catch (error) {
+            console.error(`Error loading animal ${i}:`, error);
+          }
+        }
+      }
+    };
+    loadAllAnimals();
+  }, []);
+
+  // Load Lottie animations for meadow animals
+  useEffect(() => {
+    const loadAnimations = async () => {
+      const meadowAnimals = userData.meadowAnimals || [];
+      console.log('🌱 Loading meadow animations for', meadowAnimals.length, 'animals');
+
+      for (const animal of meadowAnimals) {
+        console.log('🐾 Attempting to load animal:', animal.id, 'URL:', animal.lottieUrl);
+
+        try {
+          const response = await fetch(animal.lottieUrl);
+          if (!response.ok) {
+            console.error('❌ Failed to fetch animation:', response.status, response.statusText);
+            continue;
+          }
+          const data = await response.json();
+          console.log('✅ Loaded animation for:', animal.id);
+          setLoadedAnimations(prev => ({ ...prev, [animal.id]: data }));
+        } catch (error) {
+          console.error('❌ Error loading meadow animal animation:', error, 'for animal:', animal.id);
+        }
+      }
+    };
+
+    if (activeTab === 'Meadow' && userData.meadowAnimals && userData.meadowAnimals.length > 0) {
+      console.log('🎯 Meadow tab active, triggering animation load');
+      loadAnimations();
+    }
+  }, [activeTab, userData.meadowAnimals]);
 
   // Update timeLeft when timerMinutes changes
   useEffect(() => {
@@ -1122,6 +1345,9 @@ export default function App() {
     // Also save to enhanced session storage with category metadata
     saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
 
+    // Add completed session to storage (this spawns meadow animal automatically)
+    addCompletedSession(timerMinutes);
+
     // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
     const xpGained = timerMinutes * 10;
     let newLevel = userData.level;
@@ -1134,10 +1360,13 @@ export default function App() {
       newLevel += 1;
     }
 
+    // Update local userData (keep old structure for compatibility)
     const newData = {
       level: newLevel,
       xp: remainingXp,
-      sessionsCompleted: userData.sessionsCompleted + 1
+      sessionsCompleted: userData.sessionsCompleted + 1,
+      meadowAnimals: userData.meadowAnimals || [],
+      lastMeadowReset: userData.lastMeadowReset
     };
 
     setUserData(newData);
@@ -1250,7 +1479,7 @@ export default function App() {
               />
             </div>
 
-            {/* Mascot Container */}
+            {/* Selected Animal Display */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -1258,12 +1487,30 @@ export default function App() {
               justifyContent: 'center',
               marginTop: '12px'
             }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center'
-              }}>
-                <AstronautCat size={80} level={userData.level} isTimerActive={isRunning} theme={selectedTheme} />
-              </div>
+              <motion.div
+                onClick={() => setShowAnimalSelector(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  width: '80px',
+                  height: '80px'
+                }}
+              >
+                {loadedAnimations[`selected-${selectedAnimal}`] ? (
+                  <Lottie
+                    animationData={loadedAnimations[`selected-${selectedAnimal}`]}
+                    loop={true}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                ) : (
+                  <div style={{ fontSize: '60px', display: 'flex', alignItems: 'center' }}>
+                    {ANIMALS[selectedAnimal].emoji}
+                  </div>
+                )}
+              </motion.div>
 
               <div style={{
                 background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
@@ -1280,7 +1527,7 @@ export default function App() {
                 textAlign: 'center',
                 marginTop: '8px'
               }}>
-                {getCharacterTitle(userData.level)} · Lvl {userData.level}
+                {ANIMALS[selectedAnimal].name}
               </div>
             </div>
           </GlassCard>
@@ -1346,6 +1593,7 @@ export default function App() {
                 { id: 'Timer', icon: Home },
                 { id: 'Stats', icon: BarChart2 },
                 { id: 'Reports', icon: FileText },
+                { id: 'Meadow', icon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
                 { id: 'Avatar', icon: User },
                 { id: 'Settings', icon: SettingsIcon }
               ].map(tab => {
@@ -1499,6 +1747,10 @@ export default function App() {
 
     if (activeTab === 'Reports') {
       return <StatsPage theme={selectedTheme} />;
+    }
+
+    if (activeTab === 'Meadow') {
+      return <MeadowScreen />;
     }
 
     if (activeTab === 'Avatar') return (
@@ -1760,6 +2012,124 @@ export default function App() {
         onSelectCategory={handleCategorySelected}
       />
 
+      {/* Animal Selector Modal */}
+      {showAnimalSelector && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowAnimalSelector(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '20px',
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(30, 30, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderRadius: '32px',
+              padding: '32px 24px',
+              border: `1px solid ${getBorderColor(selectedTheme)}`,
+              boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3)',
+              maxWidth: '400px',
+              width: '100%',
+            }}
+          >
+            <h2 style={{
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              color: getTextColor(selectedTheme, 'primary'),
+              marginBottom: '8px',
+              textAlign: 'center',
+              fontFamily: "'Quicksand', sans-serif",
+            }}>
+              Choose Your Companion
+            </h2>
+            <p style={{
+              fontSize: '13px',
+              color: getTextColor(selectedTheme, 'secondary'),
+              marginBottom: '24px',
+              textAlign: 'center',
+              fontFamily: "'Quicksand', sans-serif",
+            }}>
+              This animal will appear in your meadow after each study session
+            </p>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+              marginBottom: '24px',
+            }}>
+              {ANIMALS.map((animal, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setSelectedAnimal(index);
+                    setShowAnimalSelector(false);
+                  }}
+                  style={{
+                    background: selectedAnimal === index
+                      ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)'
+                      : BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    border: selectedAnimal === index ? '2px solid rgba(167, 139, 250, 0.6)' : `1px solid ${getBorderColor(selectedTheme)}`,
+                    borderRadius: '20px',
+                    padding: '20px 12px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    boxShadow: selectedAnimal === index ? '0 4px 20px rgba(167, 139, 250, 0.3)' : '0 2px 10px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  {loadedAnimations[`selected-${index}`] ? (
+                    <div style={{ width: '60px', height: '60px', margin: '0 auto' }}>
+                      <Lottie
+                        animationData={loadedAnimations[`selected-${index}`]}
+                        loop={true}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '40px', marginBottom: '8px' }}>{animal.emoji}</div>
+                  )}
+                  <div style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: getTextColor(selectedTheme, 'primary'),
+                    marginTop: '8px',
+                    fontFamily: "'Quicksand', sans-serif",
+                  }}>
+                    {animal.name.split(' ')[1] || animal.name}
+                  </div>
+                  {selectedAnimal === index && (
+                    <div style={{ fontSize: '16px', marginTop: '4px' }}>✓</div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       <div style={{
         maxWidth: '480px',
         margin: '0 auto',
@@ -1802,11 +2172,13 @@ export default function App() {
               { id: 'Timer', icon: Home },
               { id: 'Stats', icon: BarChart2 },
               { id: 'Reports', icon: FileText },
+              { id: 'Meadow', icon: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
               { id: 'Avatar', icon: User },
               { id: 'Settings', icon: SettingsIcon }
             ].map(tab => {
               const isActive = activeTab === tab.id;
               const colors = getThemeColors(selectedTheme);
+              const IconComponent = tab.icon;
               return (
                 <motion.div
                   key={tab.id}
@@ -1821,11 +2193,17 @@ export default function App() {
                     boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
                   }}
                 >
-                  <tab.icon
-                    color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
-                    size={22}
-                    strokeWidth={isActive ? 2.5 : 2}
-                  />
+                  {typeof IconComponent === 'function' && tab.id === 'Meadow' ? (
+                    <div style={{ color: isActive ? colors.primary : getInactiveIconColor(selectedTheme) }}>
+                      <IconComponent />
+                    </div>
+                  ) : (
+                    <IconComponent
+                      color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
+                      size={22}
+                      strokeWidth={isActive ? 2.5 : 2}
+                    />
+                  )}
                 </motion.div>
               );
             })}
