@@ -455,8 +455,8 @@ const InteractiveTimerRing: React.FC<{
   const handleY = CY + RADIUS * Math.sin(handleAngle);
 
   // Handle radius in SVG units (for the visible knob and hit area)
-  const HANDLE_RADIUS = 4.5;
-  const HANDLE_HIT_RADIUS = 8;
+  const HANDLE_RADIUS = 7.5;
+  const HANDLE_HIT_RADIUS = 12;
 
   // === DRAG — Convert screen coords to angle ===
   const updateMinutesFromPosition = (clientX: number, clientY: number) => {
@@ -581,7 +581,7 @@ const InteractiveTimerRing: React.FC<{
               r={HANDLE_RADIUS}
               fill="rgba(255, 255, 255, 0.9)"
               stroke="rgba(167, 139, 250, 0.6)"
-              strokeWidth="0.5"
+              strokeWidth="0.8"
               className="pointer-events-none"
             />
             {/* Minutes label inside handle */}
@@ -591,7 +591,7 @@ const InteractiveTimerRing: React.FC<{
               textAnchor="middle"
               dominantBaseline="central"
               fill="rgba(139, 92, 246, 0.9)"
-              fontSize="3.5"
+              fontSize="6"
               fontWeight="700"
               fontFamily="'Quicksand', sans-serif"
               className="pointer-events-none"
