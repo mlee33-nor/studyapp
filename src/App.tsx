@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Check } from 'lucide-react';
+import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import Lottie from 'lottie-react';
 import { AstronautCat } from './AstronautCat';
 import { triggerHapticFeedback } from './utils/haptics';
+import { StatsPage } from './components/StatsPage';
+import MeadowScreen from './screens/MeadowScreen';
+import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
+import { addCompletedSession } from './utils/storage';
+import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
 const getDarkMode = () => {
@@ -33,12 +37,21 @@ const setSelectedTheme = (theme: 'morning' | 'twilight' | 'golden' | 'midnight')
 const getUserData = () => {
   const data = localStorage.getItem('userData');
   if (data) {
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    // Ensure meadow fields exist
+    return {
+      level: 1,
+      xp: 0,
+      sessionsCompleted: 0,
+      meadowAnimals: [],
+      lastMeadowReset: null,
+      ...parsed
+    };
   }
-  return { level: 1, xp: 0, sessionsCompleted: 0 };
+  return { level: 1, xp: 0, sessionsCompleted: 0, meadowAnimals: [], lastMeadowReset: null };
 };
 
-const saveUserData = (data: { level: number; xp: number; sessionsCompleted: number }) => {
+const saveUserData = (data: { level: number; xp: number; sessionsCompleted: number; meadowAnimals?: any[]; lastMeadowReset?: string | null }) => {
   localStorage.setItem('userData', JSON.stringify(data));
 };
 
@@ -50,6 +63,20 @@ const getStoredStreak = () => {
   }
   return { streak: 0, lastStudyDate: null };
 };
+
+
+const checkAndResetMeadow = () => {
+  const data = getUserData();
+  const today = new Date().toISOString().split('T')[0];
+
+  if (data.lastMeadowReset !== today) {
+    const newData = { ...data, meadowAnimals: [], lastMeadowReset: today };
+    saveUserData(newData);
+    return newData;
+  }
+  return data;
+};
+
 
 const updateStreak = () => {
   const today = new Date().toDateString();
@@ -111,56 +138,13 @@ const saveSession = (category: string, duration: number) => {
   return newSession;
 };
 
-// --- CHART DATA HELPERS ---
-const getTimeDistributionForDate = (history: FocusSession[], date: Date) => {
-  const daysSessions = history.filter(session => isSameDay(parseISO(session.date), date));
-  const categoryMap: { [key: string]: number } = {};
-  daysSessions.forEach(session => {
-    categoryMap[session.category] = (categoryMap[session.category] || 0) + session.duration;
-  });
-  return Object.entries(categoryMap).map(([name, value]) => ({ name, value }));
-};
-
-const getDailyFocusForDate = (history: FocusSession[], selectedDate: Date) => {
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-  return weekDays.map(day => {
-    const dayTotal = history
-      .filter(session => isSameDay(parseISO(session.date), day))
-      .reduce((sum, session) => sum + session.duration, 0);
-    const isSelected = isSameDay(day, selectedDate);
-    return {
-      day: format(day, 'EEE'),
-      minutes: dayTotal,
-      isSelected
-    };
-  });
-};
-
-const getCalendarData = (history: FocusSession[]) => {
-  const monthStart = startOfMonth(new Date());
-  const monthEnd = endOfMonth(new Date());
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-
-  return daysInMonth.map(day => ({
-    date: day,
-    day: format(day, 'd'),
-    hasSession: history.some(session => isSameDay(parseISO(session.date), day))
-  }));
-};
+// --- CHART DATA HELPERS (removed - replaced by new stats system) ---
 
 // --- GAME LOGIC ---
 const calculateXpForLevel = (level: number) => {
   return 100 * level;
 };
 
-const getCharacterTitle = (level: number) => {
-  if (level >= 30) return 'Space Explorer';
-  if (level >= 20) return 'Astronaut';
-  if (level >= 10) return 'Cadet';
-  return 'Rookie';
-};
 
 // Theme unlock levels
 const THEME_UNLOCK_LEVELS = {
@@ -208,7 +192,7 @@ const GENTLE_PRESS = { scale: 0.96 };
 // --- BACKGROUND THEMES - 4 Distinct Palettes ---
 const BACKGROUND_THEMES = {
   morning: {
-    name: 'Morning',
+    name: 'Daylight',
     emoji: '🌅',
     gradient: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
     orbs: [
@@ -443,20 +427,21 @@ const InteractiveTimerRing: React.FC<{
   timeLeft: number;
   totalSeconds: number;
 }> = ({ minutes, onMinutesChange, isRunning, timeLeft, totalSeconds }) => {
-  // SVG Constants - Define once for perfect mathematical alignment
-  const size = 192;
-  const strokeWidth = 5;
-  const cx = size / 2; // Center X coordinate
-  const cy = size / 2; // Center Y coordinate
-  // Radius accounts for stroke width: position handle on centerline of stroke
-  // For stroke to fit within bounds: radius + (strokeWidth/2) <= size/2
-  const radius = (size / 2) - (strokeWidth / 2); // 96 - 2.5 = 93.5
-  const circumference = radius * 2 * Math.PI;
-  const containerRef = useRef<HTMLDivElement>(null);
+  // === GLOBAL CONSTANTS — Single Source of Truth ===
+  const SVG_SIZE = 100;
+  const CX = SVG_SIZE / 2;
+  const CY = SVG_SIZE / 2;
+  const STROKE_WIDTH = 3;
+  const RADIUS = (SVG_SIZE - STROKE_WIDTH) / 2 - 2; // 45.5 — fits inside viewBox with stroke
+  const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+  const displaySize = 192;
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const previousMinutesRef = useRef<number>(minutes);
 
   const progress = 1 - (timeLeft / totalSeconds);
-  const dashOffset = circumference * (1 - progress);
+  const dashOffset = CIRCUMFERENCE * (1 - progress);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -464,54 +449,31 @@ const InteractiveTimerRing: React.FC<{
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Calculate angle from minutes (0-360 degrees)
-  const angleFromMinutes = (mins: number) => {
-    const normalized = (mins - 5) / (60 - 5); // Map 5-60 to 0-1
-    return normalized * 360 - 90; // -90 to start at top (12 o'clock position)
-  };
+  // === HANDLE POSITION — Pure Trigonometry ===
+  // Angle: map minutes (5–60) to radians, starting at 12 o'clock (-π/2)
+  const durationFraction = (minutes - 5) / (60 - 5);
+  const handleAngle = durationFraction * 2 * Math.PI - Math.PI / 2;
+  const handleX = CX + RADIUS * Math.cos(handleAngle);
+  const handleY = CY + RADIUS * Math.sin(handleAngle);
 
-  // POLAR COORDINATE SYSTEM: useMotionValue for angle
-  const angle = useMotionValue(angleFromMinutes(minutes));
+  // Handle radius in SVG units (for the visible knob and hit area)
+  const HANDLE_RADIUS = 7.5;
+  const HANDLE_HIT_RADIUS = 12;
 
-  // Update angle when minutes prop changes externally
-  useEffect(() => {
-    angle.set(angleFromMinutes(minutes));
-    previousMinutesRef.current = minutes;
-  }, [minutes, angle]);
+  // === DRAG — Convert screen coords to angle ===
+  const updateMinutesFromPosition = (clientX: number, clientY: number) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-  // POLAR TO CARTESIAN TRANSFORMATION: X = cx + R·cos(θ), Y = cy + R·sin(θ)
-  const handleX = useTransform(angle, (angleValue) => {
-    const angleRad = (angleValue * Math.PI) / 180;
-    return cx + radius * Math.cos(angleRad);
-  });
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    // atan2(dx, -dy) gives clockwise angle from 12 o'clock
+    let angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+    if (angle < 0) angle += 360;
 
-  const handleY = useTransform(angle, (angleValue) => {
-    const angleRad = (angleValue * Math.PI) / 180;
-    return cy + radius * Math.sin(angleRad);
-  });
-
-  // CONSTRAINT PROJECTION: Lock handle to circular path
-  const handleDrag = (_event: any, info: any) => {
-    if (isRunning || !containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const containerCenterX = rect.left + rect.width / 2;
-    const containerCenterY = rect.top + rect.height / 2;
-
-    // Calculate angle (θ) from center to mouse position using Math.atan2
-    const dx = info.point.x - containerCenterX;
-    const dy = info.point.y - containerCenterY;
-    let theta = Math.atan2(dy, dx) * (180 / Math.PI); // Convert to degrees
-
-    // Normalize angle to 0-360
-    theta = (theta + 90 + 360) % 360;
-
-    // Update the motion value (this will automatically update handleX and handleY via useTransform)
-    angle.set(theta);
-
-    // Map angle to minutes (5-60) and update parent component
-    const normalized = theta / 360; // 0-1
-    const newMinutes = Math.round(5 + normalized * (60 - 5));
+    const newMinutes = Math.round((angle / 360) * (60 - 5) + 5);
     const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
 
     // Trigger haptic feedback when the value changes
@@ -523,97 +485,142 @@ const InteractiveTimerRing: React.FC<{
     onMinutesChange(clampedMinutes);
   };
 
-  // ZERO-SCROLL COMPATIBILITY: Prevent page scrolling during drag
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (isRunning) return;
+    setIsDragging(true);
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+    updateMinutesFromPosition(e.clientX, e.clientY);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging || isRunning) return;
+    updateMinutesFromPosition(e.clientX, e.clientY);
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+  };
+
   useEffect(() => {
-    const preventScroll = (e: TouchEvent) => {
-      if ((e.target as HTMLElement).closest('[data-draggable-handle]')) {
-        e.preventDefault();
+    const handleGlobalPointerMove = (e: PointerEvent) => {
+      if (isDragging && !isRunning) {
+        updateMinutesFromPosition(e.clientX, e.clientY);
       }
     };
 
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    return () => document.removeEventListener('touchmove', preventScroll);
-  }, []);
+    const handleGlobalPointerUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('pointermove', handleGlobalPointerMove);
+      window.addEventListener('pointerup', handleGlobalPointerUp);
+      window.addEventListener('pointercancel', handleGlobalPointerUp);
+    }
+
+    return () => {
+      window.removeEventListener('pointermove', handleGlobalPointerMove);
+      window.removeEventListener('pointerup', handleGlobalPointerUp);
+      window.removeEventListener('pointercancel', handleGlobalPointerUp);
+    };
+  }, [isDragging, isRunning]);
+
+  // Update previousMinutesRef when minutes changes externally
+  useEffect(() => {
+    if (!isDragging) {
+      previousMinutesRef.current = minutes;
+    }
+  }, [minutes, isDragging]);
 
   return (
     <div
-      ref={containerRef}
-      style={{
-        position: 'relative',
-        width: size,
-        height: size,
-        margin: '0 auto',
-        touchAction: 'none' // Prevent touch scrolling
-      }}
+      style={{ position: 'relative', width: displaySize, height: displaySize, margin: '0 auto' }}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
     >
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        {/* Background circle - uses cx, cy, and calculated radius */}
-        <circle cx={cx} cy={cy} r={radius} stroke="rgba(255, 255, 255, 0.1)" strokeWidth={strokeWidth} fill="none" />
-        {/* Progress circle - animated stroke offset */}
-        <motion.circle
-          cx={cx}
-          cy={cy}
-          r={radius}
-          stroke="url(#lavenderGradient)"
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          animate={{ strokeDashoffset: isRunning ? dashOffset : 0 }}
-          strokeLinecap="round"
-          transition={{ duration: 1, ease: "easeInOut" }}
-        />
+      {/* Single SVG — handle lives INSIDE, sharing exact same coordinate space */}
+      <svg
+        ref={svgRef}
+        width={displaySize}
+        height={displaySize}
+        viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
+        overflow="visible"
+        style={{ display: 'block' }}
+      >
         <defs>
           <linearGradient id="lavenderGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="rgba(167, 139, 250, 0.8)" />
             <stop offset="100%" stopColor="rgba(139, 92, 246, 0.8)" />
           </linearGradient>
         </defs>
+
+        {/* Background circle — uses CX, CY, RADIUS */}
+        <circle
+          cx={CX}
+          cy={CY}
+          r={RADIUS}
+          stroke="rgba(255, 255, 255, 0.1)"
+          strokeWidth={STROKE_WIDTH}
+          fill="none"
+        />
+
+        {/* Progress arc — uses CX, CY, RADIUS, rotated -90° so 0% starts at 12 o'clock */}
+        <motion.circle
+          cx={CX}
+          cy={CY}
+          r={RADIUS}
+          stroke="url(#lavenderGradient)"
+          strokeWidth={STROKE_WIDTH}
+          fill="none"
+          strokeDasharray={CIRCUMFERENCE}
+          animate={{ strokeDashoffset: isRunning ? dashOffset : 0 }}
+          strokeLinecap="round"
+          transition={{ duration: 1, ease: "easeInOut" }}
+          transform={`rotate(-90 ${CX} ${CY})`}
+        />
+
+        {/* Handle — rendered as SVG elements INSIDE the same coordinate space */}
+        {!isRunning && (
+          <g style={{ cursor: isDragging ? 'grabbing' : 'grab' }}>
+            {/* Invisible larger hit area */}
+            <circle
+              cx={handleX}
+              cy={handleY}
+              r={HANDLE_HIT_RADIUS}
+              fill="transparent"
+              onPointerDown={handlePointerDown}
+              style={{ touchAction: 'none' }}
+            />
+            {/* Visible handle knob */}
+            <circle
+              cx={handleX}
+              cy={handleY}
+              r={HANDLE_RADIUS}
+              fill="rgba(255, 255, 255, 0.9)"
+              stroke="rgba(167, 139, 250, 0.6)"
+              strokeWidth="0.8"
+              className="pointer-events-none"
+            />
+            {/* Minutes label inside handle */}
+            <text
+              x={handleX}
+              y={handleY}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="rgba(139, 92, 246, 0.9)"
+              fontSize="6"
+              fontWeight="700"
+              fontFamily="'Quicksand', sans-serif"
+              className="pointer-events-none"
+            >
+              {minutes}
+            </text>
+          </g>
+        )}
       </svg>
 
-      {/* Draggable Handle - LOCKED TO RING via Polar Coordinates */}
-      {!isRunning && (
-        <motion.div
-          drag
-          dragMomentum={false}
-          onDrag={handleDrag}
-          dragElastic={0}
-          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} // Constrain to prevent drift
-          data-draggable-handle="true"
-          style={{
-            position: 'absolute',
-            x: handleX,
-            y: handleY,
-            transform: 'translate(-50%, -50%)', // Center the handle on calculated position
-            cursor: 'grab',
-            touchAction: 'none', // Zero-scroll compatibility
-            pointerEvents: 'auto',
-          }}
-          whileTap={{ scale: 1.1, cursor: 'grabbing' }}
-        >
-          <div style={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '2.5px solid rgba(167, 139, 250, 0.6)',
-            boxShadow: '0 4px 20px rgba(167, 139, 250, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            fontWeight: 700,
-            color: 'rgba(139, 92, 246, 0.9)',
-            fontFamily: "'Quicksand', sans-serif"
-          }}>
-            {minutes}
-          </div>
-        </motion.div>
-      )}
-
       {/* Center Display */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
         <motion.h1
           key={isRunning ? timeLeft : minutes}
           initial={{ scale: 1 }}
@@ -821,7 +828,8 @@ const CategorySelectionModal: React.FC<{
   onSelectCategory: (category: string) => void;
 }> = ({ isOpen, onClose, onSelectCategory }) => {
   const [customInput, setCustomInput] = useState('');
-  const predefinedCategories = ['Accounting', 'Algebra', 'Science', 'Coding'];
+  const [allCategories] = useState<StudyCategory[]>(getCategories());
+  const [recentCategories] = useState<StudyCategory[]>(getRecentCategories());
 
   if (!isOpen) return null;
 
@@ -833,11 +841,16 @@ const CategorySelectionModal: React.FC<{
   const handleBeginSession = () => {
     if (customInput.trim()) {
       onSelectCategory(customInput.trim());
-    } else if (predefinedCategories.length > 0) {
-      onSelectCategory(predefinedCategories[0]);
+    } else if (recentCategories.length > 0) {
+      onSelectCategory(recentCategories[0].title);
     }
     setCustomInput('');
   };
+
+  // Display recent categories (last 4 used) or first 4 predefined if no history
+  const displayCategories = recentCategories.length > 0
+    ? recentCategories
+    : allCategories.slice(0, 4);
 
   return (
     <motion.div
@@ -893,26 +906,26 @@ const CategorySelectionModal: React.FC<{
           What are we focusing on?
         </h2>
 
-        {/* Quick Select Chips */}
+        {/* Quick Select Chips with Emojis */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '12px',
           marginBottom: '24px',
         }}>
-          {predefinedCategories.map((category) => (
+          {displayCategories.map((category) => (
             <motion.button
-              key={category}
+              key={category.id}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => handleCategoryClick(category)}
+              onClick={() => handleCategoryClick(category.title)}
               style={{
                 background: customInput === ''
-                  ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.6) 0%, rgba(139, 92, 246, 0.6) 100%)'
+                  ? `linear-gradient(135deg, ${category.themeColor}99 0%, ${category.accentColor}99 100%)`
                   : 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
+                border: `1px solid ${customInput === '' ? category.themeColor + '66' : 'rgba(255, 255, 255, 0.3)'}`,
                 borderRadius: '20px',
                 padding: '16px 20px',
                 cursor: 'pointer',
@@ -920,11 +933,16 @@ const CategorySelectionModal: React.FC<{
                 fontSize: '15px',
                 fontWeight: 600,
                 fontFamily: "'Quicksand', sans-serif",
-                boxShadow: '0 4px 15px rgba(147, 197, 253, 0.2)',
+                boxShadow: `0 4px 15px ${category.themeColor}33`,
                 transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
               }}
             >
-              {category}
+              <span style={{ fontSize: '1.25rem' }}>{category.emoji}</span>
+              <span>{category.title}</span>
             </motion.button>
           ))}
         </div>
@@ -1038,15 +1056,84 @@ export default function App() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
+  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
+  const [selectedAnimal, setSelectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Panda
+  const [showAnimalSelector, setShowAnimalSelector] = useState(false);
 
   const theme = selectedTheme;
+
+  const ANIMALS = [
+    { name: 'Bunny', emoji: '🐰', url: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json' },
+    { name: 'Cat', emoji: '🐱', url: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json' },
+    { name: 'Corgi', emoji: '🐶', url: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json' },
+  ];
+
+  // Disable scrolling on the home (Timer) tab
+  useEffect(() => {
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.overflowY = activeTab === 'Timer' ? 'hidden' : 'auto';
+    }
+  }, [activeTab]);
 
   // Persistence Engine: Load saved data on mount
   useEffect(() => {
     const savedHistory = getFocusHistory();
     setFocusHistory(savedHistory);
+    // Check and reset meadow daily
+    const resetData = checkAndResetMeadow();
+    setUserData(resetData);
   }, []);
+
+  // Load all animal animations for selector and timer display
+  useEffect(() => {
+    const loadAllAnimals = async () => {
+      for (let i = 0; i < ANIMALS.length; i++) {
+        const animalKey = `selected-${i}`;
+        if (!loadedAnimations[animalKey]) {
+          try {
+            const response = await fetch(ANIMALS[i].url);
+            const data = await response.json();
+            setLoadedAnimations(prev => ({ ...prev, [animalKey]: data }));
+          } catch (error) {
+            console.error(`Error loading animal ${i}:`, error);
+          }
+        }
+      }
+    };
+    loadAllAnimals();
+  }, []);
+
+  // Load Lottie animations for meadow animals
+  useEffect(() => {
+    const loadAnimations = async () => {
+      const meadowAnimals = userData.meadowAnimals || [];
+      console.log('🌱 Loading meadow animations for', meadowAnimals.length, 'animals');
+
+      for (const animal of meadowAnimals) {
+        console.log('🐾 Attempting to load animal:', animal.id, 'URL:', animal.lottieUrl);
+
+        try {
+          const response = await fetch(animal.lottieUrl);
+          if (!response.ok) {
+            console.error('❌ Failed to fetch animation:', response.status, response.statusText);
+            continue;
+          }
+          const data = await response.json();
+          console.log('✅ Loaded animation for:', animal.id);
+          setLoadedAnimations(prev => ({ ...prev, [animal.id]: data }));
+        } catch (error) {
+          console.error('❌ Error loading meadow animal animation:', error, 'for animal:', animal.id);
+        }
+      }
+    };
+
+    if (activeTab === 'Meadow' && userData.meadowAnimals && userData.meadowAnimals.length > 0) {
+      console.log('🎯 Meadow tab active, triggering animation load');
+      loadAnimations();
+    }
+  }, [activeTab, userData.meadowAnimals]);
 
   // Update timeLeft when timerMinutes changes
   useEffect(() => {
@@ -1072,13 +1159,6 @@ export default function App() {
       handleCompleteSession();
     }
   }, [timeLeft, isRunning]);
-
-  // Reset selected date when navigating away from Reports tab
-  useEffect(() => {
-    if (activeTab !== 'Reports') {
-      setSelectedDate(null);
-    }
-  }, [activeTab]);
 
   const toggleDarkMode = () => {
     const newMode = !isDarkMode;
@@ -1122,9 +1202,15 @@ export default function App() {
     updateStreak();
     setIsRunning(false);
 
-    // Save session to focusHistory
+    // Save session to both old and enhanced storage
     const savedSession = saveSession(currentCategory || 'Uncategorized', timerMinutes);
     setFocusHistory(prev => [...prev, savedSession]);
+
+    // Also save to enhanced session storage with category metadata
+    saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
+
+    // Add completed session to storage (this spawns meadow animal automatically)
+    addCompletedSession(timerMinutes);
 
     // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
     const xpGained = timerMinutes * 10;
@@ -1138,10 +1224,13 @@ export default function App() {
       newLevel += 1;
     }
 
+    // Update local userData (keep old structure for compatibility)
     const newData = {
       level: newLevel,
       xp: remainingXp,
-      sessionsCompleted: userData.sessionsCompleted + 1
+      sessionsCompleted: userData.sessionsCompleted + 1,
+      meadowAnimals: userData.meadowAnimals || [],
+      lastMeadowReset: userData.lastMeadowReset
     };
 
     setUserData(newData);
@@ -1254,7 +1343,7 @@ export default function App() {
               />
             </div>
 
-            {/* Mascot Container */}
+            {/* Selected Animal Display */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
@@ -1262,12 +1351,30 @@ export default function App() {
               justifyContent: 'center',
               marginTop: '12px'
             }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center'
-              }}>
-                <AstronautCat size={80} level={userData.level} isTimerActive={isRunning} theme={selectedTheme} />
-              </div>
+              <motion.div
+                onClick={() => setShowAnimalSelector(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  width: '80px',
+                  height: '80px'
+                }}
+              >
+                {loadedAnimations[`selected-${selectedAnimal}`] ? (
+                  <Lottie
+                    animationData={loadedAnimations[`selected-${selectedAnimal}`]}
+                    loop={true}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                ) : (
+                  <div style={{ fontSize: '60px', display: 'flex', alignItems: 'center' }}>
+                    {ANIMALS[selectedAnimal].emoji}
+                  </div>
+                )}
+              </motion.div>
 
               <div style={{
                 background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
@@ -1284,7 +1391,7 @@ export default function App() {
                 textAlign: 'center',
                 marginTop: '8px'
               }}>
-                {getCharacterTitle(userData.level)} · Lvl {userData.level}
+                {ANIMALS[selectedAnimal].name}
               </div>
             </div>
           </GlassCard>
@@ -1350,6 +1457,7 @@ export default function App() {
                 { id: 'Timer', icon: Home },
                 { id: 'Stats', icon: BarChart2 },
                 { id: 'Reports', icon: FileText },
+                { id: 'Meadow', icon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
                 { id: 'Avatar', icon: User },
                 { id: 'Settings', icon: SettingsIcon }
               ].map(tab => {
@@ -1502,328 +1610,11 @@ export default function App() {
     );
 
     if (activeTab === 'Reports') {
-      const colors = getThemeColors(theme);
-      const calendarData = getCalendarData(focusHistory);
+      return <StatsPage theme={selectedTheme} />;
+    }
 
-      // Only compute filtered data when a date is selected
-      const timeDistData = selectedDate ? getTimeDistributionForDate(focusHistory, selectedDate) : [];
-      const dailyData = selectedDate ? getDailyFocusForDate(focusHistory, selectedDate) : [];
-
-      const handleDayClick = (day: { date: Date; day: string; hasSession: boolean }) => {
-        if (day.hasSession) {
-          setSelectedDate(day.date);
-        }
-      };
-
-      // GlobalStyles component to permanently remove blue focus boxes
-      const GlobalStyles = () => (
-        <style dangerouslySetInnerHTML={{ __html: `
-          * { -webkit-tap-highlight-color: transparent !important; }
-          *:focus { outline: none !important; }
-          .recharts-wrapper, .recharts-surface { outline: none !important; border: none !important; }
-          svg, svg * { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
-        `}} />
-      );
-
-      return (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={SOFT_SPRING}
-          style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
-        >
-          <GlobalStyles />
-          <h1 style={{
-            fontSize: '1.5rem',
-            fontWeight: 500,
-            color: getTextColor(selectedTheme, 'primary'),
-            marginBottom: '32px',
-            letterSpacing: '0.05em',
-            fontFamily: "'Quicksand', sans-serif"
-          }}>
-            Detailed Report
-          </h1>
-
-          {/* Card 4: Pomodoro Record Calendar Grid (Always visible) */}
-          <GlassCard theme={selectedTheme} style={{ marginBottom: selectedDate ? '20px' : '0' }}>
-            <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-              Pomodoro Record ({format(new Date(), 'MMMM yyyy')})
-            </h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(7, 1fr)',
-              gap: '8px'
-            }}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} style={{
-                  textAlign: 'center',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: getTextColor(selectedTheme, 'tertiary'),
-                  fontFamily: "'Quicksand', sans-serif",
-                  padding: '8px 0'
-                }}>
-                  {day}
-                </div>
-              ))}
-              {calendarData.map((day, index) => {
-                const isSelected = selectedDate && isSameDay(day.date, selectedDate);
-                return (
-                  <motion.div
-                    key={index}
-                    onClick={() => handleDayClick(day)}
-                    whileHover={{ scale: day.hasSession ? 1.1 : 1 }}
-                    whileTap={{ scale: day.hasSession ? 0.95 : 1 }}
-                    style={{
-                      aspectRatio: '1',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: isSelected
-                        ? colors.primary
-                        : day.hasSession
-                          ? 'rgba(168, 85, 247, 0.4)'
-                          : 'rgba(255, 255, 255, 0.1)',
-                      color: (day.hasSession || isSelected) ? 'white' : getTextColor(selectedTheme, 'tertiary'),
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      fontFamily: "'Quicksand', sans-serif",
-                      position: 'relative',
-                      cursor: day.hasSession ? 'pointer' : 'default',
-                      boxShadow: isSelected
-                        ? '0 0 15px rgba(244, 114, 182, 0.5), 0 0 30px rgba(244, 114, 182, 0.3)'
-                        : day.hasSession
-                          ? '0 2px 10px rgba(168, 85, 247, 0.3)'
-                          : 'none',
-                      outline: 'none',
-                      border: isSelected ? '2px solid rgba(255, 255, 255, 0.8)' : 'none',
-                      WebkitTapHighlightColor: 'transparent',
-                      transition: 'all 0.3s ease'
-                    } as React.CSSProperties}
-                  >
-                    {day.hasSession ? (
-                      <div style={{ position: 'relative' }}>
-                        <Check size={16} strokeWidth={3} />
-                      </div>
-                    ) : (
-                      day.day
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-            {selectedDate && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={SOFT_SPRING}
-                style={{
-                  marginTop: '20px',
-                  padding: '12px 16px',
-                  background: 'rgba(167, 139, 250, 0.1)',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: getTextColor(selectedTheme, 'primary'),
-                  fontFamily: "'Quicksand', sans-serif"
-                }}
-              >
-                📅 Selected: {format(selectedDate, 'MMMM d, yyyy')}
-              </motion.div>
-            )}
-          </GlassCard>
-
-          {/* Card 1: Time Distribution (Only visible when date selected) */}
-          {selectedDate && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={SOFT_SPRING}
-            >
-              <GlassCard theme={selectedTheme} style={{
-                marginBottom: '20px',
-                outline: 'none',
-                WebkitTapHighlightColor: 'transparent'
-              } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-                  Time Distribution - {format(selectedDate, 'MMM d')}
-                </h3>
-                {timeDistData.length === 0 ? (
-                  <div style={{
-                    textAlign: 'center',
-                    padding: '48px 24px',
-                    color: getTextColor(selectedTheme, 'tertiary'),
-                    fontSize: '14px',
-                    fontFamily: "'Quicksand', sans-serif"
-                  }}>
-                    No sessions recorded for this day.
-                  </div>
-                ) : (
-                  <div style={{
-                    outline: 'none',
-                    WebkitTapHighlightColor: 'transparent',
-                    padding: '20px 20px 10px'
-                  }}>
-                    <ResponsiveContainer width="100%" height={360}>
-                      <PieChart>
-                        <Pie
-                          data={timeDistData}
-                          cx="50%"
-                          cy="45%"
-                          labelLine={false}
-                          outerRadius="85%"
-                          paddingAngle={0}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {timeDistData.map((_, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={colors.pastels[index % colors.pastels.length]}
-                              stroke="none"
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: '12px',
-                            border: `1px solid ${getBorderColor(selectedTheme)}`,
-                            padding: '8px 12px',
-                            fontFamily: "'Quicksand', sans-serif",
-                            fontSize: '13px',
-                            fontWeight: 600,
-                            color: getTextColor(selectedTheme, 'primary'),
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                            outline: 'none'
-                          }}
-                          wrapperStyle={{ outline: 'none' }}
-                          formatter={(value: any) => {
-                            if (!value) return '';
-                            const hours = Math.floor(value / 60);
-                            const mins = value % 60;
-                            return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-                          }}
-                        />
-                        <Legend
-                          verticalAlign="bottom"
-                          align="center"
-                          iconType="circle"
-                          wrapperStyle={{
-                            paddingTop: '15px',
-                            fontFamily: "'Quicksand', sans-serif"
-                          }}
-                          formatter={(value: string, entry: any) => (
-                            <span style={{
-                              color: getTextColor(selectedTheme, 'secondary'),
-                              fontSize: '12px',
-                              fontWeight: 600,
-                              fontFamily: "'Quicksand', sans-serif"
-                            }}>
-                              {value}: {entry.payload.value}m
-                            </span>
-                          )}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </GlassCard>
-            </motion.div>
-          )}
-
-          {/* Card 2: Daily Focus (Only visible when date selected) */}
-          {selectedDate && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...SOFT_SPRING, delay: 0.1 }}
-            >
-              <GlassCard theme={selectedTheme} style={{
-                marginBottom: '20px',
-                outline: 'none',
-                WebkitTapHighlightColor: 'transparent'
-              } as React.CSSProperties}>
-                <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-                  Weekly Context - {format(startOfWeek(selectedDate, { weekStartsOn: 0 }), 'MMM d')} to {format(addDays(startOfWeek(selectedDate, { weekStartsOn: 0 }), 6), 'MMM d')}
-                </h3>
-                <div style={{
-                  outline: 'none',
-                  WebkitTapHighlightColor: 'transparent'
-                }}>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={dailyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'} />
-                      <XAxis
-                        dataKey="day"
-                        tick={{ fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
-                      />
-                      <YAxis
-                        tick={{ fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                        stroke={BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}
-                        label={{ value: 'Minutes', angle: -90, position: 'insideLeft', fill: getTextColor(selectedTheme, 'secondary'), fontFamily: "'Quicksand', sans-serif", fontSize: 12 }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)',
-                          backdropFilter: 'blur(10px)',
-                          border: `1px solid ${getBorderColor(selectedTheme)}`,
-                          borderRadius: '12px',
-                          padding: '8px 12px',
-                          fontFamily: "'Quicksand', sans-serif",
-                          fontSize: '13px',
-                          fontWeight: 600,
-                          color: getTextColor(selectedTheme, 'primary'),
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                          outline: 'none'
-                        }}
-                        cursor={{ fill: 'transparent' }}
-                        wrapperStyle={{ outline: 'none' }}
-                        labelStyle={{ color: getTextColor(selectedTheme, 'primary'), fontWeight: 600 }}
-                      />
-                      <Bar
-                        dataKey="minutes"
-                        fill={colors.primary}
-                        radius={[8, 8, 0, 0]}
-                        isAnimationActive={false}
-                        shape={(props: any) => {
-                          const { x, y, width, height, payload } = props;
-                          const isSelected = payload.isSelected;
-                          const [isHovered, setIsHovered] = React.useState(false);
-
-                          return (
-                            <rect
-                              x={x}
-                              y={y}
-                              width={width}
-                              height={height}
-                              fill={isSelected ? colors.primary : 'rgba(167, 139, 250, 0.4)'}
-                              fillOpacity={isHovered ? 0.8 : 1}
-                              rx={8}
-                              ry={8}
-                              onMouseEnter={() => setIsHovered(true)}
-                              onMouseLeave={() => setIsHovered(false)}
-                              style={{
-                                outline: 'none',
-                                transition: 'fill-opacity 0.2s ease',
-                                cursor: 'pointer'
-                              }}
-                            />
-                          );
-                        }}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </GlassCard>
-            </motion.div>
-          )}
-        </motion.div>
-      );
+    if (activeTab === 'Meadow') {
+      return <MeadowScreen />;
     }
 
     if (activeTab === 'Avatar') return (
@@ -2085,11 +1876,130 @@ export default function App() {
         onSelectCategory={handleCategorySelected}
       />
 
+      {/* Animal Selector Modal */}
+      {showAnimalSelector && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowAnimalSelector(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '20px',
+          }}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(30, 30, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderRadius: '32px',
+              padding: '32px 24px',
+              border: `1px solid ${getBorderColor(selectedTheme)}`,
+              boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3)',
+              maxWidth: '400px',
+              width: '100%',
+            }}
+          >
+            <h2 style={{
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              color: getTextColor(selectedTheme, 'primary'),
+              marginBottom: '8px',
+              textAlign: 'center',
+              fontFamily: "'Quicksand', sans-serif",
+            }}>
+              Choose Your Companion
+            </h2>
+            <p style={{
+              fontSize: '13px',
+              color: getTextColor(selectedTheme, 'secondary'),
+              marginBottom: '24px',
+              textAlign: 'center',
+              fontFamily: "'Quicksand', sans-serif",
+            }}>
+              This animal will appear in your meadow after each study session
+            </p>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+              marginBottom: '24px',
+            }}>
+              {ANIMALS.map((animal, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setSelectedAnimal(index);
+                    setShowAnimalSelector(false);
+                  }}
+                  style={{
+                    background: selectedAnimal === index
+                      ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)'
+                      : BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    border: selectedAnimal === index ? '2px solid rgba(167, 139, 250, 0.6)' : `1px solid ${getBorderColor(selectedTheme)}`,
+                    borderRadius: '20px',
+                    padding: '20px 12px',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    boxShadow: selectedAnimal === index ? '0 4px 20px rgba(167, 139, 250, 0.3)' : '0 2px 10px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  {loadedAnimations[`selected-${index}`] ? (
+                    <div style={{ width: '60px', height: '60px', margin: '0 auto' }}>
+                      <Lottie
+                        animationData={loadedAnimations[`selected-${index}`]}
+                        loop={true}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '40px', marginBottom: '8px' }}>{animal.emoji}</div>
+                  )}
+                  <div style={{
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: getTextColor(selectedTheme, 'primary'),
+                    marginTop: '8px',
+                    fontFamily: "'Quicksand', sans-serif",
+                  }}>
+                    {animal.name.split(' ')[1] || animal.name}
+                  </div>
+                  {selectedAnimal === index && (
+                    <div style={{ fontSize: '16px', marginTop: '4px' }}>✓</div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       <div style={{
         maxWidth: '480px',
         margin: '0 auto',
         position: 'relative',
-        height: activeTab === 'Timer' ? '100dvh' : 'auto'
+        height: activeTab === 'Timer' ? '100dvh' : 'auto',
+        overflow: activeTab === 'Timer' ? 'hidden' : undefined,
       }}>
         {renderContent()}
       </div>
@@ -2127,11 +2037,13 @@ export default function App() {
               { id: 'Timer', icon: Home },
               { id: 'Stats', icon: BarChart2 },
               { id: 'Reports', icon: FileText },
+              { id: 'Meadow', icon: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
               { id: 'Avatar', icon: User },
               { id: 'Settings', icon: SettingsIcon }
             ].map(tab => {
               const isActive = activeTab === tab.id;
               const colors = getThemeColors(selectedTheme);
+              const IconComponent = tab.icon;
               return (
                 <motion.div
                   key={tab.id}
@@ -2146,11 +2058,17 @@ export default function App() {
                     boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
                   }}
                 >
-                  <tab.icon
-                    color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
-                    size={22}
-                    strokeWidth={isActive ? 2.5 : 2}
-                  />
+                  {typeof IconComponent === 'function' && tab.id === 'Meadow' ? (
+                    <div style={{ color: isActive ? colors.primary : getInactiveIconColor(selectedTheme) }}>
+                      <IconComponent />
+                    </div>
+                  ) : (
+                    <IconComponent
+                      color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
+                      size={22}
+                      strokeWidth={isActive ? 2.5 : 2}
+                    />
+                  )}
                 </motion.div>
               );
             })}

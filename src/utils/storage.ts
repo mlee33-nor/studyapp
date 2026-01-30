@@ -14,12 +14,15 @@ const DEFAULT_SETTINGS: UserSettings = {
 
 const DEFAULT_USER_DATA: UserData = {
   totalCompletedSessions: 0,
-  currentStage: 1,
   dailyStats: {},
   weeklyStats: {},
   studyStreak: 0,
   lastStudyDate: null,
   settings: DEFAULT_SETTINGS,
+  meadowAnimals: [],
+  lastResetDate: null,
+  // Legacy fields for compatibility
+  currentStage: 1,
   xp: 0,
   level: 1,
 };
@@ -66,6 +69,41 @@ export const updateSettings = (settings: Partial<UserSettings>): void => {
   updateUserData({ settings: newSettings });
 };
 
+const ANIMAL_LOTTIE_URLS = [
+  'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json', // Bunny (transparent, idle)
+  'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json', // Cat (idle)
+  'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json', // Dog (full body corgi)
+];
+
+export const checkAndResetMeadow = (): UserData => {
+  const currentData = getUserData();
+  const today = new Date().toISOString().split('T')[0];
+  if (currentData.lastResetDate !== today) {
+    return updateUserData({ meadowAnimals: [], lastResetDate: today });
+  }
+  return currentData;
+};
+
+export const getRandomAnimalUrl = (): string => {
+  return ANIMAL_LOTTIE_URLS[Math.floor(Math.random() * ANIMAL_LOTTIE_URLS.length)];
+};
+
+export const updateAnimalPosition = (animalId: string, x: number, y: number): void => {
+  const currentData = getUserData();
+  const meadowAnimals = currentData.meadowAnimals.map(animal =>
+    animal.id === animalId ? { ...animal, x, y } : animal
+  );
+  updateUserData({ meadowAnimals });
+};
+
+export const toggleAnimalFlip = (animalId: string): void => {
+  const currentData = getUserData();
+  const meadowAnimals = currentData.meadowAnimals.map(animal =>
+    animal.id === animalId ? { ...animal, flipped: !animal.flipped } : animal
+  );
+  updateUserData({ meadowAnimals });
+};
+
 export const addCompletedSession = (minutes: number): UserData => {
   const currentData = getUserData();
   const today = new Date().toISOString().split('T')[0];
@@ -98,29 +136,69 @@ export const addCompletedSession = (minutes: number): UserData => {
     studyStreak = 1;
   }
 
-  // Calculate new stage and XP
+  // Spawn new meadow animal with collision-free positioning
+  const MEADOW_WIDTH = 400;
+  const MEADOW_HEIGHT = 500;
+  const ANIMAL_SIZE = 80;
+  const MIN_Y = MEADOW_HEIGHT * 0.3; // Can't spawn in far back (top 30%)
+  const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
+  const MIN_X = 10;
+  const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
+
+  // Find a valid spawn position that doesn't overlap with existing animals
+  const findValidSpawnPosition = (): { x: number; y: number } => {
+    const COLLISION_THRESHOLD = 70;
+    const MAX_ATTEMPTS = 20;
+
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const x = MIN_X + Math.random() * (MAX_X - MIN_X);
+      const y = MIN_Y + Math.random() * (MAX_Y - MIN_Y);
+
+      // Check if this position collides with any existing animal
+      let hasCollision = false;
+      for (const animal of currentData.meadowAnimals) {
+        const dx = x - animal.x;
+        const dy = y - animal.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < COLLISION_THRESHOLD) {
+          hasCollision = true;
+          break;
+        }
+      }
+
+      if (!hasCollision) {
+        return { x, y };
+      }
+    }
+
+    // If all attempts failed, place in center with slight randomness
+    return {
+      x: MEADOW_WIDTH / 2 - ANIMAL_SIZE / 2 + (Math.random() - 0.5) * 100,
+      y: (MIN_Y + MAX_Y) / 2 + (Math.random() - 0.5) * 100
+    };
+  };
+
+  const spawnPos = findValidSpawnPosition();
+  const newAnimal = {
+    id: `${Date.now()}-${Math.random()}`,
+    lottieUrl: getRandomAnimalUrl(),
+    x: spawnPos.x,
+    y: spawnPos.y,
+    flipped: Math.random() > 0.5, // Random initial flip
+  };
+  const meadowAnimals = [...currentData.meadowAnimals, newAnimal];
+
   const totalCompletedSessions = currentData.totalCompletedSessions + 1;
-  const xp = currentData.xp + 100; // 100 XP per session
-  const level = Math.floor(xp / 500) + 1; // Level up every 500 XP
-  const currentStage = calculateStage(totalCompletedSessions);
 
   return updateUserData({
     totalCompletedSessions,
-    currentStage,
     dailyStats,
     weeklyStats,
     studyStreak,
     lastStudyDate: today,
-    xp,
-    level,
+    meadowAnimals,
   });
-};
-
-const calculateStage = (completedSessions: number): number => {
-  if (completedSessions >= 51) return 4;
-  if (completedSessions >= 26) return 3;
-  if (completedSessions >= 11) return 2;
-  return 1;
 };
 
 const getWeekStart = (date: Date): string => {
@@ -157,4 +235,15 @@ export const getWeeklyData = (): number[] => {
   }
 
   return weekData;
+};
+
+// Reset all stats while keeping user settings
+export const resetAllStats = (): UserData => {
+  const currentData = getUserData();
+  const newData: UserData = {
+    ...DEFAULT_USER_DATA,
+    settings: currentData.settings, // Preserve settings
+  };
+  saveUserData(newData);
+  return newData;
 };

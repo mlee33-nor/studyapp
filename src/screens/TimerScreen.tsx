@@ -179,7 +179,7 @@ const TimerScreen: React.FC = () => {
           <h1 className="text-2xl font-semibold text-text-primary">
             {timerMode === 'study' ? 'Timer' : 'Break'}
           </h1>
-          <p className="text-xs text-text-secondary">v2.0 Build 4 - Angle Fix</p>
+          <p className="text-xs text-text-secondary">v2.1 Build 5 - Math Lock</p>
         </div>
         <button
           onClick={() => navigate('/settings')}
@@ -192,110 +192,148 @@ const TimerScreen: React.FC = () => {
         </button>
       </div>
 
-      {/* Timer Circle */}
-      <div className="flex justify-center mb-6">
-        <div className="relative">
-          <svg
-            ref={circleRef}
-            className="transform -rotate-90"
-            width="280"
-            height="280"
-            style={{ touchAction: 'none' }}
-          >
-            <circle
-              cx="140"
-              cy="140"
-              r="130"
-              fill="white"
-              opacity="0.2"
-            />
-            <circle
-              cx="140"
-              cy="140"
-              r="120"
-              fill="white"
-              stroke="white"
-              strokeWidth="2"
-              opacity="0.3"
-            />
-            <circle
-              cx="140"
-              cy="140"
-              r="120"
-              fill="none"
-              stroke="white"
-              strokeWidth="8"
-              strokeDasharray={`${2 * Math.PI * 120}`}
-              strokeDashoffset={`${2 * Math.PI * 120 * (1 - timer.progress / 100)}`}
-              strokeLinecap="round"
-              opacity="0.9"
-              className="transition-all duration-1000"
-            />
-            {/* Draggable handle - only show when timer is not running and in study mode */}
-            {!timer.isRunning && timerMode === 'study' && (
-              <>
-                {/* Handle track circle */}
+      {/* Timer Circle - Mathematical Lock System */}
+      {(() => {
+        // === GLOBAL CONSTANTS (Single Source of Truth) ===
+        const SVG_SIZE = 280;
+        const CX = SVG_SIZE / 2; // 140
+        const CY = SVG_SIZE / 2; // 140
+        const STROKE_WIDTH = 8;
+        const RADIUS = (SVG_SIZE - STROKE_WIDTH) / 2 - 16; // 120
+        const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+        // === HANDLE POSITION via Pure Trigonometry ===
+        // Progress handle: angle derived from timer.progress (0-100)
+        const progressAngle = (timer.progress / 100) * 2 * Math.PI - Math.PI / 2;
+        const progressHandleX = CX + RADIUS * Math.cos(progressAngle);
+        const progressHandleY = CY + RADIUS * Math.sin(progressAngle);
+
+        // Duration handle: angle derived from customDuration (5-60 min)
+        const durationFraction = (customDuration - 5) / 55;
+        const durationAngle = durationFraction * 2 * Math.PI - Math.PI / 2;
+        const durationHandleX = CX + RADIUS * Math.cos(durationAngle);
+        const durationHandleY = CY + RADIUS * Math.sin(durationAngle);
+
+        return (
+          <div className="flex justify-center mb-6">
+            <div className="relative aspect-square" style={{ width: SVG_SIZE, height: SVG_SIZE }}>
+              <svg
+                ref={circleRef}
+                width={SVG_SIZE}
+                height={SVG_SIZE}
+                viewBox={`0 0 ${SVG_SIZE} ${SVG_SIZE}`}
+                overflow="visible"
+                style={{ touchAction: 'none' }}
+              >
+                {/* Background fill circle */}
                 <circle
-                  cx="140"
-                  cy="140"
-                  r="120"
+                  cx={CX}
+                  cy={CY}
+                  r={RADIUS + 10}
+                  fill="white"
+                  opacity="0.2"
+                />
+                {/* Border circle */}
+                <circle
+                  cx={CX}
+                  cy={CY}
+                  r={RADIUS}
+                  fill="white"
+                  stroke="white"
+                  strokeWidth="2"
+                  opacity="0.3"
+                />
+                {/* Progress ring - starts at top (12 o'clock) */}
+                <circle
+                  cx={CX}
+                  cy={CY}
+                  r={RADIUS}
                   fill="none"
-                  stroke="rgba(0,0,0,0.1)"
-                  strokeWidth="2"
-                  strokeDasharray="4 4"
+                  stroke="white"
+                  strokeWidth={STROKE_WIDTH}
+                  strokeDasharray={CIRCUMFERENCE}
+                  strokeDashoffset={CIRCUMFERENCE * (1 - timer.progress / 100)}
+                  strokeLinecap="round"
+                  opacity="0.9"
+                  transform={`rotate(-90 ${CX} ${CY})`}
+                  className="transition-all duration-1000"
                 />
-                {/* Duration indicator line */}
-                <line
-                  x1="140"
-                  y1="140"
-                  x2="140"
-                  y2={140 - 120}
-                  stroke="rgba(0,0,0,0.3)"
-                  strokeWidth="2"
-                  transform={`rotate(${((customDuration - 5) / 55) * 360} 140 140)`}
-                  className="transition-transform duration-100"
-                />
-                {/* Draggable handle - larger touch target */}
-                <g transform={`rotate(${((customDuration - 5) / 55) * 360} 140 140)`}>
-                  {/* Invisible larger hit area for easier touch */}
+
+                {/* Draggable handle - only when timer stopped & study mode */}
+                {!timer.isRunning && timerMode === 'study' && (
+                  <>
+                    {/* Handle track circle (dashed) */}
+                    <circle
+                      cx={CX}
+                      cy={CY}
+                      r={RADIUS}
+                      fill="none"
+                      stroke="rgba(0,0,0,0.1)"
+                      strokeWidth="2"
+                      strokeDasharray="4 4"
+                    />
+                    {/* Duration indicator line from center to handle */}
+                    <line
+                      x1={CX}
+                      y1={CY}
+                      x2={durationHandleX}
+                      y2={durationHandleY}
+                      stroke="rgba(0,0,0,0.3)"
+                      strokeWidth="2"
+                    />
+                    {/* Invisible larger hit area for easier touch (cx/cy positioned via trig) */}
+                    <circle
+                      cx={durationHandleX}
+                      cy={durationHandleY}
+                      r="24"
+                      fill="transparent"
+                      style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                      onTouchStart={handleDragStart}
+                      onMouseDown={handleDragStart}
+                    />
+                    {/* Visible handle circle (cx/cy positioned via trig) */}
+                    <circle
+                      cx={durationHandleX}
+                      cy={durationHandleY}
+                      r="14"
+                      fill="rgba(0,0,0,0.8)"
+                      stroke="white"
+                      strokeWidth="3"
+                      className="pointer-events-none"
+                    />
+                  </>
+                )}
+
+                {/* Progress handle - visible while timer is running */}
+                {timer.isRunning && (
                   <circle
-                    cx="140"
-                    cy={140 - 120}
-                    r="24"
-                    fill="transparent"
-                    className="cursor-pointer"
-                    style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
-                    onTouchStart={handleDragStart}
-                    onMouseDown={handleDragStart}
+                    cx={progressHandleX}
+                    cy={progressHandleY}
+                    r="10"
+                    fill="white"
+                    stroke="rgba(0,0,0,0.3)"
+                    strokeWidth="2"
+                    className="pointer-events-none"
                   />
-                  {/* Visible handle */}
-                  <circle
-                    cx="140"
-                    cy={140 - 120}
-                    r="14"
-                    fill="rgba(0,0,0,0.8)"
-                    stroke="white"
-                    strokeWidth="3"
-                    className="pointer-events-none transition-transform duration-100"
-                  />
-                </g>
-              </>
-            )}
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center">
-              <span className="text-6xl font-light text-text-primary">
-                {formatTime(timer.timeLeft)}
-              </span>
-              {!timer.isRunning && timerMode === 'study' && (
-                <p className="text-sm text-text-secondary mt-2">
-                  Drag handle to adjust
-                </p>
-              )}
+                )}
+              </svg>
+              {/* Centered time display overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center">
+                  <span className="text-6xl font-light text-text-primary">
+                    {formatTime(timer.timeLeft)}
+                  </span>
+                  {!timer.isRunning && timerMode === 'study' && (
+                    <p className="text-sm text-text-secondary mt-2">
+                      Drag handle to adjust
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        );
+      })()}
 
 
       {/* Character */}
