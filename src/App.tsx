@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Lottie from 'lottie-react';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { AstronautCat } from './AstronautCat';
 import { triggerHapticFeedback } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
@@ -441,17 +440,6 @@ const InteractiveTimerRing: React.FC<{
   const [isDragging, setIsDragging] = useState(false);
   const prevMinutesRef = useRef(minutes);
 
-  // Trigger haptic feedback when minute value changes during drag
-  useEffect(() => {
-    if (prevMinutesRef.current !== minutes) {
-      prevMinutesRef.current = minutes;
-      Haptics.impact({ style: ImpactStyle.Light }).catch(() => {
-        // Fallback for web: use vibrate API if available
-        navigator?.vibrate?.(10);
-      });
-    }
-  }, [minutes]);
-
   const progress = 1 - (timeLeft / totalSeconds);
   const dashOffset = CIRCUMFERENCE * (1 - progress);
 
@@ -489,9 +477,9 @@ const InteractiveTimerRing: React.FC<{
     const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
 
     // Trigger haptic feedback when the value changes
-    if (clampedMinutes !== previousMinutesRef.current) {
+    if (clampedMinutes !== prevMinutesRef.current) {
       triggerHapticFeedback(10);
-      previousMinutesRef.current = clampedMinutes;
+      prevMinutesRef.current = clampedMinutes;
     }
 
     onMinutesChange(clampedMinutes);
@@ -537,10 +525,10 @@ const InteractiveTimerRing: React.FC<{
     };
   }, [isDragging, isRunning]);
 
-  // Update previousMinutesRef when minutes changes externally
+  // Update prevMinutesRef when minutes changes externally
   useEffect(() => {
     if (!isDragging) {
-      previousMinutesRef.current = minutes;
+      prevMinutesRef.current = minutes;
     }
   }, [minutes, isDragging]);
 
