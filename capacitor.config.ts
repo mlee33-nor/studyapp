@@ -4,6 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.studybuddy.app',
   appName: 'StudyBuddy',
   webDir: 'dist',
+  includePlugins: [],
   server: {
     cleartext: true,
     // Disable caching to ensure latest build always loads
