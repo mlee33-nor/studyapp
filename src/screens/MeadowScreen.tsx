@@ -19,7 +19,7 @@ const MIN_X = 10;
 const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 
 const MeadowScreen: React.FC = () => {
-  const { userData, setUserData, refreshData } = useUserData();
+  const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
 
   // Load Lottie animations
