@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Lottie from 'lottie-react';
 import { AstronautCat } from './AstronautCat';
+import { triggerHapticFeedback } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
@@ -437,6 +438,7 @@ const InteractiveTimerRing: React.FC<{
   const displaySize = 192;
   const svgRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const previousMinutesRef = useRef<number>(minutes);
 
   const progress = 1 - (timeLeft / totalSeconds);
   const dashOffset = CIRCUMFERENCE * (1 - progress);
@@ -472,7 +474,15 @@ const InteractiveTimerRing: React.FC<{
     if (angle < 0) angle += 360;
 
     const newMinutes = Math.round((angle / 360) * (60 - 5) + 5);
-    onMinutesChange(Math.max(5, Math.min(60, newMinutes)));
+    const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
+
+    // Trigger haptic feedback when the value changes
+    if (clampedMinutes !== previousMinutesRef.current) {
+      triggerHapticFeedback(10);
+      previousMinutesRef.current = clampedMinutes;
+    }
+
+    onMinutesChange(clampedMinutes);
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -514,6 +524,13 @@ const InteractiveTimerRing: React.FC<{
       window.removeEventListener('pointercancel', handleGlobalPointerUp);
     };
   }, [isDragging, isRunning]);
+
+  // Update previousMinutesRef when minutes changes externally
+  useEffect(() => {
+    if (!isDragging) {
+      previousMinutesRef.current = minutes;
+    }
+  }, [minutes, isDragging]);
 
   return (
     <div
