@@ -6,6 +6,7 @@ import confetti from 'canvas-confetti';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { AstronautCat } from './AstronautCat';
+import { triggerHapticFeedback } from './utils/haptics';
 
 // --- STORAGE HELPERS ---
 const getDarkMode = () => {
@@ -452,6 +453,7 @@ const InteractiveTimerRing: React.FC<{
   const radius = (size / 2) - (strokeWidth / 2); // 96 - 2.5 = 93.5
   const circumference = radius * 2 * Math.PI;
   const containerRef = useRef<HTMLDivElement>(null);
+  const previousMinutesRef = useRef<number>(minutes);
 
   const progress = 1 - (timeLeft / totalSeconds);
   const dashOffset = circumference * (1 - progress);
@@ -474,6 +476,7 @@ const InteractiveTimerRing: React.FC<{
   // Update angle when minutes prop changes externally
   useEffect(() => {
     angle.set(angleFromMinutes(minutes));
+    previousMinutesRef.current = minutes;
   }, [minutes, angle]);
 
   // POLAR TO CARTESIAN TRANSFORMATION: X = cx + R·cos(θ), Y = cy + R·sin(θ)
@@ -510,6 +513,12 @@ const InteractiveTimerRing: React.FC<{
     const normalized = theta / 360; // 0-1
     const newMinutes = Math.round(5 + normalized * (60 - 5));
     const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
+
+    // Trigger haptic feedback when the value changes
+    if (clampedMinutes !== previousMinutesRef.current) {
+      triggerHapticFeedback(10);
+      previousMinutesRef.current = clampedMinutes;
+    }
 
     onMinutesChange(clampedMinutes);
   };

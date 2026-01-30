@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Character from '../components/Character';
 import type { TimerMode } from '../types';
 import { getWeeklyMinutes } from '../utils/storage';
+import { triggerHapticFeedback } from '../utils/haptics';
 
 const TimerScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const TimerScreen: React.FC = () => {
   const [customDuration, setCustomDuration] = useState(userData.settings.studyDuration);
   const circleRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const previousMinutesRef = useRef<number>(customDuration);
 
   const getDuration = () => {
     switch (timerMode) {
@@ -63,6 +65,13 @@ const TimerScreen: React.FC = () => {
     }
   }, [customDuration]);
 
+  // Update previousMinutesRef when customDuration changes from outside drag
+  useEffect(() => {
+    if (!isDragging) {
+      previousMinutesRef.current = customDuration;
+    }
+  }, [customDuration, isDragging]);
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -103,6 +112,12 @@ const TimerScreen: React.FC = () => {
     // Full circle = 55 minutes range (60-5)
     const minutes = Math.round((angle / 360) * 55 + 5);
     const clampedMinutes = Math.max(5, Math.min(60, minutes));
+
+    // Trigger haptic feedback when the value changes
+    if (clampedMinutes !== previousMinutesRef.current) {
+      triggerHapticFeedback(10);
+      previousMinutesRef.current = clampedMinutes;
+    }
 
     setCustomDuration(clampedMinutes);
   }, [timer.isRunning, timerMode]);
