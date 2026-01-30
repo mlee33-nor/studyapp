@@ -1052,6 +1052,14 @@ export default function App() {
     { name: 'Corgi', emoji: '🐶', url: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json' },
   ];
 
+  // Disable scrolling on the home (Timer) tab
+  useEffect(() => {
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.overflowY = activeTab === 'Timer' ? 'hidden' : 'auto';
+    }
+  }, [activeTab]);
+
   // Persistence Engine: Load saved data on mount
   useEffect(() => {
     const savedHistory = getFocusHistory();
@@ -1973,7 +1981,8 @@ export default function App() {
         maxWidth: '480px',
         margin: '0 auto',
         position: 'relative',
-        height: activeTab === 'Timer' ? '100dvh' : 'auto'
+        height: activeTab === 'Timer' ? '100dvh' : 'auto',
+        overflow: activeTab === 'Timer' ? 'hidden' : undefined,
       }}>
         {renderContent()}
       </div>
