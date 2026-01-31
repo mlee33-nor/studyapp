@@ -62,17 +62,6 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
           pointerEvents: 'none'
         }} />
       ))}
-      {/* Ground */}
-      <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: '60%',
-        background: 'linear-gradient(to bottom, rgba(124, 252, 0, 0.3) 0%, rgba(34, 139, 34, 0.5) 100%)',
-        pointerEvents: 'none',
-        zIndex: 3
-      }} />
     </div>
   ),
   safari: () => (
