@@ -10,8 +10,8 @@ const MEADOW_WIDTH = 400;
 const MEADOW_HEIGHT = 450;
 const ANIMAL_SIZE = 80;
 
-// Depth zones - animals can't go into the far back (top 30% is restricted)
-const MIN_Y = MEADOW_HEIGHT * 0.3; // Can't place above 30% (too far back)
+// Depth zones - animals can't go into the sky (top 180px is sky area)
+const MIN_Y = 200; // Keep animals on grass only (sky ends at 180px, add buffer)
 const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20; // Bottom boundary with padding
 
 // Safe horizontal bounds
@@ -21,6 +21,7 @@ const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 const MeadowScreen: React.FC = () => {
   const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
+  const [draggingAnimalId, setDraggingAnimalId] = useState<string | null>(null);
 
   // Load Lottie animations
   useEffect(() => {
@@ -75,7 +76,21 @@ const MeadowScreen: React.FC = () => {
 
   // Handle drag end with smooth constraints
   const handleDragEnd = (animalId: string, _event: any, info: any) => {
-    let { x: newX, y: newY } = constrainPosition(info.point.x, info.point.y);
+    // Get current animal to find its starting position
+    const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
+    if (!currentAnimal) {
+      setDraggingAnimalId(null);
+      return;
+    }
+
+    // Calculate new position based on offset from start (relative movement)
+    let newX = currentAnimal.x + info.offset.x;
+    let newY = currentAnimal.y + info.offset.y;
+
+    // Apply constraints
+    const constrained = constrainPosition(newX, newY);
+    newX = constrained.x;
+    newY = constrained.y;
 
     // If collision detected, try to find nearby valid position
     if (checkCollision(animalId, newX, newY)) {
@@ -105,15 +120,13 @@ const MeadowScreen: React.FC = () => {
 
       // If no valid position found, snap back to original position
       if (!validPositionFound) {
-        const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
-        if (currentAnimal) {
-          newX = currentAnimal.x;
-          newY = currentAnimal.y;
-        }
+        newX = currentAnimal.x;
+        newY = currentAnimal.y;
       }
     }
 
     updateAnimalPosition(animalId, newX, newY);
+    setDraggingAnimalId(null);
     refreshData();
   };
 
@@ -303,35 +316,33 @@ const MeadowScreen: React.FC = () => {
                     key={animal.id}
                     drag
                     dragMomentum={false}
-                    dragElastic={0.1}
-                    dragTransition={{
-                      power: 0.1,
-                      timeConstant: 200,
-                      bounceStiffness: 300,
-                      bounceDamping: 20
-                    }}
+                    dragElastic={0}
                     dragConstraints={{
                       left: MIN_X,
                       right: MAX_X,
                       top: MIN_Y,
                       bottom: MAX_Y,
                     }}
+                    onDragStart={() => setDraggingAnimalId(animal.id)}
                     onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                     onClick={() => handleAnimalTap(animal.id)}
-                    initial={{ x: animal.x, y: animal.y }}
-                    animate={{ x: animal.x, y: animal.y }}
+                    animate={draggingAnimalId !== animal.id ? { x: animal.x, y: animal.y } : undefined}
                     transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 25
+                      type: "tween",
+                      duration: 0.2
                     }}
                     className="absolute cursor-grab active:cursor-grabbing"
                     style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
                       width: `${ANIMAL_SIZE}px`,
                       height: `${ANIMAL_SIZE}px`,
                       zIndex: getZIndex(animal.y),
                       transform: animal.flipped ? 'scaleX(-1)' : 'scaleX(1)',
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                      x: animal.x,
+                      y: animal.y
                     }}
                     whileHover={{
                       scale: 1.05,

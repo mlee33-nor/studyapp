@@ -104,7 +104,7 @@ export const toggleAnimalFlip = (animalId: string): void => {
   updateUserData({ meadowAnimals });
 };
 
-export const addCompletedSession = (minutes: number): UserData => {
+export const addCompletedSession = (minutes: number, animalUrl?: string): UserData => {
   const currentData = getUserData();
   const today = new Date().toISOString().split('T')[0];
 
@@ -138,9 +138,9 @@ export const addCompletedSession = (minutes: number): UserData => {
 
   // Spawn new meadow animal with collision-free positioning
   const MEADOW_WIDTH = 400;
-  const MEADOW_HEIGHT = 500;
+  const MEADOW_HEIGHT = 450;
   const ANIMAL_SIZE = 80;
-  const MIN_Y = MEADOW_HEIGHT * 0.3; // Can't spawn in far back (top 30%)
+  const MIN_Y = 200; // Keep animals on grass only (sky ends at 180px, add buffer)
   const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
   const MIN_X = 10;
   const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
@@ -182,7 +182,7 @@ export const addCompletedSession = (minutes: number): UserData => {
   const spawnPos = findValidSpawnPosition();
   const newAnimal = {
     id: `${Date.now()}-${Math.random()}`,
-    lottieUrl: getRandomAnimalUrl(),
+    lottieUrl: animalUrl || getRandomAnimalUrl(),
     x: spawnPos.x,
     y: spawnPos.y,
     flipped: Math.random() > 0.5, // Random initial flip

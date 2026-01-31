@@ -1210,7 +1210,8 @@ export default function App() {
     saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
 
     // Add completed session to storage (this spawns meadow animal automatically)
-    addCompletedSession(timerMinutes);
+    const selectedAnimalUrl = ANIMALS[selectedAnimal].url;
+    addCompletedSession(timerMinutes, selectedAnimalUrl);
 
     // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
     const xpGained = timerMinutes * 10;
