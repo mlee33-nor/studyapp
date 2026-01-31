@@ -365,7 +365,7 @@ const TimerScreen: React.FC = () => {
             className="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white/80 backdrop-blur-sm shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
           >
             <div className="text-sm text-text-secondary font-medium">Next Animal:</div>
-            <div className="w-20 h-20">
+            <div className="w-20 h-20 pointer-events-none">
               {loadedAnimations[userData.selectedAnimal.id] ? (
                 <Lottie
                   animationData={loadedAnimations[userData.selectedAnimal.id]}
@@ -373,6 +373,7 @@ const TimerScreen: React.FC = () => {
                   style={{
                     width: '100%',
                     height: '100%',
+                    pointerEvents: 'none',
                   }}
                 />
               ) : (
