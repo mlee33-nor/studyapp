@@ -189,6 +189,21 @@ const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') =
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 const GENTLE_PRESS = { scale: 0.96 };
 
+const MeadowIcon = ({ color, size, strokeWidth }: { color: string; size: number; strokeWidth: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+    <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+  </svg>
+);
+
+const NAV_TABS = [
+  { id: 'Timer', icon: Home },
+  { id: 'Stats', icon: BarChart2 },
+  { id: 'Reports', icon: FileText },
+  { id: 'Meadow', icon: MeadowIcon },
+  { id: 'Avatar', icon: User },
+  { id: 'Settings', icon: SettingsIcon },
+] as const;
+
 // --- BACKGROUND THEMES - 4 Distinct Palettes ---
 const BACKGROUND_THEMES = {
   morning: {
@@ -1803,6 +1818,7 @@ export default function App() {
   };
 
   return (
+    <>
     <motion.div
       animate={{ background: BACKGROUND_THEMES[theme].gradient }}
       transition={{ duration: 2, ease: "easeInOut" }}
@@ -1948,6 +1964,7 @@ export default function App() {
       }}>
         {renderContent()}
       </div>
+    </motion.div>
 
       {/* Fixed Navigation - Always visible */}
       <div style={{
@@ -1974,47 +1991,33 @@ export default function App() {
               pointerEvents: 'auto',
             }}
           >
-            {[
-              { id: 'Timer', icon: Home },
-              { id: 'Stats', icon: BarChart2 },
-              { id: 'Reports', icon: FileText },
-              { id: 'Meadow', icon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
-              { id: 'Avatar', icon: User },
-              { id: 'Settings', icon: SettingsIcon }
-            ].map(tab => {
+            {NAV_TABS.map(tab => {
               const isActive = activeTab === tab.id;
               const colors = getThemeColors(selectedTheme);
               const IconComponent = tab.icon;
               return (
-                <motion.div
+                <div
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  whileTap={GENTLE_PRESS}
-                  transition={SOFT_SPRING}
                   style={{
                     cursor: 'pointer',
                     padding: '8px',
                     borderRadius: '14px',
                     background: isActive ? (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(167, 139, 250, 0.2)') : 'transparent',
                     boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
+                    transition: 'background 0.2s, box-shadow 0.2s',
                   }}
                 >
-                  {typeof IconComponent === 'function' && tab.id === 'Meadow' ? (
-                    <div style={{ color: isActive ? colors.primary : getInactiveIconColor(selectedTheme) }}>
-                      <IconComponent />
-                    </div>
-                  ) : (
-                    <IconComponent
-                      color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
-                      size={20}
-                      strokeWidth={isActive ? 2.5 : 2}
-                    />
-                  )}
-                </motion.div>
+                  <IconComponent
+                    color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
+                    size={20}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                </div>
               );
             })}
         </div>
       </div>
-    </motion.div>
+    </>
   );
 }
