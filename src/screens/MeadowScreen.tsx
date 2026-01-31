@@ -182,7 +182,7 @@ const MeadowScreen: React.FC = () => {
         </div>
 
         {/* 3D Meadow Diorama Container */}
-        <div style={{ perspective: '1200px', marginBottom: '20px' }}>
+        <div style={{ perspective: '1200px', marginBottom: '20px', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
           <div
             style={{
               padding: '0',
@@ -190,7 +190,6 @@ const MeadowScreen: React.FC = () => {
               borderRadius: '28px',
               transform: 'rotateX(8deg)',
               transformStyle: 'preserve-3d',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.2), 0 10px 30px rgba(0,0,0,0.1)',
             }}
           >
             <div
@@ -362,7 +361,7 @@ const MeadowScreen: React.FC = () => {
                       scale: 1.05,
                       filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))'
                     }}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
                   >
                     {loadedAnimations[animal.id] && (
                       <Lottie
