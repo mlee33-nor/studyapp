@@ -1451,14 +1451,14 @@ export default function App() {
                 boxShadow: getNavShadow(selectedTheme),
                 display: 'flex',
                 gap: '8px',
-                padding: '10px 16px',
+                padding: '12px 20px',
               }}
             >
               {[
                 { id: 'Timer', icon: Home },
                 { id: 'Stats', icon: BarChart2 },
                 { id: 'Reports', icon: FileText },
-                { id: 'Meadow', icon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
+                { id: 'Meadow', icon: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
                 { id: 'Avatar', icon: User },
                 { id: 'Settings', icon: SettingsIcon }
               ].map(tab => {
@@ -1472,15 +1472,15 @@ export default function App() {
                     transition={SOFT_SPRING}
                     style={{
                       cursor: 'pointer',
-                      padding: '8px',
-                      borderRadius: '14px',
+                      padding: '10px',
+                      borderRadius: '16px',
                       background: isActive ? (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(167, 139, 250, 0.2)') : 'transparent',
                       boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
                     }}
                   >
                     <tab.icon
                       color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
-                      size={20}
+                      size={22}
                       strokeWidth={isActive ? 2.5 : 2}
                     />
                   </motion.div>
