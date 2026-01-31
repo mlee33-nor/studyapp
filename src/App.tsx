@@ -983,8 +983,7 @@ export default function App() {
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
-  const [selectedAnimal, setSelectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Panda
-  const [showAnimalSelector, setShowAnimalSelector] = useState(false);
+  const [selectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Corgi (fixed selection, no selector modal)
   const [showRarityReveal, setShowRarityReveal] = useState(false);
   const [unlockedAnimal, setUnlockedAnimal] = useState<any>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
@@ -1308,11 +1307,8 @@ export default function App() {
               marginTop: '12px'
             }}>
               <motion.div
-                onClick={() => setShowAnimalSelector(true)}
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 style={{
-                  cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'center',
                   width: '80px',
@@ -1840,124 +1836,6 @@ export default function App() {
         onClose={() => setShowCategoryModal(false)}
         onSelectCategory={handleCategorySelected}
       />
-
-      {/* Animal Selector Modal */}
-      {showAnimalSelector && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setShowAnimalSelector(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.4)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2000,
-            padding: '20px',
-          }}
-        >
-          <motion.div
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(30, 30, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderRadius: '32px',
-              padding: '32px 24px',
-              border: `1px solid ${getBorderColor(selectedTheme)}`,
-              boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3)',
-              maxWidth: '400px',
-              width: '100%',
-            }}
-          >
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: 600,
-              color: getTextColor(selectedTheme, 'primary'),
-              marginBottom: '8px',
-              textAlign: 'center',
-              fontFamily: "'Quicksand', sans-serif",
-            }}>
-              Choose Your Companion
-            </h2>
-            <p style={{
-              fontSize: '13px',
-              color: getTextColor(selectedTheme, 'secondary'),
-              marginBottom: '24px',
-              textAlign: 'center',
-              fontFamily: "'Quicksand', sans-serif",
-            }}>
-              This animal will appear in your meadow after each study session
-            </p>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-              marginBottom: '24px',
-            }}>
-              {ANIMALS.map((animal, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setSelectedAnimal(index);
-                    setShowAnimalSelector(false);
-                  }}
-                  style={{
-                    background: selectedAnimal === index
-                      ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)'
-                      : BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: selectedAnimal === index ? '2px solid rgba(167, 139, 250, 0.6)' : `1px solid ${getBorderColor(selectedTheme)}`,
-                    borderRadius: '20px',
-                    padding: '20px 12px',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    boxShadow: selectedAnimal === index ? '0 4px 20px rgba(167, 139, 250, 0.3)' : '0 2px 10px rgba(0,0,0,0.05)',
-                  }}
-                >
-                  {loadedAnimations[`selected-${index}`] ? (
-                    <div style={{ width: '60px', height: '60px', margin: '0 auto' }}>
-                      <Lottie
-                        animationData={loadedAnimations[`selected-${index}`]}
-                        loop={true}
-                        style={{ width: '100%', height: '100%' }}
-                      />
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '40px', marginBottom: '8px' }}>{animal.emoji}</div>
-                  )}
-                  <div style={{
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: getTextColor(selectedTheme, 'primary'),
-                    marginTop: '8px',
-                    fontFamily: "'Quicksand', sans-serif",
-                  }}>
-                    {animal.name.split(' ')[1] || animal.name}
-                  </div>
-                  {selectedAnimal === index && (
-                    <div style={{ fontSize: '16px', marginTop: '4px' }}>✓</div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
 
       <div style={{
         maxWidth: '480px',
