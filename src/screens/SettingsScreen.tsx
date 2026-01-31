@@ -148,7 +148,9 @@ const SettingsScreen: React.FC = () => {
               activeBiome: 'meadow' as any,
             };
             setUserData(newData);
-            navigate('/meadow');
+            setTimeout(() => {
+              navigate('/');
+            }, 100);
           }}
           className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-2xl transition-all duration-200 shadow-soft"
         >
