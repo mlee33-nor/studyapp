@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTimer } from '../hooks/useTimer';
 import { useUserData } from '../hooks/useUserData';
 import { useTheme } from '../contexts/ThemeContext';
-import Character from '../components/Character';
 import type { TimerMode } from '../types';
 import { getWeeklyMinutes } from '../utils/storage';
 import { triggerHapticFeedback } from '../utils/haptics';
@@ -335,13 +334,6 @@ const TimerScreen: React.FC = () => {
         );
       })()}
 
-
-      {/* Character */}
-      <div className="flex justify-center mb-4">
-        <button onClick={() => navigate('/avatar')} className="transition-transform hover:scale-105 active:scale-95">
-          <Character stage={userData.currentStage} />
-        </button>
-      </div>
 
       {/* Progress Bar */}
       <div className="max-w-xs mx-auto mb-2">

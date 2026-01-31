@@ -58,6 +58,7 @@ export interface UserSettings {
   shortBreakDuration: number; // in minutes
   longBreakDuration: number; // in minutes
   selectedTheme: ThemeColor;
+  devModeEnabled?: boolean;
 }
 
 export type ThemeColor = 'blue' | 'green' | 'purple' | 'peach' | 'beige';

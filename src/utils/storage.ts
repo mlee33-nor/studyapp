@@ -1,4 +1,5 @@
 import type { UserData, UserSettings, CollectedAnimal, RarityType, BiomeType } from '../types';
+import { getAnimalsForBiome } from '../data/biomes';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
@@ -10,6 +11,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   shortBreakDuration: 5,
   longBreakDuration: 15,
   selectedTheme: 'purple',
+  devModeEnabled: false,
 };
 
 const DEFAULT_USER_DATA: UserData = {
@@ -248,10 +250,20 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   };
 
   const spawnPos = findValidSpawnPosition();
-  const selectedUrl = animalUrl || getRandomAnimalUrl();
+
+  // Get active biome and spawn animal from that biome's pool
+  const activeBiome = currentData.activeBiome || 'meadow';
+  const biomeAnimals = getAnimalsForBiome(activeBiome);
+
+  // Select random animal from biome pool, or use default if pool is empty
+  let selectedAnimal = biomeAnimals.length > 0
+    ? biomeAnimals[Math.floor(Math.random() * biomeAnimals.length)]
+    : { name: 'Animal', id: 'default', lottieUrl: getRandomAnimalUrl(), rarity: 'common' as RarityType };
+
+  const selectedUrl = animalUrl || selectedAnimal.lottieUrl;
 
   // Add to permanent collection with rarity metadata (session duration boosts rarity odds)
-  const collectedAnimal = addToCollection('Meadow Animal', 'meadow', selectedUrl, minutes);
+  const collectedAnimal = addToCollection(selectedAnimal.name || 'Animal', activeBiome, selectedUrl, minutes);
 
   // Create meadow display animal with metadata from collected animal
   const newAnimal = {
@@ -328,5 +340,17 @@ export const resetAllStats = (): UserData => {
     settings: currentData.settings, // Preserve settings
   };
   saveUserData(newData);
+  return newData;
+};
+
+// Dev Mode: Unlock all biomes by setting level to 50
+export const unlockAllBiomes = (): UserData => {
+  const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
+  const newData = updateUserData({
+    level: 50,
+    xp: 25000, // Max XP
+    unlockedBiomes: biomeIds,
+    activeBiome: 'meadow',
+  });
   return newData;
 };

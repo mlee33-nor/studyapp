@@ -5,6 +5,12 @@ import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType } from '../types';
 import { BIOME_CONFIG, getUnlockedBiomes } from '../data/biomes';
+import meadowBg from '../assets/biomes/meadows.jpg';
+import safariBg from '../assets/biomes/safari.jpg';
+import forestBg from '../assets/biomes/forest.jpg';
+import oceanBg from '../assets/biomes/ocean.jpg';
+import arcticBg from '../assets/biomes/arctic.jpg';
+import mountainBg from '../assets/biomes/mountains.jpg';
 
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
@@ -22,7 +28,9 @@ const MIN_X = 10;
 const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   meadow: () => (
     <div style={{
-      background: 'linear-gradient(165deg, #87CEEB 0%, #98D8E8 30%, #90EE90 60%, #76B583 100%)',
+      backgroundImage: `url(${meadowBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
       position: 'relative',
       width: '100%',
       height: '100%',
@@ -69,7 +77,9 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   ),
   safari: () => (
     <div style={{
-      background: 'linear-gradient(135deg, #F4A460 0%, #DEB887 40%, #D2B48C 100%)',
+      backgroundImage: `url(${safariBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
       position: 'relative',
       width: '100%',
       height: '100%',
@@ -147,7 +157,9 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   ),
   forest: () => (
     <div style={{
-      background: 'linear-gradient(135deg, #1B4D3E 0%, #2D5F4F 40%, #0D3B2D 100%)',
+      backgroundImage: `url(${forestBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
       position: 'relative',
       width: '100%',
       height: '100%',
@@ -199,7 +211,9 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   ),
   ocean: () => (
     <div style={{
-      background: 'linear-gradient(135deg, #0369A1 0%, #06B6D4 40%, #06B6D4 100%)',
+      backgroundImage: `url(${oceanBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
       position: 'relative',
       width: '100%',
       height: '100%',
@@ -245,7 +259,9 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   ),
   arctic: () => (
     <div style={{
-      background: 'linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 40%, #7DD3FC 100%)',
+      backgroundImage: `url(${arcticBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
       position: 'relative',
       width: '100%',
       height: '100%',
@@ -293,7 +309,9 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   ),
   mountain: () => (
     <div style={{
-      background: 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 40%, #6366F1 100%)',
+      backgroundImage: `url(${mountainBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
       position: 'relative',
       width: '100%',
       height: '100%',
