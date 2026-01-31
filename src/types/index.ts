@@ -22,6 +22,13 @@ export interface CollectedAnimal {
   collectedAt: string; // ISO date string
 }
 
+export interface SelectedAnimal {
+  id: string;
+  name: string;
+  biome: BiomeType;
+  lottieUrl: string;
+}
+
 export interface UserData {
   totalCompletedSessions: number;
   dailyStats: DailyStats;
@@ -36,6 +43,8 @@ export interface UserData {
   activeBiome: BiomeType;
   unlockedBiomes: BiomeType[];
   lastDailyReset: string | null;
+  // Selected animal for pomodoro session
+  selectedAnimal: SelectedAnimal | null;
   // Legacy fields (for compatibility with unused screen files)
   currentStage: number;
   xp: number;

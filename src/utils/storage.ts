@@ -1,5 +1,4 @@
 import type { UserData, UserSettings, CollectedAnimal, RarityType, BiomeType } from '../types';
-import { getAnimalsForBiome } from '../data/biomes';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
@@ -28,6 +27,13 @@ const DEFAULT_USER_DATA: UserData = {
   activeBiome: 'meadow',
   unlockedBiomes: ['meadow'],
   lastDailyReset: null,
+  // Selected animal for pomodoro
+  selectedAnimal: {
+    id: 'rabbit',
+    name: 'Rabbit',
+    biome: 'meadow',
+    lottieUrl: 'https://lottie.host/mj0n1o2p-qn4r-4p67-8s45-f012345678/CcCfF9U4X7.json',
+  },
   // Legacy fields for compatibility
   currentStage: 1,
   xp: 0,
@@ -154,15 +160,13 @@ export const getRarityColor = (rarity: RarityType): string => {
 export const addToCollection = (
   name: string,
   biome: BiomeType,
-  lottieUrl: string,
-  sessionMinutes: number = 25
+  lottieUrl: string
 ): CollectedAnimal => {
-  const rarity = rollRarity(sessionMinutes);
   const animal: CollectedAnimal = {
     id: `${Date.now()}-${Math.random()}`,
     name,
     biome,
-    rarity,
+    rarity: 'common',
     lottieUrl,
     collectedAt: new Date().toISOString(),
   };
@@ -251,19 +255,18 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
 
   const spawnPos = findValidSpawnPosition();
 
-  // Get active biome and spawn animal from that biome's pool
-  const activeBiome = currentData.activeBiome || 'meadow';
-  const biomeAnimals = getAnimalsForBiome(activeBiome);
+  // Use the user's selected animal, or default to rabbit if not set
+  const selectedAnimalData = currentData.selectedAnimal || {
+    id: 'rabbit',
+    name: 'Rabbit',
+    biome: 'meadow',
+    lottieUrl: 'https://lottie.host/mj0n1o2p-qn4r-4p67-8s45-f012345678/CcCfF9U4X7.json',
+  };
 
-  // Select random animal from biome pool, or use default if pool is empty
-  let selectedAnimal = biomeAnimals.length > 0
-    ? biomeAnimals[Math.floor(Math.random() * biomeAnimals.length)]
-    : { name: 'Animal', id: 'default', lottieUrl: getRandomAnimalUrl(), rarity: 'common' as RarityType };
+  const selectedUrl = animalUrl || selectedAnimalData.lottieUrl;
 
-  const selectedUrl = animalUrl || selectedAnimal.lottieUrl;
-
-  // Add to permanent collection with rarity metadata (session duration boosts rarity odds)
-  const collectedAnimal = addToCollection(selectedAnimal.name || 'Animal', activeBiome, selectedUrl, minutes);
+  // Add to permanent collection
+  const collectedAnimal = addToCollection(selectedAnimalData.name, selectedAnimalData.biome, selectedUrl);
 
   // Create meadow display animal with metadata from collected animal
   const newAnimal = {
