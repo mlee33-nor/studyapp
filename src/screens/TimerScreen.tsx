@@ -387,11 +387,11 @@ const TimerScreen: React.FC = () => {
       {/* Animal Selector Modal */}
       {showAnimalSelector && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end z-50 px-6"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-6"
           onClick={() => setShowAnimalSelector(false)}
         >
           <div
-            className="bg-white rounded-t-3xl p-6 w-full max-w-lg mx-auto max-h-96 overflow-y-auto"
+            className="bg-white rounded-3xl p-6 w-full max-w-md max-h-96 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-xl font-semibold text-text-primary mb-4">Select Your Animal</h2>
