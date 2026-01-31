@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '../hooks/useUserData';
 import { useTheme } from '../contexts/ThemeContext';
-import { unlockAllBiomes } from '../utils/storage';
 import type { ThemeColor } from '../types';
 import Character from '../components/Character';
 
 const SettingsScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { userData, updateSettings, resetAllStats } = useUserData();
+  const { userData, updateSettings, resetAllStats, setUserData } = useUserData();
   const { getGradientClass } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -140,8 +139,16 @@ const SettingsScreen: React.FC = () => {
         </p>
         <button
           onClick={() => {
-            unlockAllBiomes();
-            window.location.reload();
+            const biomeIds: any[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
+            const newData = {
+              ...userData,
+              level: 50,
+              xp: 25000,
+              unlockedBiomes: biomeIds,
+              activeBiome: 'meadow' as any,
+            };
+            setUserData(newData);
+            navigate('/meadow');
           }}
           className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-2xl transition-all duration-200 shadow-soft"
         >
