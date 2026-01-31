@@ -358,7 +358,10 @@ const TimerScreen: React.FC = () => {
       {userData.selectedAnimal && (
         <div className="flex justify-center mb-6">
           <button
-            onClick={() => setShowAnimalSelector(true)}
+            onClick={() => {
+              console.log("Animal button clicked!");
+              setShowAnimalSelector(true);
+            }}
             className="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white/80 backdrop-blur-sm shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
           >
             <div className="text-sm text-text-secondary font-medium">Next Animal:</div>
