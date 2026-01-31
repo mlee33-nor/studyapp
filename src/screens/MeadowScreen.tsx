@@ -340,10 +340,7 @@ const MeadowScreen: React.FC = () => {
                     onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                     onClick={() => handleAnimalTap(animal.id)}
                     animate={draggingAnimalId !== animal.id ? { x: animal.x, y: animal.y } : undefined}
-                    transition={{
-                      type: "tween",
-                      duration: 0.2
-                    }}
+                    transition={draggingAnimalId === animal.id ? { duration: 0 } : { type: "tween", duration: 0.2 }}
                     className="absolute cursor-grab active:cursor-grabbing"
                     style={{
                       position: 'absolute',
