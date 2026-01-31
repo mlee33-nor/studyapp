@@ -343,7 +343,6 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
 const MeadowScreen: React.FC = () => {
   const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
-  const [draggingAnimalId, setDraggingAnimalId] = useState<string | null>(null);
   const meadowRef = useRef<HTMLDivElement>(null);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
 
@@ -392,77 +391,77 @@ const MeadowScreen: React.FC = () => {
     };
   };
 
-  // Check if position overlaps with existing animals
-  const checkCollision = (animalId: string, newX: number, newY: number) => {
-    const COLLISION_THRESHOLD = 35; // Minimum distance - allows close proximity, auto-repels when overlapping
+  // Check if position is in a valid zone (not in sky, not too close to another animal)
+  const isValidPosition = (animalId: string, newX: number, newY: number): boolean => {
+    // Sky threshold - animals must be below this line
+    const SKY_THRESHOLD = MIN_Y;
+    if (newY < SKY_THRESHOLD) return false;
 
+    // Collision threshold - must be at least this far from other animals
+    const COLLISION_THRESHOLD = 45;
     for (const animal of userData.meadowAnimals) {
       if (animal.id === animalId) continue;
-
       const dx = newX - animal.x;
       const dy = newY - animal.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance < COLLISION_THRESHOLD) {
-        return true; // Collision detected
-      }
+      if (distance < COLLISION_THRESHOLD) return false;
     }
-    return false;
+
+    return true;
   };
 
-  // Handle drag end with smooth constraints
+  // Handle drag end - place exactly where user drops, allow close positioning
   const handleDragEnd = (animalId: string, _event: any, info: any) => {
-    // Get current animal to find its starting position
     const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
     if (!currentAnimal) {
-      setDraggingAnimalId(null);
       return;
     }
 
-    // Calculate new position based on offset from start (relative movement)
+    // Calculate desired position based on drag offset
     let newX = currentAnimal.x + info.offset.x;
     let newY = currentAnimal.y + info.offset.y;
 
-    // Apply constraints
+    // Apply boundary constraints first
     const constrained = constrainPosition(newX, newY);
     newX = constrained.x;
     newY = constrained.y;
 
-    // If collision detected, try to find nearby valid position
-    if (checkCollision(animalId, newX, newY)) {
-      // Try small adjustments to find valid position
-      const adjustments = [
-        { dx: 70, dy: 0 },
-        { dx: -70, dy: 0 },
-        { dx: 0, dy: 70 },
-        { dx: 0, dy: -70 },
-        { dx: 50, dy: 50 },
-        { dx: -50, dy: -50 }
+    // Check if position is valid (not in sky, not directly on another animal)
+    if (!isValidPosition(animalId, newX, newY)) {
+      // Try nearby positions in priority order
+      const attempts = [
+        { dx: 0, dy: 0 },      // Try exact position first
+        { dx: 30, dy: 0 },     // Try slightly right
+        { dx: -30, dy: 0 },    // Try slightly left
+        { dx: 0, dy: 30 },     // Try down
+        { dx: 0, dy: -20 },    // Try up slightly
+        { dx: 30, dy: 30 },    // Diagonal
+        { dx: -30, dy: 30 },   // Diagonal
       ];
 
-      let validPositionFound = false;
-      for (const adj of adjustments) {
-        const testX = newX + adj.dx;
-        const testY = newY + adj.dy;
-        const constrained = constrainPosition(testX, testY);
+      let foundValid = false;
+      for (const attempt of attempts) {
+        const testX = constrained.x + attempt.dx;
+        const testY = constrained.y + attempt.dy;
+        const finalConstrained = constrainPosition(testX, testY);
 
-        if (!checkCollision(animalId, constrained.x, constrained.y)) {
-          newX = constrained.x;
-          newY = constrained.y;
-          validPositionFound = true;
+        if (isValidPosition(animalId, finalConstrained.x, finalConstrained.y)) {
+          newX = finalConstrained.x;
+          newY = finalConstrained.y;
+          foundValid = true;
           break;
         }
       }
 
-      // If no valid position found, snap back to original position
-      if (!validPositionFound) {
+      // If still no valid position, keep original position
+      if (!foundValid) {
         newX = currentAnimal.x;
         newY = currentAnimal.y;
       }
     }
 
+    // Update position and refresh
     updateAnimalPosition(animalId, newX, newY);
-    setDraggingAnimalId(null);
     refreshData();
   };
 
@@ -613,11 +612,11 @@ const MeadowScreen: React.FC = () => {
                     dragMomentum={false}
                     dragElastic={0}
                     dragConstraints={meadowRef}
-                    onDragStart={() => setDraggingAnimalId(animal.id)}
+                    onDragStart={() => {}}
                     onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                     onClick={() => handleAnimalTap(animal.id)}
-                    animate={draggingAnimalId !== animal.id ? { x: animal.x, y: animal.y } : undefined}
-                    transition={draggingAnimalId === animal.id ? { duration: 0 } : { type: "tween", duration: 0.2 }}
+                    animate={{ x: animal.x, y: animal.y }}
+                    transition={{ duration: 0.1, ease: 'easeOut' }}
                     className="absolute cursor-grab active:cursor-grabbing"
                     style={{
                       position: 'absolute',
