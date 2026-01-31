@@ -182,7 +182,7 @@ const MeadowScreen: React.FC = () => {
         </div>
 
         {/* 3D Meadow Diorama Container */}
-        <div style={{ marginBottom: '20px', borderRadius: '28px', boxShadow: '0 20px 60px rgba(0,0,0,0.2), 0 10px 30px rgba(0,0,0,0.1)' }}>
+        <div style={{ marginBottom: '20px' }}>
           <div style={{ perspective: '1200px' }}>
           <div
             style={{
