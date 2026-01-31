@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image, Trophy } from 'lucide-react';
+import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -215,8 +215,7 @@ const NAV_TABS = [
   { id: 'Stats', icon: BarChart2 },
   { id: 'Reports', icon: FileText },
   { id: 'Meadow', icon: MeadowIcon },
-  { id: 'Gallery', icon: Image },
-  { id: 'Achievements', icon: Trophy },
+  { id: 'Collection', icon: Image },
   { id: 'Settings', icon: SettingsIcon },
 ] as const;
 
@@ -988,6 +987,7 @@ export default function App() {
   const [showAnimalSelector, setShowAnimalSelector] = useState(false);
   const [showRarityReveal, setShowRarityReveal] = useState(false);
   const [unlockedAnimal, setUnlockedAnimal] = useState<any>(null);
+  const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
 
   const theme = selectedTheme;
 
@@ -1517,12 +1517,90 @@ export default function App() {
       return <MeadowScreen />;
     }
 
-    if (activeTab === 'Gallery') {
-      return <GalleryScreen collection={userData.permanentCollection} theme={selectedTheme} />;
-    }
+    if (activeTab === 'Collection') {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
+        >
+          {/* Collection View Toggle */}
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            marginBottom: '24px',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10
+          }}>
+            <motion.button
+              onClick={() => setCollectionViewMode('gallery')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '16px',
+                border: collectionViewMode === 'gallery' ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(200, 200, 200, 0.3)',
+                background: collectionViewMode === 'gallery' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(10px)',
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '14px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              📚 Gallery
+            </motion.button>
+            <motion.button
+              onClick={() => setCollectionViewMode('achievements')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '16px',
+                border: collectionViewMode === 'achievements' ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(200, 200, 200, 0.3)',
+                background: collectionViewMode === 'achievements' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(10px)',
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '14px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              🏆 Achievements
+            </motion.button>
+          </div>
 
-    if (activeTab === 'Achievements') {
-      return <AchievementsScreen userData={userData} theme={selectedTheme} />;
+          {/* Gallery View */}
+          {collectionViewMode === 'gallery' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <GalleryScreen collection={userData.permanentCollection} theme={selectedTheme} />
+            </motion.div>
+          )}
+
+          {/* Achievements View */}
+          {collectionViewMode === 'achievements' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <AchievementsScreen userData={userData} theme={selectedTheme} />
+            </motion.div>
+          )}
+        </motion.div>
+      );
     }
 
     return (
