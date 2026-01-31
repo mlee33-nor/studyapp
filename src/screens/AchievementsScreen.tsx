@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { UserData } from '../types';
+import type { Achievement } from '../utils/achievements';
 import { getAchievementStats, getNextAchievements } from '../utils/achievements';
 
 interface AchievementsScreenProps {
@@ -147,7 +148,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
             Next Objectives
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            {nextAchievements.map((achievement, index) => (
+            {nextAchievements.map((achievement: Achievement, index: number) => (
               <motion.div
                 key={achievement.id}
                 initial={{ opacity: 0, x: -10 }}
@@ -249,7 +250,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
             gap: '12px',
             marginBottom: '24px'
           }}>
-            {unlockedAchievements.map((achievement, index) => (
+            {unlockedAchievements.map((achievement: Achievement, index: number) => (
               <motion.div
                 key={achievement.id}
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -312,7 +313,7 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
             gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
             gap: '12px'
           }}>
-            {lockedAchievements.map((achievement) => (
+            {lockedAchievements.map((achievement: Achievement) => (
               <motion.div
                 key={achievement.id}
                 style={{
