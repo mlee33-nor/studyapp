@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText } from 'lucide-react';
+import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image, Trophy } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -8,6 +8,8 @@ import { AstronautCat } from './AstronautCat';
 import { triggerHapticFeedback } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
+import GalleryScreen from './screens/GalleryScreen';
+import AchievementsScreen from './screens/AchievementsScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
 import { addCompletedSession } from './utils/storage';
 import type { StudyCategory } from './types/stats';
@@ -38,20 +40,34 @@ const getUserData = () => {
   const data = localStorage.getItem('userData');
   if (data) {
     const parsed = JSON.parse(data);
-    // Ensure meadow fields exist
+    // Ensure meadow fields and collection fields exist
     return {
       level: 1,
       xp: 0,
       sessionsCompleted: 0,
       meadowAnimals: [],
       lastMeadowReset: null,
+      permanentCollection: [],
+      activeBiome: 'meadow' as const,
+      unlockedBiomes: ['meadow'],
+      lastDailyReset: null,
       ...parsed
     };
   }
-  return { level: 1, xp: 0, sessionsCompleted: 0, meadowAnimals: [], lastMeadowReset: null };
+  return {
+    level: 1,
+    xp: 0,
+    sessionsCompleted: 0,
+    meadowAnimals: [],
+    lastMeadowReset: null,
+    permanentCollection: [],
+    activeBiome: 'meadow' as const,
+    unlockedBiomes: ['meadow'],
+    lastDailyReset: null
+  };
 };
 
-const saveUserData = (data: { level: number; xp: number; sessionsCompleted: number; meadowAnimals?: any[]; lastMeadowReset?: string | null }) => {
+const saveUserData = (data: any) => {
   localStorage.setItem('userData', JSON.stringify(data));
 };
 
@@ -200,6 +216,8 @@ const NAV_TABS = [
   { id: 'Stats', icon: BarChart2 },
   { id: 'Reports', icon: FileText },
   { id: 'Meadow', icon: MeadowIcon },
+  { id: 'Gallery', icon: Image },
+  { id: 'Achievements', icon: Trophy },
   { id: 'Avatar', icon: User },
   { id: 'Settings', icon: SettingsIcon },
 ] as const;
@@ -1575,6 +1593,14 @@ export default function App() {
 
     if (activeTab === 'Meadow') {
       return <MeadowScreen />;
+    }
+
+    if (activeTab === 'Gallery') {
+      return <GalleryScreen collection={userData.permanentCollection} theme={selectedTheme} />;
+    }
+
+    if (activeTab === 'Achievements') {
+      return <AchievementsScreen userData={userData} theme={selectedTheme} />;
     }
 
     if (activeTab === 'Avatar') return (

@@ -6,6 +6,19 @@ export interface MeadowAnimal {
   flipped?: boolean;
 }
 
+// Biome and Collection Types
+export type BiomeType = 'meadow' | 'safari' | 'forest' | 'ocean' | 'arctic' | 'mountain';
+export type RarityType = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+export interface CollectedAnimal {
+  id: string;
+  name: string;
+  biome: BiomeType;
+  rarity: RarityType;
+  lottieUrl: string;
+  collectedAt: string; // ISO date string
+}
+
 export interface UserData {
   totalCompletedSessions: number;
   dailyStats: DailyStats;
@@ -15,6 +28,11 @@ export interface UserData {
   settings: UserSettings;
   meadowAnimals: MeadowAnimal[];
   lastResetDate: string | null;
+  // Collection and Biome fields
+  permanentCollection: CollectedAnimal[];
+  activeBiome: BiomeType;
+  unlockedBiomes: BiomeType[];
+  lastDailyReset: string | null;
   // Legacy fields (for compatibility with unused screen files)
   currentStage: number;
   xp: number;

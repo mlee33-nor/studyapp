@@ -1,4 +1,4 @@
-import type { UserData, UserSettings } from '../types';
+import type { UserData, UserSettings, CollectedAnimal, RarityType, BiomeType } from '../types';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
@@ -21,6 +21,11 @@ const DEFAULT_USER_DATA: UserData = {
   settings: DEFAULT_SETTINGS,
   meadowAnimals: [],
   lastResetDate: null,
+  // Collection and Biome fields
+  permanentCollection: [],
+  activeBiome: 'meadow',
+  unlockedBiomes: ['meadow'],
+  lastDailyReset: null,
   // Legacy fields for compatibility
   currentStage: 1,
   xp: 0,
@@ -104,6 +109,53 @@ export const toggleAnimalFlip = (animalId: string): void => {
   updateUserData({ meadowAnimals });
 };
 
+// Rarity Rolling Function - Returns a rarity based on probability weights
+export const rollRarity = (): RarityType => {
+  const rand = Math.random() * 100;
+
+  // Probability weights: Common 40%, Uncommon 35%, Rare 15%, Epic 8%, Legendary 2%
+  if (rand < 40) return 'common';
+  if (rand < 75) return 'uncommon';
+  if (rand < 90) return 'rare';
+  if (rand < 98) return 'epic';
+  return 'legendary';
+};
+
+// Get rarity colors for UI display
+export const getRarityColor = (rarity: RarityType): string => {
+  const colors = {
+    common: 'rgba(167, 139, 250, 0.5)',
+    uncommon: 'rgba(34, 197, 94, 0.6)',
+    rare: 'rgba(59, 130, 246, 0.7)',
+    epic: 'rgba(168, 85, 247, 0.8)',
+    legendary: 'rgba(251, 146, 60, 0.9)',
+  };
+  return colors[rarity];
+};
+
+// Hybrid collection logic - Adds animal to permanent collection
+export const addToCollection = (
+  name: string,
+  biome: BiomeType,
+  lottieUrl: string
+): CollectedAnimal => {
+  const rarity = rollRarity();
+  const animal: CollectedAnimal = {
+    id: `${Date.now()}-${Math.random()}`,
+    name,
+    biome,
+    rarity,
+    lottieUrl,
+    collectedAt: new Date().toISOString(),
+  };
+
+  const currentData = getUserData();
+  const updatedCollection = [...currentData.permanentCollection, animal];
+  updateUserData({ permanentCollection: updatedCollection });
+
+  return animal;
+};
+
 export const addCompletedSession = (minutes: number, animalUrl?: string): UserData => {
   const currentData = getUserData();
   const today = new Date().toISOString().split('T')[0];
@@ -180,18 +232,22 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   };
 
   const spawnPos = findValidSpawnPosition();
+  const selectedUrl = animalUrl || getRandomAnimalUrl();
   const newAnimal = {
     id: `${Date.now()}-${Math.random()}`,
-    lottieUrl: animalUrl || getRandomAnimalUrl(),
+    lottieUrl: selectedUrl,
     x: spawnPos.x,
     y: spawnPos.y,
     flipped: Math.random() > 0.5, // Random initial flip
   };
   const meadowAnimals = [...currentData.meadowAnimals, newAnimal];
 
+  // Add to permanent collection with rarity metadata
+  const collectedAnimal = addToCollection('Meadow Animal', 'meadow', selectedUrl);
+
   const totalCompletedSessions = currentData.totalCompletedSessions + 1;
 
-  return updateUserData({
+  const updatedData = updateUserData({
     totalCompletedSessions,
     dailyStats,
     weeklyStats,
@@ -199,6 +255,12 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     lastStudyDate: today,
     meadowAnimals,
   });
+
+  // Add rarity metadata to returned data for UI feedback
+  return {
+    ...updatedData,
+    collectedAnimal,
+  } as any;
 };
 
 const getWeekStart = (date: Date): string => {
