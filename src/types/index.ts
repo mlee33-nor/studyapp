@@ -1,9 +1,12 @@
 export interface MeadowAnimal {
   id: string;
+  name: string;
   lottieUrl: string;
   x: number;
   y: number;
   flipped?: boolean;
+  rarity: RarityType;
+  biome: BiomeType;
 }
 
 // Biome and Collection Types

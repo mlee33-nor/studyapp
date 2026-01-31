@@ -233,17 +233,22 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
 
   const spawnPos = findValidSpawnPosition();
   const selectedUrl = animalUrl || getRandomAnimalUrl();
+
+  // Add to permanent collection with rarity metadata
+  const collectedAnimal = addToCollection('Meadow Animal', 'meadow', selectedUrl);
+
+  // Create meadow display animal with metadata from collected animal
   const newAnimal = {
-    id: `${Date.now()}-${Math.random()}`,
+    id: collectedAnimal.id,
+    name: collectedAnimal.name,
     lottieUrl: selectedUrl,
     x: spawnPos.x,
     y: spawnPos.y,
     flipped: Math.random() > 0.5, // Random initial flip
+    rarity: collectedAnimal.rarity,
+    biome: collectedAnimal.biome,
   };
   const meadowAnimals = [...currentData.meadowAnimals, newAnimal];
-
-  // Add to permanent collection with rarity metadata
-  const collectedAnimal = addToCollection('Meadow Animal', 'meadow', selectedUrl);
 
   const totalCompletedSessions = currentData.totalCompletedSessions + 1;
 
