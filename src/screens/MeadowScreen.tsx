@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
@@ -22,6 +22,15 @@ const MeadowScreen: React.FC = () => {
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [draggingAnimalId, setDraggingAnimalId] = useState<string | null>(null);
   const meadowRef = useRef<HTMLDivElement>(null);
+
+  const grassBlades = useMemo(() =>
+    Array.from({ length: 25 }, (_, i) => ({
+      bottom: Math.random() * 60,
+      left: (i / 25) * 100,
+      height: 25 + Math.random() * 30,
+      rotation: -15 + Math.random() * 30,
+      depth: Math.random() * 10,
+    })), []);
 
   // Load Lottie animations
   useEffect(() => {
@@ -177,7 +186,8 @@ const MeadowScreen: React.FC = () => {
           <div
             style={{
               padding: '0',
-              overflow: 'visible',
+              overflow: 'hidden',
+              borderRadius: '28px',
               transform: 'rotateX(8deg)',
               transformStyle: 'preserve-3d',
               boxShadow: '0 20px 60px rgba(0,0,0,0.2), 0 10px 30px rgba(0,0,0,0.1)',
@@ -270,18 +280,18 @@ const MeadowScreen: React.FC = () => {
               }} />
 
               {/* 3D Grass blades */}
-              {[...Array(25)].map((_, i) => (
+              {grassBlades.map((blade, i) => (
                 <div
                   key={`grass-${i}`}
                   style={{
                     position: 'absolute',
-                    bottom: Math.random() * 60,
-                    left: `${(i / 25) * 100}%`,
+                    bottom: blade.bottom,
+                    left: `${blade.left}%`,
                     width: '3px',
-                    height: `${25 + Math.random() * 30}px`,
+                    height: `${blade.height}px`,
                     background: 'linear-gradient(to top, rgba(34, 139, 34, 0.6), rgba(124, 252, 0, 0.3))',
                     borderRadius: '3px',
-                    transform: `rotate(${-15 + Math.random() * 30}deg) translateZ(${Math.random() * 10}px)`,
+                    transform: `rotate(${blade.rotation}deg) translateZ(${blade.depth}px)`,
                     boxShadow: '2px 2px 4px rgba(0,0,0,0.1)',
                     zIndex: 4,
                     pointerEvents: 'none'
