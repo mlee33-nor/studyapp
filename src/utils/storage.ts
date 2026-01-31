@@ -110,14 +110,29 @@ export const toggleAnimalFlip = (animalId: string): void => {
 };
 
 // Rarity Rolling Function - Returns a rarity based on probability weights
-export const rollRarity = (): RarityType => {
+// Boosts rarer odds for longer study sessions
+export const rollRarity = (sessionMinutes: number = 25): RarityType => {
   const rand = Math.random() * 100;
 
-  // Probability weights: Common 40%, Uncommon 35%, Rare 15%, Epic 8%, Legendary 2%
-  if (rand < 40) return 'common';
-  if (rand < 75) return 'uncommon';
-  if (rand < 90) return 'rare';
-  if (rand < 98) return 'epic';
+  // Base probability weights: Common 60%, Uncommon 25%, Rare 10%, Epic 4%, Legendary 1%
+  // Bonus: +0.5% legendary chance per minute studied (max +12.5% at 25 min, +50% at 100 min)
+  // This rewards longer focus sessions!
+  const sessionBonus = Math.min(sessionMinutes * 0.5, 50); // Cap bonus at 50%
+
+  let commonChance = 60 - sessionBonus * 0.6; // Decrease common as session gets longer
+  let uncommonChance = 25 - sessionBonus * 0.2; // Slight decrease
+  let rareChance = 10 + sessionBonus * 0.3; // Increase rare chance
+  let epicChance = 4 + sessionBonus * 0.05; // Slight increase
+  // Remaining percentage goes to legendary
+
+  // Ensure probabilities don't go below 0
+  commonChance = Math.max(commonChance, 10);
+  uncommonChance = Math.max(uncommonChance, 10);
+
+  if (rand < commonChance) return 'common';
+  if (rand < commonChance + uncommonChance) return 'uncommon';
+  if (rand < commonChance + uncommonChance + rareChance) return 'rare';
+  if (rand < commonChance + uncommonChance + rareChance + epicChance) return 'epic';
   return 'legendary';
 };
 
@@ -137,9 +152,10 @@ export const getRarityColor = (rarity: RarityType): string => {
 export const addToCollection = (
   name: string,
   biome: BiomeType,
-  lottieUrl: string
+  lottieUrl: string,
+  sessionMinutes: number = 25
 ): CollectedAnimal => {
-  const rarity = rollRarity();
+  const rarity = rollRarity(sessionMinutes);
   const animal: CollectedAnimal = {
     id: `${Date.now()}-${Math.random()}`,
     name,
@@ -234,8 +250,8 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   const spawnPos = findValidSpawnPosition();
   const selectedUrl = animalUrl || getRandomAnimalUrl();
 
-  // Add to permanent collection with rarity metadata
-  const collectedAnimal = addToCollection('Meadow Animal', 'meadow', selectedUrl);
+  // Add to permanent collection with rarity metadata (session duration boosts rarity odds)
+  const collectedAnimal = addToCollection('Meadow Animal', 'meadow', selectedUrl, minutes);
 
   // Create meadow display animal with metadata from collected animal
   const newAnimal = {
