@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
@@ -16,12 +16,12 @@ const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20; // Bottom boundary with padding
 
 // Safe horizontal bounds
 const MIN_X = 10;
-const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 
 const MeadowScreen: React.FC = () => {
   const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [draggingAnimalId, setDraggingAnimalId] = useState<string | null>(null);
+  const meadowRef = useRef<HTMLDivElement>(null);
 
   // Load Lottie animations
   useEffect(() => {
@@ -48,11 +48,19 @@ const MeadowScreen: React.FC = () => {
     loadAnimations();
   }, [userData.meadowAnimals, loadedAnimations]);
 
+  // Get dynamic bounds based on actual container size
+  const getBounds = () => {
+    const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
+    const maxX = meadowWidth - ANIMAL_SIZE - 10;
+    return { minX: MIN_X, maxX, minY: MIN_Y, maxY: MAX_Y };
+  };
+
   // Constrain position to valid bounds
   const constrainPosition = (x: number, y: number) => {
+    const { minX, maxX, minY, maxY } = getBounds();
     return {
-      x: Math.max(MIN_X, Math.min(MAX_X, x)),
-      y: Math.max(MIN_Y, Math.min(MAX_Y, y))
+      x: Math.max(minX, Math.min(maxX, x)),
+      y: Math.max(minY, Math.min(maxY, y))
     };
   };
 
@@ -176,6 +184,7 @@ const MeadowScreen: React.FC = () => {
             }}
           >
             <div
+              ref={meadowRef}
               style={{
                 background: 'linear-gradient(165deg, #87CEEB 0%, #98D8E8 30%, #90EE90 60%, #76B583 100%)',
                 position: 'relative',
@@ -317,12 +326,7 @@ const MeadowScreen: React.FC = () => {
                     drag
                     dragMomentum={false}
                     dragElastic={0}
-                    dragConstraints={{
-                      left: MIN_X,
-                      right: MAX_X,
-                      top: MIN_Y,
-                      bottom: MAX_Y,
-                    }}
+                    dragConstraints={meadowRef}
                     onDragStart={() => setDraggingAnimalId(animal.id)}
                     onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                     onClick={() => handleAnimalTap(animal.id)}
