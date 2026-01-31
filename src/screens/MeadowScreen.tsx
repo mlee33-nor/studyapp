@@ -8,10 +8,10 @@ import type { MeadowAnimal } from '../types';
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
 const MEADOW_HEIGHT = 450;
-const ANIMAL_SIZE = 80;
+const ANIMAL_SIZE = 60;
 
 // Depth zones - animals can't go into the sky (top 180px is sky area)
-const MIN_Y = 200; // Keep animals on grass only (sky ends at 180px, add buffer)
+const MIN_Y = 185; // Start on first color of green
 const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20; // Bottom boundary with padding
 
 // Safe horizontal bounds
@@ -58,7 +58,7 @@ const MeadowScreen: React.FC = () => {
 
   // Check if position overlaps with existing animals
   const checkCollision = (animalId: string, newX: number, newY: number) => {
-    const COLLISION_THRESHOLD = 60; // Minimum distance between animals
+    const COLLISION_THRESHOLD = 35; // Minimum distance - allows close proximity, auto-repels when overlapping
 
     for (const animal of userData.meadowAnimals) {
       if (animal.id === animalId) continue;

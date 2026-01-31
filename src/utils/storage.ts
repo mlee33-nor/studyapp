@@ -139,15 +139,15 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   // Spawn new meadow animal with collision-free positioning
   const MEADOW_WIDTH = 400;
   const MEADOW_HEIGHT = 450;
-  const ANIMAL_SIZE = 80;
-  const MIN_Y = 200; // Keep animals on grass only (sky ends at 180px, add buffer)
+  const ANIMAL_SIZE = 60;
+  const MIN_Y = 185; // Start on first color of green
   const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
   const MIN_X = 10;
   const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 
   // Find a valid spawn position that doesn't overlap with existing animals
   const findValidSpawnPosition = (): { x: number; y: number } => {
-    const COLLISION_THRESHOLD = 70;
+    const COLLISION_THRESHOLD = 35; // Allows close proximity, auto-repels when overlapping
     const MAX_ATTEMPTS = 20;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
