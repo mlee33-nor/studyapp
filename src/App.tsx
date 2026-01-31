@@ -6,7 +6,7 @@ import confetti from 'canvas-confetti';
 import Lottie from 'lottie-react';
 import { AstronautCat } from './AstronautCat';
 import { StatsPage } from './components/StatsPage';
-import MeadowScreen from './screens/MeadowScreen';
+import MeadowScreen, { getAllBiomesUnlocked, setAllBiomesUnlocked } from './screens/MeadowScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
 import { addCompletedSession } from './utils/storage';
 import type { StudyCategory } from './types/stats';
@@ -1816,6 +1816,38 @@ export default function App() {
                 cursor: 'pointer'
               }}
             />
+          </div>
+
+          <div style={{ marginTop: '16px' }}>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                const current = getAllBiomesUnlocked();
+                setAllBiomesUnlocked(!current);
+                // Force re-render
+                setUserData({ ...userData });
+              }}
+              style={{
+                width: '100%',
+                padding: '10px 16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: getAllBiomesUnlocked()
+                  ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%)'
+                  : 'linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)',
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '13px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              {getAllBiomesUnlocked() ? 'Lock Biomes (Re-enable Levels)' : 'Unlock All Biomes'}
+            </motion.button>
           </div>
 
           <div style={{
