@@ -10,7 +10,7 @@ import MeadowScreen from './screens/MeadowScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
-import { addCompletedSession } from './utils/storage';
+import { addCompletedSession, unlockAllBiomes as unlockAllBiomesStorage, updateUserData as updateStorageUserData } from './utils/storage';
 import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
@@ -1184,6 +1184,14 @@ export default function App() {
       if (level >= threshold) unlockedBiomes.push(biome);
     });
 
+    // Update the canonical storage (pomodoroStudyApp key) so MeadowScreen sees the change
+    updateStorageUserData({
+      level: level,
+      xp: 0,
+      unlockedBiomes: unlockedBiomes.length > 0 ? unlockedBiomes : ['meadow']
+    });
+
+    // Also sync App-level state
     const newData = {
       ...userData,
       level: level,
@@ -1195,6 +1203,9 @@ export default function App() {
   };
 
   const handleUnlockAllBiomes = () => {
+    // Update the canonical storage (pomodoroStudyApp key)
+    unlockAllBiomesStorage();
+    // Also sync the local App state
     const newData = {
       ...userData,
       level: 50,
