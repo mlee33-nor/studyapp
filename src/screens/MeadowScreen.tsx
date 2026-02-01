@@ -669,7 +669,12 @@ const MeadowScreen: React.FC = () => {
                     drag
                     dragMomentum={false}
                     dragElastic={0}
-                    dragConstraints={meadowRef}
+                    dragConstraints={{
+                      left: MIN_X,
+                      right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - ANIMAL_SIZE - 10,
+                      top: MIN_Y,
+                      bottom: MAX_Y,
+                    }}
                     onDragStart={() => {}}
                     onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                     onClick={() => handleAnimalTap(animal.id)}
