@@ -4,7 +4,7 @@ import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType } from '../types';
-import { BIOME_CONFIG, getUnlockedBiomes } from '../data/biomes';
+import { BIOME_CONFIG, getUnlockedBiomes, getAnimalsForBiome } from '../data/biomes';
 import meadowBg from '../assets/biomes/meadows.jpg';
 import safariBg from '../assets/biomes/safari.jpg';
 import forestBg from '../assets/biomes/forest.jpg';
@@ -352,6 +352,7 @@ const ALL_BIOME_IDS: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arct
 const MeadowScreen: React.FC = () => {
   const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
+  const [failedAnimations, setFailedAnimations] = useState<Set<string>>(new Set());
   const meadowRef = useRef<HTMLDivElement>(null);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
   const [allUnlocked, setAllUnlocked] = useState<boolean>(false);
@@ -380,19 +381,31 @@ const MeadowScreen: React.FC = () => {
     refreshData();
   };
 
+  // Helper: look up emoji for an animal by name from biome data
+  const getAnimalEmoji = (animal: MeadowAnimal): string => {
+    const biomeAnimals = getAnimalsForBiome(animal.biome);
+    const match = biomeAnimals.find(a => a.name === animal.name);
+    return match?.emoji || '🐾';
+  };
+
   // Load Lottie animations
   useEffect(() => {
     const loadAnimations = async () => {
       const animations: Record<string, any> = {};
+      const failed: string[] = [];
 
       for (const animal of userData.meadowAnimals) {
-        if (!loadedAnimations[animal.id]) {
+        if (!loadedAnimations[animal.id] && !failedAnimations.has(animal.id)) {
           try {
             const response = await fetch(animal.lottieUrl);
+            if (!response.ok) {
+              failed.push(animal.id);
+              continue;
+            }
             const data = await response.json();
             animations[animal.id] = data;
           } catch (error) {
-            console.error('Error loading animation:', error);
+            failed.push(animal.id);
           }
         }
       }
@@ -400,10 +413,13 @@ const MeadowScreen: React.FC = () => {
       if (Object.keys(animations).length > 0) {
         setLoadedAnimations(prev => ({ ...prev, ...animations }));
       }
+      if (failed.length > 0) {
+        setFailedAnimations(prev => new Set([...prev, ...failed]));
+      }
     };
 
     loadAnimations();
-  }, [userData.meadowAnimals, loadedAnimations]);
+  }, [userData.meadowAnimals]);
 
   // Get dynamic bounds based on actual container size
   const getBounds = () => {
@@ -699,7 +715,7 @@ const MeadowScreen: React.FC = () => {
                     }}
                     whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
                   >
-                    {loadedAnimations[animal.id] && (
+                    {loadedAnimations[animal.id] ? (
                       <Lottie
                         animationData={loadedAnimations[animal.id]}
                         loop={true}
@@ -709,6 +725,19 @@ const MeadowScreen: React.FC = () => {
                           pointerEvents: 'none'
                         }}
                       />
+                    ) : (
+                      <div style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '36px',
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                        pointerEvents: 'none',
+                      }}>
+                        {getAnimalEmoji(animal)}
+                      </div>
                     )}
                   </motion.div>
                 ))
