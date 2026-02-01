@@ -983,7 +983,7 @@ export default function App() {
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
-  const [selectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Corgi (fixed selection, no selector modal)
+  const [selectedAnimal, setSelectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Corgi
   const [showRarityReveal, setShowRarityReveal] = useState(false);
   const [unlockedAnimal, setUnlockedAnimal] = useState<any>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
@@ -1304,18 +1304,21 @@ export default function App() {
             }}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setSelectedAnimal((prev) => (prev + 1) % ANIMALS.length)}
                 style={{
                   display: 'flex',
                   justifyContent: 'center',
                   width: '80px',
-                  height: '80px'
+                  height: '80px',
+                  cursor: 'pointer',
                 }}
               >
                 {loadedAnimations[`selected-${selectedAnimal}`] ? (
                   <Lottie
                     animationData={loadedAnimations[`selected-${selectedAnimal}`]}
                     loop={true}
-                    style={{ width: '100%', height: '100%' }}
+                    style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                   />
                 ) : (
                   <div style={{ fontSize: '60px', display: 'flex', alignItems: 'center' }}>
