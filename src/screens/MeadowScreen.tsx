@@ -15,7 +15,8 @@ import mountainBg from '../assets/biomes/mountains.jpg';
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
 const MEADOW_HEIGHT = 450;
-const ANIMAL_SIZE = 90;
+const ANIMAL_SIZE = 60;
+const EMOJI_SIZE = 90; // Larger size for emoji fallback animals
 
 // Depth zones - animals can't go into the sky (top 180px is sky area)
 const MIN_Y = 185; // Start on first color of green
@@ -376,7 +377,10 @@ const MeadowScreen: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                biomeAnimals.map((animal: MeadowAnimal) => (
+                biomeAnimals.map((animal: MeadowAnimal) => {
+                  const hasLottie = !!loadedAnimations[animal.id];
+                  const size = hasLottie ? ANIMAL_SIZE : EMOJI_SIZE;
+                  return (
                   <motion.div
                     key={animal.id}
                     drag
@@ -384,7 +388,7 @@ const MeadowScreen: React.FC = () => {
                     dragElastic={0}
                     dragConstraints={{
                       left: MIN_X,
-                      right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - ANIMAL_SIZE - 10,
+                      right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - size - 10,
                       top: MIN_Y,
                       bottom: MAX_Y,
                     }}
@@ -398,8 +402,8 @@ const MeadowScreen: React.FC = () => {
                       position: 'absolute',
                       left: 0,
                       top: 0,
-                      width: `${ANIMAL_SIZE}px`,
-                      height: `${ANIMAL_SIZE}px`,
+                      width: `${size}px`,
+                      height: `${size}px`,
                       zIndex: getZIndex(animal.y),
                       transform: animal.flipped ? 'scaleX(-1)' : 'scaleX(1)',
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
@@ -437,7 +441,8 @@ const MeadowScreen: React.FC = () => {
                       </div>
                     )}
                   </motion.div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

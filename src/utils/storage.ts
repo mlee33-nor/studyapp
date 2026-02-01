@@ -213,7 +213,7 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   // Spawn new meadow animal with collision-free positioning
   const MEADOW_WIDTH = 400;
   const MEADOW_HEIGHT = 450;
-  const ANIMAL_SIZE = 90;
+  const ANIMAL_SIZE = 60;
   const MIN_Y = 185; // Start on first color of green
   const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
   const MIN_X = 10;
