@@ -353,7 +353,15 @@ const MeadowScreen: React.FC = () => {
   const meadowRef = useRef<HTMLDivElement>(null);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
 
-  const unlockedBiomes = getUnlockedBiomes(userData.level);
+  // Always refresh data from storage when the component mounts (e.g. tab switch)
+  useEffect(() => {
+    refreshData();
+  }, [refreshData]);
+
+  // Determine unlocked biomes: use the stored array if available, otherwise derive from level
+  const unlockedBiomes = (userData.unlockedBiomes && userData.unlockedBiomes.length > 0)
+    ? userData.unlockedBiomes as BiomeType[]
+    : getUnlockedBiomes(userData.level);
   const biomeAnimals = userData.meadowAnimals.filter(a => a.biome === activeBiome);
   const BiomeBackground = BiomeBackgrounds[activeBiome];
 
