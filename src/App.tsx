@@ -10,7 +10,9 @@ import MeadowScreen from './screens/MeadowScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
-import { addCompletedSession, updateUserData as updateStorageUserData } from './utils/storage';
+import { addCompletedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData } from './utils/storage';
+import { getAnimalsForBiome } from './data/biomes';
+import type { BiomeType } from './types';
 import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
@@ -983,19 +985,38 @@ export default function App() {
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
-  const [selectedAnimal, setSelectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Corgi
+  const [selectedAnimal, setSelectedAnimal] = useState(0);
   const [showAnimalSelector, setShowAnimalSelector] = useState(false);
+  const [activeBiome, setActiveBiome] = useState<BiomeType>(() => {
+    const storageData = getStorageUserData();
+    return (storageData.activeBiome as BiomeType) || 'meadow';
+  });
   const [showRarityReveal, setShowRarityReveal] = useState(false);
   const [unlockedAnimal, setUnlockedAnimal] = useState<any>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
 
   const theme = selectedTheme;
 
-  const ANIMALS = [
-    { name: 'Bunny', emoji: '🐰', url: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json' },
-    { name: 'Cat', emoji: '🐱', url: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json' },
-    { name: 'Corgi', emoji: '🐶', url: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json' },
-  ];
+  // Build companion list from the active biome's animals
+  const biomeAnimals = getAnimalsForBiome(activeBiome);
+  const ANIMALS = biomeAnimals.map(a => ({
+    name: a.name,
+    emoji: a.emoji,
+    url: a.lottieUrl,
+    biome: activeBiome,
+  }));
+
+  // Re-read active biome from storage when returning to the timer tab (user may have switched biomes in Sanctuary)
+  useEffect(() => {
+    if (activeTab === 'Timer') {
+      const storageData = getStorageUserData();
+      const storedBiome = (storageData.activeBiome as BiomeType) || 'meadow';
+      if (storedBiome !== activeBiome) {
+        setActiveBiome(storedBiome);
+        setSelectedAnimal(0); // Reset selection when biome changes
+      }
+    }
+  }, [activeTab]);
 
   // Disable scrolling on the home (Timer) tab
   useEffect(() => {
@@ -1014,11 +1035,11 @@ export default function App() {
     setUserData(resetData);
   }, []);
 
-  // Load all animal animations for selector and timer display
+  // Load all animal animations for selector and timer display (re-runs when biome changes)
   useEffect(() => {
     const loadAllAnimals = async () => {
       for (let i = 0; i < ANIMALS.length; i++) {
-        const animalKey = `selected-${i}`;
+        const animalKey = `selected-${activeBiome}-${i}`;
         if (!loadedAnimations[animalKey]) {
           try {
             const response = await fetch(ANIMALS[i].url);
@@ -1031,7 +1052,7 @@ export default function App() {
       }
     };
     loadAllAnimals();
-  }, []);
+  }, [activeBiome]);
 
   // Load Lottie animations for meadow animals
   useEffect(() => {
@@ -1137,9 +1158,21 @@ export default function App() {
     // Also save to enhanced session storage with category metadata
     saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
 
-    // Add completed session to storage (this spawns meadow animal automatically)
-    const selectedAnimalUrl = ANIMALS[selectedAnimal].url;
-    const result = addCompletedSession(timerMinutes, selectedAnimalUrl);
+    // Save the selected animal info to storage so addCompletedSession picks it up
+    const currentAnimal = ANIMALS[selectedAnimal];
+    const storageNow = getStorageUserData();
+    updateStorageUserData({
+      ...storageNow,
+      selectedAnimal: {
+        id: biomeAnimals[selectedAnimal]?.id || 'rabbit',
+        name: currentAnimal.name,
+        biome: activeBiome,
+        lottieUrl: currentAnimal.url,
+      },
+    });
+
+    // Add completed session to storage (this spawns biome animal automatically)
+    const result = addCompletedSession(timerMinutes, currentAnimal.url);
 
     // Extract the collected animal for rarity reveal
     if (result && (result as any).collectedAnimal) {
@@ -1315,9 +1348,9 @@ export default function App() {
                   cursor: 'pointer',
                 }}
               >
-                {loadedAnimations[`selected-${selectedAnimal}`] ? (
+                {loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`] ? (
                   <Lottie
-                    animationData={loadedAnimations[`selected-${selectedAnimal}`]}
+                    animationData={loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`]}
                     loop={true}
                     style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                   />
@@ -1404,8 +1437,9 @@ export default function App() {
               </div>
               <div style={{
                 display: 'flex',
+                flexWrap: 'wrap',
                 justifyContent: 'center',
-                gap: '12px',
+                gap: '10px',
               }}>
                 {ANIMALS.map((animal, index) => {
                   const isSelected = selectedAnimal === index;
@@ -1421,8 +1455,8 @@ export default function App() {
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '8px',
-                        padding: '12px 16px',
+                        gap: '6px',
+                        padding: '10px 12px',
                         borderRadius: '18px',
                         border: isSelected
                           ? '2px solid rgba(167, 139, 250, 0.8)'
@@ -1431,14 +1465,15 @@ export default function App() {
                           ? 'rgba(167, 139, 250, 0.2)'
                           : 'transparent',
                         cursor: 'pointer',
-                        flex: 1,
+                        width: '28%',
+                        minWidth: '80px',
                         transition: 'all 0.15s ease',
                       }}
                     >
                       <div style={{ width: '56px', height: '56px' }}>
-                        {loadedAnimations[`selected-${index}`] ? (
+                        {loadedAnimations[`selected-${activeBiome}-${index}`] ? (
                           <Lottie
-                            animationData={loadedAnimations[`selected-${index}`]}
+                            animationData={loadedAnimations[`selected-${activeBiome}-${index}`]}
                             loop={true}
                             style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                           />
