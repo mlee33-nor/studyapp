@@ -15,7 +15,7 @@ import mountainBg from '../assets/biomes/mountains.jpg';
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
 const MEADOW_HEIGHT = 450;
-const ANIMAL_SIZE = 60;
+const ANIMAL_SIZE = 90;
 
 // Depth zones - animals can't go into the sky (top 180px is sky area)
 const MIN_Y = 185; // Start on first color of green
@@ -732,7 +732,7 @@ const MeadowScreen: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '36px',
+                        fontSize: '54px',
                         filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
                         pointerEvents: 'none',
                       }}>
