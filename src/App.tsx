@@ -1347,33 +1347,58 @@ export default function App() {
               </div>
             </div>
           </GlassCard>
+        </div>
 
-          {/* Animal Selector Card */}
-          {showAnimalSelector && (
+        {/* Animal Selector Overlay */}
+        {showAnimalSelector && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowAnimalSelector(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+            }}
+          >
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
               style={{
-                marginTop: '12px',
                 background: BACKGROUND_THEMES[selectedTheme].isDark
-                  ? 'rgba(30, 30, 60, 0.85)'
-                  : 'rgba(255, 255, 255, 0.85)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderRadius: '20px',
-                padding: '16px',
+                  ? 'rgba(30, 30, 60, 0.95)'
+                  : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                padding: '24px',
                 border: `1px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(167, 139, 250, 0.3)' : 'rgba(200, 200, 220, 0.5)'}`,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                boxShadow: '0 16px 48px rgba(0,0,0,0.25)',
+                width: '100%',
+                maxWidth: '340px',
               }}
             >
               <div style={{
-                fontSize: '13px',
+                fontSize: '16px',
                 fontWeight: 700,
-                color: getTextColor(selectedTheme, 'secondary'),
+                color: getTextColor(selectedTheme, 'primary'),
                 fontFamily: "'Quicksand', sans-serif",
                 textAlign: 'center',
-                marginBottom: '12px',
+                marginBottom: '20px',
               }}>
                 Choose Your Companion
               </div>
@@ -1396,21 +1421,21 @@ export default function App() {
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '6px',
-                        padding: '10px 14px',
-                        borderRadius: '16px',
+                        gap: '8px',
+                        padding: '12px 16px',
+                        borderRadius: '18px',
                         border: isSelected
                           ? '2px solid rgba(167, 139, 250, 0.8)'
-                          : `2px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255,255,255,0.1)' : 'rgba(200, 200, 220, 0.4)'}`,
+                          : `2px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255,255,255,0.12)' : 'rgba(200, 200, 220, 0.4)'}`,
                         background: isSelected
                           ? 'rgba(167, 139, 250, 0.2)'
                           : 'transparent',
                         cursor: 'pointer',
-                        minWidth: '80px',
+                        flex: 1,
                         transition: 'all 0.15s ease',
                       }}
                     >
-                      <div style={{ width: '50px', height: '50px' }}>
+                      <div style={{ width: '56px', height: '56px' }}>
                         {loadedAnimations[`selected-${index}`] ? (
                           <Lottie
                             animationData={loadedAnimations[`selected-${index}`]}
@@ -1418,13 +1443,13 @@ export default function App() {
                             style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                           />
                         ) : (
-                          <div style={{ fontSize: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                          <div style={{ fontSize: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
                             {animal.emoji}
                           </div>
                         )}
                       </div>
                       <span style={{
-                        fontSize: '11px',
+                        fontSize: '12px',
                         fontWeight: 600,
                         color: isSelected
                           ? (BACKGROUND_THEMES[selectedTheme].isDark ? '#c4b5fd' : '#7c3aed')
@@ -1438,8 +1463,8 @@ export default function App() {
                 })}
               </div>
             </motion.div>
-          )}
-        </div>
+          </motion.div>
+        )}
 
         {/* Zone 3 (Bottom): Action Zone - flex-1.5 */}
         <div style={{
