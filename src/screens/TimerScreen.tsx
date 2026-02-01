@@ -3,20 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { useTimer } from '../hooks/useTimer';
 import { useUserData } from '../hooks/useUserData';
 import { useTheme } from '../contexts/ThemeContext';
-import Character from '../components/Character';
-import type { TimerMode } from '../types';
+import type { TimerMode, BiomeType } from '../types';
 import { getWeeklyMinutes } from '../utils/storage';
+import { triggerHapticFeedback } from '../utils/haptics';
+import { getAnimalsForBiome, BIOME_CONFIG } from '../data/biomes';
+import Lottie from 'lottie-react';
 
 const TimerScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { userData, completeSession, updateSettings } = useUserData();
+  const { userData, completeSession, updateSettings, setUserData } = useUserData();
   const { getGradientClass } = useTheme();
   const [timerMode, setTimerMode] = useState<TimerMode>('study');
   const [showCelebration, setShowCelebration] = useState(false);
   const [weeklyMinutes, setWeeklyMinutes] = useState(0);
   const [customDuration, setCustomDuration] = useState(userData.settings.studyDuration);
+  const [showAnimalSelector, setShowAnimalSelector] = useState(false);
+  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const circleRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const previousMinutesRef = useRef<number>(customDuration);
 
   const getDuration = () => {
     switch (timerMode) {
@@ -63,6 +68,13 @@ const TimerScreen: React.FC = () => {
     }
   }, [customDuration]);
 
+  // Update previousMinutesRef when customDuration changes from outside drag
+  useEffect(() => {
+    if (!isDragging) {
+      previousMinutesRef.current = customDuration;
+    }
+  }, [customDuration, isDragging]);
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -103,6 +115,12 @@ const TimerScreen: React.FC = () => {
     // Full circle = 55 minutes range (60-5)
     const minutes = Math.round((angle / 360) * 55 + 5);
     const clampedMinutes = Math.max(5, Math.min(60, minutes));
+
+    // Trigger haptic feedback when the value changes
+    if (clampedMinutes !== previousMinutesRef.current) {
+      triggerHapticFeedback(10);
+      previousMinutesRef.current = clampedMinutes;
+    }
 
     setCustomDuration(clampedMinutes);
   }, [timer.isRunning, timerMode]);
@@ -155,6 +173,22 @@ const TimerScreen: React.FC = () => {
       };
     }
   }, [isDragging, handleDrag, handleDragEnd]);
+
+  // Load selected animal animation
+  useEffect(() => {
+    const loadAnimation = async () => {
+      if (userData.selectedAnimal && !loadedAnimations[userData.selectedAnimal.id]) {
+        try {
+          const response = await fetch(userData.selectedAnimal.lottieUrl);
+          const data = await response.json();
+          setLoadedAnimations(prev => ({ ...prev, [userData.selectedAnimal!.id]: data }));
+        } catch (error) {
+          console.error('Error loading animation:', error);
+        }
+      }
+    };
+    loadAnimation();
+  }, [userData.selectedAnimal, loadedAnimations]);
 
   return (
     <div className={`min-h-screen ${getGradientClass()} transition-all duration-700 pb-20 px-6 pt-8`}>
@@ -320,13 +354,96 @@ const TimerScreen: React.FC = () => {
         );
       })()}
 
+      {/* Selected Animal Display */}
+      {userData.selectedAnimal && (
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={() => {
+              console.log("Animal button clicked!");
+              setShowAnimalSelector(true);
+            }}
+            className="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white/80 backdrop-blur-sm shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
+          >
+            <div className="text-sm text-text-secondary font-medium">Next Animal:</div>
+            <div className="w-20 h-20 pointer-events-none">
+              {loadedAnimations[userData.selectedAnimal.id] ? (
+                <Lottie
+                  animationData={loadedAnimations[userData.selectedAnimal.id]}
+                  loop={true}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    pointerEvents: 'none',
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-2xl">
+                  {userData.selectedAnimal.name}
+                </div>
+              )}
+            </div>
+            <div className="text-sm text-text-primary font-semibold">{userData.selectedAnimal.name}</div>
+            <div className="text-xs text-text-secondary">{BIOME_CONFIG[userData.selectedAnimal.biome as BiomeType].name}</div>
+          </button>
+        </div>
+      )}
 
-      {/* Character */}
-      <div className="flex justify-center mb-4">
-        <button onClick={() => navigate('/avatar')} className="transition-transform hover:scale-105 active:scale-95">
-          <Character stage={userData.currentStage} />
-        </button>
-      </div>
+      {/* Animal Selector Modal */}
+      {showAnimalSelector && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-6"
+          onClick={() => setShowAnimalSelector(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 w-full max-w-md max-h-96 overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Select Your Animal</h2>
+
+            {(userData.unlockedBiomes as BiomeType[]).map((biomeId) => {
+              const biomeConfig = BIOME_CONFIG[biomeId];
+              const biomeAnimals = getAnimalsForBiome(biomeId);
+
+              return (
+                <div key={biomeId} className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="text-xl">{biomeConfig.emoji}</div>
+                    <h3 className="text-sm font-semibold text-text-primary">{biomeConfig.name}</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {biomeAnimals.map((animal) => (
+                      <button
+                        key={animal.id}
+                        onClick={() => {
+                          const newData = {
+                            ...userData,
+                            selectedAnimal: {
+                              id: animal.id,
+                              name: animal.name,
+                              biome: biomeId,
+                              lottieUrl: animal.lottieUrl,
+                            },
+                          };
+                          setUserData(newData);
+                          setShowAnimalSelector(false);
+                        }}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl transition-all duration-200 ${
+                          userData.selectedAnimal?.id === animal.id
+                            ? 'bg-pastel-purple/30 ring-2 ring-pastel-purple'
+                            : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
+                      >
+                        <div className="text-3xl">{animal.emoji}</div>
+                        <div className="text-xs text-text-primary font-medium text-center line-clamp-2">{animal.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Progress Bar */}
       <div className="max-w-xs mx-auto mb-2">

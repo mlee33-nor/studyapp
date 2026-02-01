@@ -1,182 +1,361 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
-import type { MeadowAnimal } from '../types';
+import type { MeadowAnimal, BiomeType } from '../types';
+import { BIOME_CONFIG, getUnlockedBiomes } from '../data/biomes';
+import meadowBg from '../assets/biomes/meadows.jpg';
+import safariBg from '../assets/biomes/safari.jpg';
+import forestBg from '../assets/biomes/forest.jpg';
+import oceanBg from '../assets/biomes/ocean.jpg';
+import arcticBg from '../assets/biomes/arctic.jpg';
+import mountainBg from '../assets/biomes/mountains.jpg';
 
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
 const MEADOW_HEIGHT = 450;
-const ANIMAL_SIZE = 80;
+const ANIMAL_SIZE = 60;
 
-// Depth zones - animals can't go into the far back (top 30% is restricted)
-const MIN_Y = MEADOW_HEIGHT * 0.3; // Can't place above 30% (too far back)
+// Depth zones - animals can't go into the sky (top 180px is sky area)
+const MIN_Y = 185; // Start on first color of green
 const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20; // Bottom boundary with padding
 
 // Safe horizontal bounds
 const MIN_X = 10;
-const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 
-// Biome definitions
-export type BiomeKey = 'meadows' | 'forest' | 'tundra' | 'desert' | 'coral_reef';
-
-export interface BiomeConfig {
-  name: string;
-  emoji: string;
-  unlockLevel: number;
-  background: string;
-  skyOverlay: string;
-  cloudColor: string;
-  hillColor: string;
-  hillSecondary: string;
-  groundColor: string;
-  groundSecondary: string;
-  grassColor: string;
-  grassTip: string;
-  textureColor: string;
-  emptyIcon: string;
-  emptyText: string;
-}
-
-export const BIOME_CONFIGS: Record<BiomeKey, BiomeConfig> = {
-  meadows: {
-    name: 'Meadows',
-    emoji: '🌱',
-    unlockLevel: 0,
-    background: 'linear-gradient(165deg, #87CEEB 0%, #98D8E8 30%, #90EE90 60%, #76B583 100%)',
-    skyOverlay: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 100%)',
-    cloudColor: 'rgba(255,255,255,0.5)',
-    hillColor: 'rgba(60, 179, 113, 0.3)',
-    hillSecondary: 'rgba(46, 139, 87, 0.2)',
-    groundColor: 'rgba(124, 252, 0, 0.3)',
-    groundSecondary: 'rgba(34, 139, 34, 0.5)',
-    grassColor: 'rgba(34, 139, 34, 0.6)',
-    grassTip: 'rgba(124, 252, 0, 0.3)',
-    textureColor: 'rgba(34, 139, 34, 0.05)',
-    emptyIcon: '🌱',
-    emptyText: 'Your meadow awaits...',
-  },
-  forest: {
-    name: 'Enchanted Forest',
-    emoji: '🌲',
-    unlockLevel: 5,
-    background: 'linear-gradient(165deg, #2D5A27 0%, #1A3C2A 30%, #0F2B1E 60%, #0A1F15 100%)',
-    skyOverlay: 'linear-gradient(180deg, rgba(100,180,100,0.15) 0%, rgba(50,100,50,0.05) 40%, transparent 100%)',
-    cloudColor: 'rgba(200,230,200,0.2)',
-    hillColor: 'rgba(20, 80, 30, 0.5)',
-    hillSecondary: 'rgba(15, 60, 25, 0.4)',
-    groundColor: 'rgba(30, 100, 30, 0.4)',
-    groundSecondary: 'rgba(20, 70, 20, 0.6)',
-    grassColor: 'rgba(20, 80, 30, 0.7)',
-    grassTip: 'rgba(60, 140, 60, 0.4)',
-    textureColor: 'rgba(20, 60, 20, 0.08)',
-    emptyIcon: '🌲',
-    emptyText: 'The forest awaits its creatures...',
-  },
-  tundra: {
-    name: 'Frozen Tundra',
-    emoji: '❄️',
-    unlockLevel: 15,
-    background: 'linear-gradient(165deg, #B0C4DE 0%, #87CEEB 30%, #E8EFF5 60%, #D6E5F0 100%)',
-    skyOverlay: 'linear-gradient(180deg, rgba(200,220,255,0.4) 0%, rgba(200,220,255,0.1) 40%, transparent 100%)',
-    cloudColor: 'rgba(220,235,255,0.6)',
-    hillColor: 'rgba(180, 200, 220, 0.5)',
-    hillSecondary: 'rgba(160, 185, 210, 0.4)',
-    groundColor: 'rgba(230, 240, 250, 0.6)',
-    groundSecondary: 'rgba(200, 220, 240, 0.7)',
-    grassColor: 'rgba(180, 200, 220, 0.5)',
-    grassTip: 'rgba(220, 240, 255, 0.4)',
-    textureColor: 'rgba(180, 200, 220, 0.08)',
-    emptyIcon: '❄️',
-    emptyText: 'The tundra is quiet and still...',
-  },
-  desert: {
-    name: 'Golden Desert',
-    emoji: '🏜️',
-    unlockLevel: 25,
-    background: 'linear-gradient(165deg, #FFB347 0%, #FF8C00 30%, #DEB887 60%, #D2B48C 100%)',
-    skyOverlay: 'linear-gradient(180deg, rgba(255,220,150,0.3) 0%, rgba(255,200,100,0.1) 40%, transparent 100%)',
-    cloudColor: 'rgba(255,240,200,0.3)',
-    hillColor: 'rgba(210, 170, 100, 0.4)',
-    hillSecondary: 'rgba(190, 150, 80, 0.3)',
-    groundColor: 'rgba(230, 190, 130, 0.5)',
-    groundSecondary: 'rgba(200, 160, 100, 0.6)',
-    grassColor: 'rgba(180, 140, 80, 0.5)',
-    grassTip: 'rgba(220, 190, 120, 0.3)',
-    textureColor: 'rgba(180, 140, 80, 0.06)',
-    emptyIcon: '🌵',
-    emptyText: 'The desert sands await visitors...',
-  },
-  coral_reef: {
-    name: 'Coral Reef',
-    emoji: '🐠',
-    unlockLevel: 35,
-    background: 'linear-gradient(165deg, #006994 0%, #0088A8 30%, #40E0D0 60%, #20B2AA 100%)',
-    skyOverlay: 'linear-gradient(180deg, rgba(0,150,200,0.2) 0%, rgba(0,100,150,0.1) 40%, transparent 100%)',
-    cloudColor: 'rgba(150,230,255,0.25)',
-    hillColor: 'rgba(0, 120, 150, 0.4)',
-    hillSecondary: 'rgba(0, 100, 130, 0.3)',
-    groundColor: 'rgba(30, 180, 170, 0.4)',
-    groundSecondary: 'rgba(20, 140, 130, 0.5)',
-    grassColor: 'rgba(0, 150, 140, 0.5)',
-    grassTip: 'rgba(60, 210, 200, 0.4)',
-    textureColor: 'rgba(0, 130, 120, 0.06)',
-    emptyIcon: '🐠',
-    emptyText: 'The reef awaits its swimmers...',
-  },
-};
-
-export const BIOME_KEYS: BiomeKey[] = ['meadows', 'forest', 'tundra', 'desert', 'coral_reef'];
-
-// Storage helpers for biome selection
-const getSelectedBiome = (): BiomeKey => {
-  const stored = localStorage.getItem('selectedBiome');
-  if (stored && stored in BIOME_CONFIGS) return stored as BiomeKey;
-  return 'meadows';
-};
-
-const setSelectedBiomeStorage = (biome: BiomeKey) => {
-  localStorage.setItem('selectedBiome', biome);
-};
-
-export const getAllBiomesUnlocked = (): boolean => {
-  return localStorage.getItem('allBiomesUnlocked') === 'true';
-};
-
-export const setAllBiomesUnlocked = (unlocked: boolean) => {
-  localStorage.setItem('allBiomesUnlocked', unlocked ? 'true' : 'false');
-};
-
-export const isBiomeUnlocked = (biome: BiomeKey, level: number): boolean => {
-  if (getAllBiomesUnlocked()) return true;
-  return level >= BIOME_CONFIGS[biome].unlockLevel;
+// Biome background components
+const BiomeBackgrounds: Record<BiomeType, React.FC> = {
+  meadow: () => (
+    <div style={{
+      backgroundImage: `url(${meadowBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      {/* Sky */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '180px',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 40%, transparent 100%)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+      {/* Clouds */}
+      {[...Array(3)].map((_, i) => (
+        <div key={`cloud-${i}`} style={{
+          position: 'absolute',
+          top: 20 + i * 40,
+          left: `${20 + i * 30}%`,
+          width: `${60 + i * 20}px`,
+          height: '30px',
+          background: 'rgba(255,255,255,0.5)',
+          borderRadius: '50px',
+          filter: 'blur(8px)',
+          zIndex: 1,
+          pointerEvents: 'none'
+        }} />
+      ))}
+    </div>
+  ),
+  safari: () => (
+    <div style={{
+      backgroundImage: `url(${safariBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      {/* Sky with heat haze */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '180px',
+        background: 'linear-gradient(180deg, rgba(255,200,0,0.2) 0%, rgba(255,150,0,0.1) 40%, transparent 100%)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+      {/* Sun */}
+      <div style={{
+        position: 'absolute',
+        top: 30,
+        right: '10%',
+        width: '60px',
+        height: '60px',
+        background: 'radial-gradient(circle, #FFD700 0%, rgba(255,215,0,0.3) 100%)',
+        borderRadius: '50%',
+        filter: 'drop-shadow(0 0 20px rgba(255,215,0,0.5))',
+        zIndex: 2,
+        pointerEvents: 'none'
+      }} />
+      {/* Acacia trees */}
+      {[...Array(2)].map((_, i) => (
+        <div key={`tree-${i}`} style={{
+          position: 'absolute',
+          bottom: '30%',
+          left: `${i * 60}%`,
+          width: '80px',
+          height: '120px',
+          zIndex: 2,
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '6px',
+            height: '60px',
+            background: '#8B6F47'
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '70px',
+            height: '70px',
+            background: 'radial-gradient(circle, #BDB76B 0%, #9B8C3A 100%)',
+            borderRadius: '50%',
+            filter: 'drop-shadow(-5px 5px 8px rgba(0,0,0,0.2))'
+          }} />
+        </div>
+      ))}
+      {/* Ground */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60%',
+        background: 'linear-gradient(to bottom, rgba(210, 180, 140, 0.3) 0%, rgba(160, 120, 80, 0.5) 100%)',
+        pointerEvents: 'none',
+        zIndex: 3
+      }} />
+    </div>
+  ),
+  forest: () => (
+    <div style={{
+      backgroundImage: `url(${forestBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      {/* Sky */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '180px',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(100,150,100,0.2) 40%, transparent 100%)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+      {/* Pine trees background */}
+      {[...Array(3)].map((_, i) => (
+        <div key={`pine-${i}`} style={{
+          position: 'absolute',
+          bottom: '25%',
+          left: `${i * 40}%`,
+          width: '60px',
+          height: '140px',
+          zIndex: 2,
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(135deg, #0D3B2D 0%, #1B4D3E 50%, #0D3B2D 100%)',
+            clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
+            filter: 'drop-shadow(-3px 3px 5px rgba(0,0,0,0.3))'
+          }} />
+        </div>
+      ))}
+      {/* Ground */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60%',
+        background: 'linear-gradient(to bottom, rgba(47, 79, 47, 0.4) 0%, rgba(25, 40, 25, 0.6) 100%)',
+        pointerEvents: 'none',
+        zIndex: 3
+      }} />
+    </div>
+  ),
+  ocean: () => (
+    <div style={{
+      backgroundImage: `url(${oceanBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      {/* Sky */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '180px',
+        background: 'linear-gradient(180deg, rgba(135,206,235,0.4) 0%, rgba(100,180,220,0.2) 40%, transparent 100%)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+      {/* Waves */}
+      {[...Array(4)].map((_, i) => (
+        <div key={`wave-${i}`} style={{
+          position: 'absolute',
+          bottom: `${i * 15}%`,
+          left: 0,
+          right: 0,
+          height: '20px',
+          borderTop: '2px solid rgba(255,255,255,0.3)',
+          borderBottom: '2px solid rgba(0,0,0,0.1)',
+          pointerEvents: 'none',
+          zIndex: 2
+        }} />
+      ))}
+      {/* Ground */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60%',
+        background: 'linear-gradient(to bottom, rgba(6, 182, 212, 0.3) 0%, rgba(3, 105, 161, 0.5) 100%)',
+        pointerEvents: 'none',
+        zIndex: 3
+      }} />
+    </div>
+  ),
+  arctic: () => (
+    <div style={{
+      backgroundImage: `url(${arcticBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      {/* Aurora effect */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '140px',
+        background: 'linear-gradient(135deg, rgba(165,113,250,0.2) 0%, rgba(139,92,246,0.1) 50%, rgba(59,130,246,0.2) 100%)',
+        filter: 'blur(30px)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+      {/* Snow peaks */}
+      {[...Array(3)].map((_, i) => (
+        <div key={`peak-${i}`} style={{
+          position: 'absolute',
+          bottom: '30%',
+          left: `${i * 35}%`,
+          width: '70px',
+          height: '100px',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #E0F2FE 50%, #7DD3FC 100%)',
+          clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
+          filter: 'drop-shadow(-2px 2px 4px rgba(0,0,0,0.2))',
+          zIndex: 2,
+          pointerEvents: 'none'
+        }} />
+      ))}
+      {/* Ground */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60%',
+        background: 'linear-gradient(to bottom, rgba(220,240,255,0.4) 0%, rgba(180,220,255,0.6) 100%)',
+        pointerEvents: 'none',
+        zIndex: 3
+      }} />
+    </div>
+  ),
+  mountain: () => (
+    <div style={{
+      backgroundImage: `url(${mountainBg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center bottom',
+      position: 'relative',
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      {/* Sky */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '180px',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(200,150,255,0.1) 40%, transparent 100%)',
+        pointerEvents: 'none',
+        zIndex: 1
+      }} />
+      {/* Mountain peaks */}
+      {[...Array(4)].map((_, i) => (
+        <div key={`peak-${i}`} style={{
+          position: 'absolute',
+          bottom: `${20 - i * 5}%`,
+          left: `${i * 25}%`,
+          width: `${80 + i * 10}px`,
+          height: `${120 + i * 20}px`,
+          background: i % 2 === 0 ? 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)' : 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
+          clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
+          filter: 'drop-shadow(-3px 3px 6px rgba(0,0,0,0.3))',
+          zIndex: 1 + i,
+          pointerEvents: 'none'
+        }} />
+      ))}
+      {/* Ground */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '60%',
+        background: 'linear-gradient(to bottom, rgba(124, 58, 237, 0.3) 0%, rgba(99, 102, 241, 0.5) 100%)',
+        pointerEvents: 'none',
+        zIndex: 5
+      }} />
+    </div>
+  )
 };
 
 const MeadowScreen: React.FC = () => {
   const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
-  const [selectedBiome, setSelectedBiome] = useState<BiomeKey>(getSelectedBiome());
+  const meadowRef = useRef<HTMLDivElement>(null);
+  const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
 
-  const biome = BIOME_CONFIGS[selectedBiome];
-
-  // Get user level from the App-level userData stored in localStorage
-  const appUserData = useMemo(() => {
-    try {
-      const data = localStorage.getItem('userData');
-      if (data) return JSON.parse(data);
-    } catch {}
-    return { level: 1 };
-  }, []);
-
-  const userLevel = appUserData.level || 1;
-
-  const handleBiomeSelect = (key: BiomeKey) => {
-    if (isBiomeUnlocked(key, userLevel)) {
-      setSelectedBiome(key);
-      setSelectedBiomeStorage(key);
-    }
-  };
+  const unlockedBiomes = getUnlockedBiomes(userData.level);
+  const biomeAnimals = userData.meadowAnimals.filter(a => a.biome === activeBiome);
+  const BiomeBackground = BiomeBackgrounds[activeBiome];
 
   // Load Lottie animations
   useEffect(() => {
@@ -203,72 +382,92 @@ const MeadowScreen: React.FC = () => {
     loadAnimations();
   }, [userData.meadowAnimals, loadedAnimations]);
 
+  // Get dynamic bounds based on actual container size
+  const getBounds = () => {
+    const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
+    const maxX = meadowWidth - ANIMAL_SIZE - 10;
+    return { minX: MIN_X, maxX, minY: MIN_Y, maxY: MAX_Y };
+  };
+
   // Constrain position to valid bounds
   const constrainPosition = (x: number, y: number) => {
+    const { minX, maxX, minY, maxY } = getBounds();
     return {
-      x: Math.max(MIN_X, Math.min(MAX_X, x)),
-      y: Math.max(MIN_Y, Math.min(MAX_Y, y))
+      x: Math.max(minX, Math.min(maxX, x)),
+      y: Math.max(minY, Math.min(maxY, y))
     };
   };
 
-  // Check if position overlaps with existing animals
-  const checkCollision = (animalId: string, newX: number, newY: number) => {
-    const COLLISION_THRESHOLD = 60; // Minimum distance between animals
+  // Check if position is in a valid zone (not in sky, not too close to another animal)
+  const isValidPosition = (animalId: string, newX: number, newY: number): boolean => {
+    // Sky threshold - animals must be below this line
+    const SKY_THRESHOLD = MIN_Y;
+    if (newY < SKY_THRESHOLD) return false;
 
+    // Collision threshold - must be at least this far from other animals
+    const COLLISION_THRESHOLD = 45;
     for (const animal of userData.meadowAnimals) {
       if (animal.id === animalId) continue;
-
       const dx = newX - animal.x;
       const dy = newY - animal.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance < COLLISION_THRESHOLD) {
-        return true; // Collision detected
-      }
+      if (distance < COLLISION_THRESHOLD) return false;
     }
-    return false;
+
+    return true;
   };
 
-  // Handle drag end with smooth constraints
+  // Handle drag end - place exactly where user drops, allow close positioning
   const handleDragEnd = (animalId: string, _event: any, info: any) => {
-    let { x: newX, y: newY } = constrainPosition(info.point.x, info.point.y);
+    const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
+    if (!currentAnimal) {
+      return;
+    }
 
-    // If collision detected, try to find nearby valid position
-    if (checkCollision(animalId, newX, newY)) {
-      // Try small adjustments to find valid position
-      const adjustments = [
-        { dx: 70, dy: 0 },
-        { dx: -70, dy: 0 },
-        { dx: 0, dy: 70 },
-        { dx: 0, dy: -70 },
-        { dx: 50, dy: 50 },
-        { dx: -50, dy: -50 }
+    // Calculate desired position based on drag offset
+    let newX = currentAnimal.x + info.offset.x;
+    let newY = currentAnimal.y + info.offset.y;
+
+    // Apply boundary constraints first
+    const constrained = constrainPosition(newX, newY);
+    newX = constrained.x;
+    newY = constrained.y;
+
+    // Check if position is valid (not in sky, not directly on another animal)
+    if (!isValidPosition(animalId, newX, newY)) {
+      // Try nearby positions in priority order
+      const attempts = [
+        { dx: 0, dy: 0 },      // Try exact position first
+        { dx: 30, dy: 0 },     // Try slightly right
+        { dx: -30, dy: 0 },    // Try slightly left
+        { dx: 0, dy: 30 },     // Try down
+        { dx: 0, dy: -20 },    // Try up slightly
+        { dx: 30, dy: 30 },    // Diagonal
+        { dx: -30, dy: 30 },   // Diagonal
       ];
 
-      let validPositionFound = false;
-      for (const adj of adjustments) {
-        const testX = newX + adj.dx;
-        const testY = newY + adj.dy;
-        const constrained = constrainPosition(testX, testY);
+      let foundValid = false;
+      for (const attempt of attempts) {
+        const testX = constrained.x + attempt.dx;
+        const testY = constrained.y + attempt.dy;
+        const finalConstrained = constrainPosition(testX, testY);
 
-        if (!checkCollision(animalId, constrained.x, constrained.y)) {
-          newX = constrained.x;
-          newY = constrained.y;
-          validPositionFound = true;
+        if (isValidPosition(animalId, finalConstrained.x, finalConstrained.y)) {
+          newX = finalConstrained.x;
+          newY = finalConstrained.y;
+          foundValid = true;
           break;
         }
       }
 
-      // If no valid position found, snap back to original position
-      if (!validPositionFound) {
-        const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
-        if (currentAnimal) {
-          newX = currentAnimal.x;
-          newY = currentAnimal.y;
-        }
+      // If still no valid position, keep original position
+      if (!foundValid) {
+        newX = currentAnimal.x;
+        newY = currentAnimal.y;
       }
     }
 
+    // Update position and refresh
     updateAnimalPosition(animalId, newX, newY);
     refreshData();
   };
@@ -286,214 +485,104 @@ const MeadowScreen: React.FC = () => {
   // Calculate z-index based on y position (animals further back have lower z-index)
   const getZIndex = (y: number) => Math.floor(y / 10) + 5;
 
+  const handleBiomeSwitch = (biomeId: BiomeType) => {
+    setActiveBiome(biomeId);
+    const currentData = getUserData();
+    saveUserData({ ...currentData, activeBiome: biomeId });
+  };
+
   return (
     <div className="min-h-screen pb-24 pt-8 px-6" style={{ background: 'linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%)' }}>
       <div className="max-w-lg mx-auto">
         <h1 className="text-3xl font-bold text-text-primary mb-2">Your Sanctuary</h1>
-        <p className="text-text-secondary mb-6">
-          Collect adorable animals as you study!
+        <p className="text-text-secondary mb-4">
+          Explore different biomes and collect unique animals
         </p>
 
-        {/* Biome Selector */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-4 mb-6 shadow-soft">
-          <p style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#64748b',
-            marginBottom: '10px',
-            fontFamily: "'Quicksand', sans-serif"
-          }}>
-            Choose Your Biome
-          </p>
-          <div style={{
-            display: 'flex',
-            gap: '8px',
-            overflowX: 'auto',
-            paddingBottom: '4px',
-          }}>
-            {BIOME_KEYS.map((key) => {
-              const cfg = BIOME_CONFIGS[key];
-              const unlocked = isBiomeUnlocked(key, userLevel);
-              const isActive = selectedBiome === key;
-
-              return (
-                <motion.button
-                  key={key}
-                  whileTap={unlocked ? { scale: 0.95 } : {}}
-                  onClick={() => handleBiomeSelect(key)}
-                  style={{
-                    flex: '0 0 auto',
-                    padding: '8px 14px',
-                    borderRadius: '14px',
-                    border: isActive ? '2px solid rgba(167, 139, 250, 0.8)' : '2px solid rgba(200, 220, 255, 0.4)',
-                    background: isActive ? 'rgba(167, 139, 250, 0.15)' : 'rgba(255,255,255,0.6)',
-                    cursor: unlocked ? 'pointer' : 'not-allowed',
-                    opacity: unlocked ? 1 : 0.45,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '2px',
-                    minWidth: '72px',
-                    position: 'relative',
-                    fontFamily: "'Quicksand', sans-serif",
-                  }}
-                >
-                  <span style={{ fontSize: '20px' }}>{cfg.emoji}</span>
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: isActive ? '#7c3aed' : '#64748b',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {cfg.name}
-                  </span>
-                  {!unlocked && (
-                    <span style={{
-                      fontSize: '9px',
-                      color: '#94a3b8',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      Lv {cfg.unlockLevel}
-                    </span>
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
+        {/* Biome Carousel */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          overflowX: 'auto',
+          marginBottom: '16px',
+          paddingBottom: '8px',
+          scrollBehavior: 'smooth'
+        }}>
+          {(unlockedBiomes as BiomeType[]).map((biomeId) => {
+            const biomeConfig = BIOME_CONFIG[biomeId];
+            const isActive = activeBiome === biomeId;
+            return (
+              <motion.button
+                key={biomeId}
+                onClick={() => handleBiomeSwitch(biomeId)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 16px',
+                  borderRadius: '20px',
+                  border: isActive ? '2px solid rgba(167, 139, 250, 0.6)' : '2px solid rgba(200, 200, 200, 0.3)',
+                  background: isActive ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                  backdropFilter: 'blur(10px)',
+                  cursor: 'pointer',
+                  minWidth: '80px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{ fontSize: '32px' }}>{biomeConfig.emoji}</div>
+                <div style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: isActive ? 'rgba(15, 23, 42, 0.95)' : 'rgba(100, 116, 139, 0.7)'
+                }}>
+                  {biomeConfig.name}
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
 
         {/* Stats Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 mb-6 shadow-soft">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Today's Collection</p>
+              <p className="text-sm text-text-secondary">Today in {BIOME_CONFIG[activeBiome].name}</p>
               <p className="text-2xl font-bold text-text-primary">
-                {userData.meadowAnimals.length} Animals
+                {biomeAnimals.length} Animals
               </p>
             </div>
-            <div className="text-4xl">{biome.emoji}</div>
+            <div className="text-4xl">{BIOME_CONFIG[activeBiome].emoji}</div>
           </div>
         </div>
 
-        {/* 3D Meadow Diorama Container */}
-        <div style={{ perspective: '1200px', marginBottom: '20px' }}>
+        {/* 3D Biome Diorama Container */}
+        <div style={{ perspective: '1200px', marginBottom: '20px', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
           <div
             style={{
               padding: '0',
-              overflow: 'visible',
+              overflow: 'hidden',
+              borderRadius: '28px',
               transform: 'rotateX(8deg)',
               transformStyle: 'preserve-3d',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.2), 0 10px 30px rgba(0,0,0,0.1)',
             }}
           >
             <div
+              ref={meadowRef}
               style={{
-                background: biome.background,
                 position: 'relative',
                 height: `${MEADOW_HEIGHT}px`,
                 borderRadius: '28px',
                 overflow: 'hidden',
-                boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)',
-                transition: 'background 0.6s ease',
+                boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)'
               }}
             >
-              {/* Sky with clouds */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '180px',
-                background: biome.skyOverlay,
-                pointerEvents: 'none',
-                zIndex: 1
-              }} />
-
-              {/* Floating clouds */}
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={`cloud-${i}`}
-                  style={{
-                    position: 'absolute',
-                    top: 20 + i * 40,
-                    left: `${20 + i * 30}%`,
-                    width: `${60 + i * 20}px`,
-                    height: '30px',
-                    background: biome.cloudColor,
-                    borderRadius: '50px',
-                    filter: 'blur(8px)',
-                    zIndex: 1,
-                    pointerEvents: 'none'
-                  }}
-                />
-              ))}
-
-              {/* Hills/Mountains in background */}
-              <div style={{
-                position: 'absolute',
-                bottom: '35%',
-                left: '-10%',
-                width: '120%',
-                height: '200px',
-                background: `linear-gradient(to bottom, ${biome.hillColor} 0%, ${biome.hillSecondary} 100%)`,
-                borderRadius: '50% 50% 0 0',
-                transform: 'translateZ(-50px)',
-                zIndex: 2,
-                pointerEvents: 'none'
-              }} />
-
-              {/* Ground layer */}
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '60%',
-                background: `linear-gradient(to bottom, ${biome.groundColor} 0%, ${biome.groundSecondary} 100%)`,
-                pointerEvents: 'none',
-                zIndex: 3
-              }} />
-
-              {/* Grass texture pattern */}
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '50%',
-                background: `repeating-linear-gradient(
-                  90deg,
-                  transparent,
-                  transparent 2px,
-                  ${biome.textureColor} 2px,
-                  ${biome.textureColor} 4px
-                )`,
-                zIndex: 3,
-                pointerEvents: 'none'
-              }} />
-
-              {/* 3D Grass blades */}
-              {[...Array(25)].map((_, i) => (
-                <div
-                  key={`grass-${i}`}
-                  style={{
-                    position: 'absolute',
-                    bottom: Math.random() * 60,
-                    left: `${(i / 25) * 100}%`,
-                    width: '3px',
-                    height: `${25 + Math.random() * 30}px`,
-                    background: `linear-gradient(to top, ${biome.grassColor}, ${biome.grassTip})`,
-                    borderRadius: '3px',
-                    transform: `rotate(${-15 + Math.random() * 30}deg) translateZ(${Math.random() * 10}px)`,
-                    boxShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-                    zIndex: 4,
-                    pointerEvents: 'none'
-                  }}
-                />
-              ))}
+              <BiomeBackground />
 
               {/* Animals */}
-              {userData.meadowAnimals.length === 0 ? (
+              {biomeAnimals.length === 0 ? (
                 <div style={{
                   position: 'absolute',
                   top: '50%',
@@ -502,7 +591,7 @@ const MeadowScreen: React.FC = () => {
                   textAlign: 'center',
                   zIndex: 10
                 }}>
-                  <div style={{ fontSize: '64px', marginBottom: '16px' }}>{biome.emptyIcon}</div>
+                  <div style={{ fontSize: '64px', marginBottom: '16px' }}>{BIOME_CONFIG[activeBiome].emoji}</div>
                   <div style={{
                     fontSize: '16px',
                     color: 'rgba(255,255,255,0.95)',
@@ -510,7 +599,7 @@ const MeadowScreen: React.FC = () => {
                     fontWeight: 600,
                     textShadow: '0 2px 4px rgba(0,0,0,0.2)'
                   }}>
-                    {biome.emptyText}
+                    Explore {BIOME_CONFIG[activeBiome].name}...
                   </div>
                   <div style={{
                     fontSize: '13px',
@@ -519,50 +608,40 @@ const MeadowScreen: React.FC = () => {
                     fontFamily: "'Quicksand', sans-serif",
                     textShadow: '0 1px 2px rgba(0,0,0,0.2)'
                   }}>
-                    Complete a study session to meet your first friend!
+                    Complete study sessions to discover animals here!
                   </div>
                 </div>
               ) : (
-                userData.meadowAnimals.map((animal: MeadowAnimal) => (
+                biomeAnimals.map((animal: MeadowAnimal) => (
                   <motion.div
                     key={animal.id}
                     drag
                     dragMomentum={false}
-                    dragElastic={0.1}
-                    dragTransition={{
-                      power: 0.1,
-                      timeConstant: 200,
-                      bounceStiffness: 300,
-                      bounceDamping: 20
-                    }}
-                    dragConstraints={{
-                      left: MIN_X,
-                      right: MAX_X,
-                      top: MIN_Y,
-                      bottom: MAX_Y,
-                    }}
+                    dragElastic={0}
+                    dragConstraints={meadowRef}
+                    onDragStart={() => {}}
                     onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                     onClick={() => handleAnimalTap(animal.id)}
-                    initial={{ x: animal.x, y: animal.y }}
                     animate={{ x: animal.x, y: animal.y }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 25
-                    }}
+                    transition={{ duration: 0.1, ease: 'easeOut' }}
                     className="absolute cursor-grab active:cursor-grabbing"
                     style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
                       width: `${ANIMAL_SIZE}px`,
                       height: `${ANIMAL_SIZE}px`,
                       zIndex: getZIndex(animal.y),
                       transform: animal.flipped ? 'scaleX(-1)' : 'scaleX(1)',
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                      x: animal.x,
+                      y: animal.y
                     }}
                     whileHover={{
                       scale: 1.05,
                       filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))'
                     }}
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
                   >
                     {loadedAnimations[animal.id] && (
                       <Lottie
@@ -585,10 +664,10 @@ const MeadowScreen: React.FC = () => {
         {/* Instructions */}
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
           <p className="text-sm text-text-secondary text-center">
-            🌿 Drag to move animals • Hover for 3D effect • Tap to flip direction
+            🌍 Switch biomes • 🐾 Drag animals • 👆 Tap to flip
           </p>
           <p className="text-xs text-text-secondary text-center mt-2">
-            Your sanctuary resets daily at midnight • Complete study sessions to collect more friends!
+            Collect animals daily • Unlock biomes by leveling up • Your collection resets at midnight
           </p>
         </div>
       </div>

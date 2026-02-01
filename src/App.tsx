@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText } from 'lucide-react';
+import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Lottie from 'lottie-react';
-import { AstronautCat } from './AstronautCat';
+import { triggerHapticFeedback } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
-import MeadowScreen, { getAllBiomesUnlocked, setAllBiomesUnlocked } from './screens/MeadowScreen';
+import MeadowScreen from './screens/MeadowScreen';
+import GalleryScreen from './screens/GalleryScreen';
+import AchievementsScreen from './screens/AchievementsScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
 import { addCompletedSession } from './utils/storage';
 import type { StudyCategory } from './types/stats';
@@ -37,20 +39,34 @@ const getUserData = () => {
   const data = localStorage.getItem('userData');
   if (data) {
     const parsed = JSON.parse(data);
-    // Ensure meadow fields exist
+    // Ensure meadow fields and collection fields exist
     return {
       level: 1,
       xp: 0,
       sessionsCompleted: 0,
       meadowAnimals: [],
       lastMeadowReset: null,
+      permanentCollection: [],
+      activeBiome: 'meadow' as const,
+      unlockedBiomes: ['meadow'],
+      lastDailyReset: null,
       ...parsed
     };
   }
-  return { level: 1, xp: 0, sessionsCompleted: 0, meadowAnimals: [], lastMeadowReset: null };
+  return {
+    level: 1,
+    xp: 0,
+    sessionsCompleted: 0,
+    meadowAnimals: [],
+    lastMeadowReset: null,
+    permanentCollection: [],
+    activeBiome: 'meadow' as const,
+    unlockedBiomes: ['meadow'],
+    lastDailyReset: null
+  };
 };
 
-const saveUserData = (data: { level: number; xp: number; sessionsCompleted: number; meadowAnimals?: any[]; lastMeadowReset?: string | null }) => {
+const saveUserData = (data: any) => {
   localStorage.setItem('userData', JSON.stringify(data));
 };
 
@@ -187,6 +203,21 @@ const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') =
 // --- SOFT ANIMATIONS ---
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 const GENTLE_PRESS = { scale: 0.96 };
+
+const MeadowIcon = ({ color, size, strokeWidth }: { color: string; size: number; strokeWidth: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
+    <path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+  </svg>
+);
+
+const NAV_TABS = [
+  { id: 'Timer', icon: Home },
+  { id: 'Stats', icon: BarChart2 },
+  { id: 'Reports', icon: FileText },
+  { id: 'Meadow', icon: MeadowIcon },
+  { id: 'Collection', icon: Image },
+  { id: 'Settings', icon: SettingsIcon },
+] as const;
 
 // --- BACKGROUND THEMES - 4 Distinct Palettes ---
 const BACKGROUND_THEMES = {
@@ -437,6 +468,7 @@ const InteractiveTimerRing: React.FC<{
   const displaySize = 192;
   const svgRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const prevMinutesRef = useRef(minutes);
 
   const progress = 1 - (timeLeft / totalSeconds);
   const dashOffset = CIRCUMFERENCE * (1 - progress);
@@ -472,7 +504,15 @@ const InteractiveTimerRing: React.FC<{
     if (angle < 0) angle += 360;
 
     const newMinutes = Math.round((angle / 360) * (60 - 5) + 5);
-    onMinutesChange(Math.max(5, Math.min(60, newMinutes)));
+    const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
+
+    // Trigger haptic feedback when the value changes
+    if (clampedMinutes !== prevMinutesRef.current) {
+      triggerHapticFeedback(10);
+      prevMinutesRef.current = clampedMinutes;
+    }
+
+    onMinutesChange(clampedMinutes);
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -514,6 +554,13 @@ const InteractiveTimerRing: React.FC<{
       window.removeEventListener('pointercancel', handleGlobalPointerUp);
     };
   }, [isDragging, isRunning]);
+
+  // Update prevMinutesRef when minutes changes externally
+  useEffect(() => {
+    if (!isDragging) {
+      prevMinutesRef.current = minutes;
+    }
+  }, [minutes, isDragging]);
 
   return (
     <div
@@ -639,111 +686,6 @@ const InteractiveTimerRing: React.FC<{
     </div>
   );
 };
-
-// --- XP PROGRESS BAR ---
-const XpProgressBar: React.FC<{ currentXp: number; requiredXp: number; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ currentXp, requiredXp, theme }) => {
-  const percentage = (currentXp / requiredXp) * 100;
-
-  return (
-    <div style={{ width: '100%' }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        marginBottom: '8px',
-        fontSize: '13px',
-        color: getTextColor(theme, 'secondary'),
-        fontWeight: 600,
-        fontFamily: "'Quicksand', sans-serif"
-      }}>
-        <span>{currentXp} XP</span>
-        <span>{requiredXp} XP</span>
-      </div>
-      <div style={{
-        width: '100%',
-        height: '12px',
-        background: BACKGROUND_THEMES[theme].isDark ? 'rgba(200, 220, 255, 0.3)' : 'rgba(100, 116, 139, 0.2)',
-        borderRadius: '100px',
-        overflow: 'hidden'
-      }}>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={SOFT_SPRING}
-          style={{
-            height: '100%',
-            background: 'linear-gradient(90deg, rgba(244, 114, 182, 0.8) 0%, rgba(168, 85, 247, 0.8) 100%)',
-            boxShadow: '0 2px 10px rgba(244, 114, 182, 0.5)'
-          }}
-        />
-      </div>
-    </div>
-  );
-};
-
-// --- MILESTONE STAGES GRID ---
-const EvolutionStages: React.FC<{ currentLevel: number; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ currentLevel, theme }) => {
-  const stages = [
-    { name: 'Rookie', level: 1, emoji: '🐱' },
-    { name: 'Beginner', level: 5, emoji: '📚' },
-    { name: 'Cadet', level: 10, emoji: '🎓' },
-    { name: 'Scholar', level: 15, emoji: '📖' },
-    { name: 'Astronaut', level: 20, emoji: '🚀' },
-    { name: 'Ace', level: 25, emoji: '⭐' },
-    { name: 'Explorer', level: 30, emoji: '🌌' },
-    { name: 'Legend', level: 35, emoji: '✨' }
-  ];
-
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(2, 1fr)',
-      gap: '16px',
-      marginTop: '24px'
-    }}>
-      {stages.map((stage, i) => {
-        const isUnlocked = currentLevel >= stage.level;
-        return (
-          <motion.div
-            key={i}
-            whileHover={{ scale: isUnlocked ? 1.05 : 1 }}
-            style={{
-              background: isUnlocked ? 'rgba(255, 255, 255, 0.5)' : 'rgba(200, 220, 255, 0.2)',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              padding: '20px',
-              borderRadius: '20px',
-              textAlign: 'center',
-              boxShadow: isUnlocked ? '0 4px 15px rgba(167, 139, 250, 0.2)' : '0 2px 10px rgba(147, 197, 253, 0.1)',
-              opacity: isUnlocked ? 1 : 0.5,
-              cursor: isUnlocked ? 'default' : 'not-allowed'
-            }}
-          >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>
-              {isUnlocked ? stage.emoji : '🔒'}
-            </div>
-            <div style={{
-              fontSize: '14px',
-              fontWeight: 600,
-              color: getTextColor(theme, 'primary'),
-              marginBottom: '4px',
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              {stage.name}
-            </div>
-            <div style={{
-              fontSize: '12px',
-              color: getTextColor(theme, 'tertiary'),
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              Level {stage.level}+
-            </div>
-          </motion.div>
-        );
-      })}
-    </div>
-  );
-};
-
 // --- SOFT STATS CHART ---
 const SoftStatsChart: React.FC<{ theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ theme }) => {
   const data = [35, 50, 30, 45, 65, 55, 25];
@@ -1041,8 +983,10 @@ export default function App() {
   const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
-  const [selectedAnimal, setSelectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Panda
-  const [showAnimalSelector, setShowAnimalSelector] = useState(false);
+  const [selectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Corgi (fixed selection, no selector modal)
+  const [showRarityReveal, setShowRarityReveal] = useState(false);
+  const [unlockedAnimal, setUnlockedAnimal] = useState<any>(null);
+  const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
 
   const theme = selectedTheme;
 
@@ -1051,6 +995,14 @@ export default function App() {
     { name: 'Cat', emoji: '🐱', url: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json' },
     { name: 'Corgi', emoji: '🐶', url: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json' },
   ];
+
+  // Disable scrolling on the home (Timer) tab
+  useEffect(() => {
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.overflowY = activeTab === 'Timer' ? 'hidden' : 'auto';
+    }
+  }, [activeTab]);
 
   // Persistence Engine: Load saved data on mount
   useEffect(() => {
@@ -1185,9 +1137,17 @@ export default function App() {
     saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
 
     // Add completed session to storage (this spawns meadow animal automatically)
-    addCompletedSession(timerMinutes);
+    const selectedAnimalUrl = ANIMALS[selectedAnimal].url;
+    const result = addCompletedSession(timerMinutes, selectedAnimalUrl);
+
+    // Extract the collected animal for rarity reveal
+    if (result && (result as any).collectedAnimal) {
+      setUnlockedAnimal((result as any).collectedAnimal);
+      setShowRarityReveal(true);
+    }
 
     // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
+    // Bonus: +0.5% XP per minute (longer sessions get better odds for animals)
     const xpGained = timerMinutes * 10;
     let newLevel = userData.level;
     let remainingXp = userData.xp + xpGained;
@@ -1217,12 +1177,32 @@ export default function App() {
 
   const handleDevLevelChange = (level: number) => {
     setDevLevel(level);
+    const unlockedBiomes: any[] = [];
+    // Unlock biomes based on level
+    const levelThresholds: any = { meadow: 0, safari: 10, forest: 20, ocean: 30, arctic: 40, mountain: 50 };
+    Object.entries(levelThresholds).forEach(([biome, threshold]: any) => {
+      if (level >= threshold) unlockedBiomes.push(biome);
+    });
+
     const newData = {
       ...userData,
       level: level,
-      xp: 0
+      xp: 0,
+      unlockedBiomes: unlockedBiomes.length > 0 ? unlockedBiomes : ['meadow']
     };
     setUserData(newData);
+    saveUserData(newData);
+  };
+
+  const handleUnlockAllBiomes = () => {
+    const newData = {
+      ...userData,
+      level: 50,
+      xp: 0,
+      unlockedBiomes: ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain']
+    };
+    setUserData(newData);
+    setDevLevel(50);
     saveUserData(newData);
   };
 
@@ -1327,11 +1307,8 @@ export default function App() {
               marginTop: '12px'
             }}>
               <motion.div
-                onClick={() => setShowAnimalSelector(true)}
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 style={{
-                  cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'center',
                   width: '80px',
@@ -1406,62 +1383,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Navigation Bar - Integrated into layout */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginTop: '0.5rem'
-          }}>
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={SOFT_SPRING}
-              style={{
-                background: getNavBackground(selectedTheme),
-                backdropFilter: 'blur(25px)',
-                WebkitBackdropFilter: 'blur(25px)',
-                border: `1px solid ${getNavBorder(selectedTheme)}`,
-                borderRadius: '30px',
-                boxShadow: getNavShadow(selectedTheme),
-                display: 'flex',
-                gap: '8px',
-                padding: '10px 16px',
-              }}
-            >
-              {[
-                { id: 'Timer', icon: Home },
-                { id: 'Stats', icon: BarChart2 },
-                { id: 'Reports', icon: FileText },
-                { id: 'Meadow', icon: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
-                { id: 'Avatar', icon: User },
-                { id: 'Settings', icon: SettingsIcon }
-              ].map(tab => {
-                const isActive = activeTab === tab.id;
-                const colors = getThemeColors(selectedTheme);
-                return (
-                  <motion.div
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    whileTap={GENTLE_PRESS}
-                    transition={SOFT_SPRING}
-                    style={{
-                      cursor: 'pointer',
-                      padding: '8px',
-                      borderRadius: '14px',
-                      background: isActive ? (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(167, 139, 250, 0.2)') : 'transparent',
-                      boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
-                    }}
-                  >
-                    <tab.icon
-                      color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
-                      size={20}
-                      strokeWidth={isActive ? 2.5 : 2}
-                    />
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </div>
         </div>
       </div>
     );
@@ -1592,49 +1513,91 @@ export default function App() {
       return <MeadowScreen />;
     }
 
-    if (activeTab === 'Avatar') return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={SOFT_SPRING}
-        style={{ padding: '40px 24px 160px', textAlign: 'center', position: 'relative', zIndex: 1 }}
-      >
-        <h1 style={{
-          fontSize: '1.5rem',
-          fontWeight: 500,
-          color: getTextColor(selectedTheme, 'primary'),
-          marginBottom: '32px',
-          letterSpacing: '0.05em',
-          fontFamily: "'Quicksand', sans-serif"
-        }}>
-          Your Character
-        </h1>
-
-        <GlassCard theme={selectedTheme}>
-          <div style={{ marginBottom: '32px' }}>
-            <AstronautCat size={160} level={userData.level} isTimerActive={false} theme={selectedTheme} />
-          </div>
-
+    if (activeTab === 'Collection') {
+      return (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
+        >
+          {/* Collection View Toggle */}
           <div style={{
-            background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.5)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            padding: '12px 24px',
-            borderRadius: '24px',
+            display: 'flex',
+            gap: '12px',
             marginBottom: '24px',
-            boxShadow: '0 4px 15px rgba(167, 139, 250, 0.2)',
-            display: 'inline-block'
+            position: 'sticky',
+            top: 0,
+            zIndex: 10
           }}>
-            <div style={{ fontSize: '24px', fontWeight: 700, color: getTextColor(selectedTheme, 'primary'), fontFamily: "'Quicksand', sans-serif" }}>
-              Level {userData.level}
-            </div>
+            <motion.button
+              onClick={() => setCollectionViewMode('gallery')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '16px',
+                border: collectionViewMode === 'gallery' ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(200, 200, 200, 0.3)',
+                background: collectionViewMode === 'gallery' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(10px)',
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '14px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              📚 Gallery
+            </motion.button>
+            <motion.button
+              onClick={() => setCollectionViewMode('achievements')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                borderRadius: '16px',
+                border: collectionViewMode === 'achievements' ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(200, 200, 200, 0.3)',
+                background: collectionViewMode === 'achievements' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(10px)',
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '14px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              🏆 Achievements
+            </motion.button>
           </div>
 
-          <XpProgressBar currentXp={userData.xp} requiredXp={calculateXpForLevel(userData.level)} theme={selectedTheme} />
-          <EvolutionStages currentLevel={userData.level} theme={selectedTheme} />
-        </GlassCard>
-      </motion.div>
-    );
+          {/* Gallery View */}
+          {collectionViewMode === 'gallery' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <GalleryScreen collection={userData.permanentCollection} theme={selectedTheme} />
+            </motion.div>
+          )}
+
+          {/* Achievements View */}
+          {collectionViewMode === 'achievements' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <AchievementsScreen userData={userData} theme={selectedTheme} />
+            </motion.div>
+          )}
+        </motion.div>
+      );
+    }
 
     return (
       <motion.div
@@ -1816,37 +1779,27 @@ export default function App() {
                 cursor: 'pointer'
               }}
             />
-          </div>
 
-          <div style={{ marginTop: '16px' }}>
             <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                const current = getAllBiomesUnlocked();
-                setAllBiomesUnlocked(!current);
-                // Force re-render
-                setUserData({ ...userData });
-              }}
+              onClick={handleUnlockAllBiomes}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               style={{
                 width: '100%',
                 padding: '10px 16px',
+                marginTop: '12px',
+                background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)',
+                border: '1px solid rgba(167, 139, 250, 0.6)',
                 borderRadius: '12px',
-                border: 'none',
-                background: getAllBiomesUnlocked()
-                  ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%)'
-                  : 'linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%)',
                 color: getTextColor(selectedTheme, 'primary'),
                 fontSize: '13px',
                 fontWeight: 600,
                 fontFamily: "'Quicksand', sans-serif",
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
+                transition: 'all 0.2s ease'
               }}
             >
-              {getAllBiomesUnlocked() ? 'Lock Biomes (Re-enable Levels)' : 'Unlock All Biomes'}
+              🔓 Unlock All Biomes
             </motion.button>
           </div>
 
@@ -1865,6 +1818,7 @@ export default function App() {
   };
 
   return (
+    <>
     <motion.div
       animate={{ background: BACKGROUND_THEMES[theme].gradient }}
       transition={{ duration: 2, ease: "easeInOut" }}
@@ -1883,149 +1837,146 @@ export default function App() {
         onSelectCategory={handleCategorySelected}
       />
 
-      {/* Animal Selector Modal */}
-      {showAnimalSelector && (
+      <div style={{
+        maxWidth: '480px',
+        margin: '0 auto',
+        position: 'relative',
+        height: activeTab === 'Timer' ? '100dvh' : 'auto',
+        overflow: activeTab === 'Timer' ? 'hidden' : undefined,
+      }}>
+        {renderContent()}
+      </div>
+    </motion.div>
+
+      {/* Rarity Reveal Modal */}
+      {showRarityReveal && unlockedAnimal && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={() => setShowAnimalSelector(false)}
+          onClick={() => setShowRarityReveal(false)}
           style={{
             position: 'fixed',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.4)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 2000,
+            zIndex: 2500,
             padding: '20px',
           }}
         >
           <motion.div
-            initial={{ scale: 0.9, y: 20 }}
+            initial={{ scale: 0.8, y: 40 }}
             animate={{ scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(30, 30, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(30, 30, 50, 0.98)' : 'rgba(255, 255, 255, 0.98)',
+              backdropFilter: 'blur(30px)',
               borderRadius: '32px',
-              padding: '32px 24px',
-              border: `1px solid ${getBorderColor(selectedTheme)}`,
-              boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3)',
-              maxWidth: '400px',
-              width: '100%',
+              padding: '40px 24px',
+              maxWidth: '320px',
+              textAlign: 'center',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
             }}
           >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+              style={{
+                fontSize: '80px',
+                marginBottom: '20px',
+                display: 'inline-block'
+              }}
+            >
+              ✨
+            </motion.div>
+
             <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: 600,
+              fontSize: '24px',
+              fontWeight: 700,
               color: getTextColor(selectedTheme, 'primary'),
-              marginBottom: '8px',
-              textAlign: 'center',
-              fontFamily: "'Quicksand', sans-serif",
+              marginBottom: '12px',
+              fontFamily: "'Quicksand', sans-serif"
             }}>
-              Choose Your Companion
+              Amazing Work!
             </h2>
-            <p style={{
-              fontSize: '13px',
-              color: getTextColor(selectedTheme, 'secondary'),
-              marginBottom: '24px',
-              textAlign: 'center',
-              fontFamily: "'Quicksand', sans-serif",
-            }}>
-              This animal will appear in your meadow after each study session
-            </p>
 
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
+              fontSize: '14px',
+              color: getTextColor(selectedTheme, 'secondary'),
               marginBottom: '24px',
+              fontFamily: "'Quicksand', sans-serif"
             }}>
-              {ANIMALS.map((animal, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    setSelectedAnimal(index);
-                    setShowAnimalSelector(false);
-                  }}
-                  style={{
-                    background: selectedAnimal === index
-                      ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)'
-                      : BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.5)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: selectedAnimal === index ? '2px solid rgba(167, 139, 250, 0.6)' : `1px solid ${getBorderColor(selectedTheme)}`,
-                    borderRadius: '20px',
-                    padding: '20px 12px',
-                    cursor: 'pointer',
-                    textAlign: 'center',
-                    boxShadow: selectedAnimal === index ? '0 4px 20px rgba(167, 139, 250, 0.3)' : '0 2px 10px rgba(0,0,0,0.05)',
-                  }}
-                >
-                  {loadedAnimations[`selected-${index}`] ? (
-                    <div style={{ width: '60px', height: '60px', margin: '0 auto' }}>
-                      <Lottie
-                        animationData={loadedAnimations[`selected-${index}`]}
-                        loop={true}
-                        style={{ width: '100%', height: '100%' }}
-                      />
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '40px', marginBottom: '8px' }}>{animal.emoji}</div>
-                  )}
-                  <div style={{
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: getTextColor(selectedTheme, 'primary'),
-                    marginTop: '8px',
-                    fontFamily: "'Quicksand', sans-serif",
-                  }}>
-                    {animal.name.split(' ')[1] || animal.name}
-                  </div>
-                  {selectedAnimal === index && (
-                    <div style={{ fontSize: '16px', marginTop: '4px' }}>✓</div>
-                  )}
-                </motion.div>
-              ))}
+              You unlocked a{unlockedAnimal.rarity !== 'common' && unlockedAnimal.rarity !== 'uncommon' ? 'n' : ''} {unlockedAnimal.rarity} animal!
             </div>
+
+            {/* Rarity Badge */}
+            <div style={{
+              background: unlockedAnimal.rarity === 'legendary' ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' :
+                         unlockedAnimal.rarity === 'epic' ? 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)' :
+                         unlockedAnimal.rarity === 'rare' ? 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)' :
+                         unlockedAnimal.rarity === 'uncommon' ? 'linear-gradient(135deg, #10B981 0%, #34D399 100%)' :
+                         'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
+              padding: '16px 24px',
+              borderRadius: '20px',
+              marginBottom: '24px',
+              fontSize: '16px',
+              fontWeight: 600,
+              color: '#FFFFFF',
+              fontFamily: "'Quicksand', sans-serif",
+              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)',
+              textTransform: 'capitalize'
+            }}>
+              {unlockedAnimal.rarity === 'legendary' ? '🟡' :
+               unlockedAnimal.rarity === 'epic' ? '🟣' :
+               unlockedAnimal.rarity === 'rare' ? '🔵' :
+               unlockedAnimal.rarity === 'uncommon' ? '🟢' : '⚪'} {unlockedAnimal.rarity}
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowRarityReveal(false)}
+              style={{
+                background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)',
+                border: '1px solid rgba(167, 139, 250, 0.6)',
+                color: getTextColor(selectedTheme, 'primary'),
+                padding: '12px 28px',
+                borderRadius: '20px',
+                fontSize: '14px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                width: '100%'
+              }}
+            >
+              View in Gallery →
+            </motion.button>
           </motion.div>
         </motion.div>
       )}
 
+      {/* Fixed Navigation - Always visible */}
       <div style={{
-        maxWidth: '480px',
-        margin: '0 auto',
-        position: 'relative',
-        height: activeTab === 'Timer' ? '100dvh' : 'auto'
+        position: 'fixed',
+        bottom: 32,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        display: 'flex',
+        justifyContent: 'center',
+        pointerEvents: 'none',
       }}>
-        {renderContent()}
-      </div>
-
-      {/* Fixed Navigation - Only show for non-Timer tabs */}
-      {activeTab !== 'Timer' && (
-        <div style={{
-          position: 'fixed',
-          bottom: 32,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1000,
-          display: 'flex',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-        }}>
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={SOFT_SPRING}
+        <div
             style={{
               background: getNavBackground(selectedTheme),
               backdropFilter: 'blur(25px)',
@@ -2035,52 +1986,37 @@ export default function App() {
               boxShadow: getNavShadow(selectedTheme),
               display: 'flex',
               gap: '8px',
-              padding: '12px 20px',
+              padding: '10px 16px',
               pointerEvents: 'auto',
             }}
           >
-            {[
-              { id: 'Timer', icon: Home },
-              { id: 'Stats', icon: BarChart2 },
-              { id: 'Reports', icon: FileText },
-              { id: 'Meadow', icon: () => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg> },
-              { id: 'Avatar', icon: User },
-              { id: 'Settings', icon: SettingsIcon }
-            ].map(tab => {
+            {NAV_TABS.map(tab => {
               const isActive = activeTab === tab.id;
               const colors = getThemeColors(selectedTheme);
               const IconComponent = tab.icon;
               return (
-                <motion.div
+                <div
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  whileTap={GENTLE_PRESS}
-                  transition={SOFT_SPRING}
                   style={{
                     cursor: 'pointer',
-                    padding: '10px',
-                    borderRadius: '16px',
+                    padding: '8px',
+                    borderRadius: '14px',
                     background: isActive ? (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(244, 114, 182, 0.2)' : 'rgba(167, 139, 250, 0.2)') : 'transparent',
                     boxShadow: isActive ? `0 4px 15px ${colors.primary}33` : 'none',
+                    transition: 'background 0.2s, box-shadow 0.2s',
                   }}
                 >
-                  {typeof IconComponent === 'function' && tab.id === 'Meadow' ? (
-                    <div style={{ color: isActive ? colors.primary : getInactiveIconColor(selectedTheme) }}>
-                      <IconComponent />
-                    </div>
-                  ) : (
-                    <IconComponent
-                      color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
-                      size={22}
-                      strokeWidth={isActive ? 2.5 : 2}
-                    />
-                  )}
-                </motion.div>
+                  <IconComponent
+                    color={isActive ? colors.primary : getInactiveIconColor(selectedTheme)}
+                    size={20}
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                </div>
               );
             })}
-          </motion.div>
         </div>
-      )}
-    </motion.div>
+      </div>
+    </>
   );
 }

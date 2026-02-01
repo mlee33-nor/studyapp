@@ -1,9 +1,32 @@
 export interface MeadowAnimal {
   id: string;
+  name: string;
   lottieUrl: string;
   x: number;
   y: number;
   flipped?: boolean;
+  rarity: RarityType;
+  biome: BiomeType;
+}
+
+// Biome and Collection Types
+export type BiomeType = 'meadow' | 'safari' | 'forest' | 'ocean' | 'arctic' | 'mountain';
+export type RarityType = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+export interface CollectedAnimal {
+  id: string;
+  name: string;
+  biome: BiomeType;
+  rarity: RarityType;
+  lottieUrl: string;
+  collectedAt: string; // ISO date string
+}
+
+export interface SelectedAnimal {
+  id: string;
+  name: string;
+  biome: BiomeType;
+  lottieUrl: string;
 }
 
 export interface UserData {
@@ -15,6 +38,13 @@ export interface UserData {
   settings: UserSettings;
   meadowAnimals: MeadowAnimal[];
   lastResetDate: string | null;
+  // Collection and Biome fields
+  permanentCollection: CollectedAnimal[];
+  activeBiome: BiomeType;
+  unlockedBiomes: BiomeType[];
+  lastDailyReset: string | null;
+  // Selected animal for pomodoro session
+  selectedAnimal: SelectedAnimal | null;
   // Legacy fields (for compatibility with unused screen files)
   currentStage: number;
   xp: number;
@@ -37,6 +67,7 @@ export interface UserSettings {
   shortBreakDuration: number; // in minutes
   longBreakDuration: number; // in minutes
   selectedTheme: ThemeColor;
+  devModeEnabled?: boolean;
 }
 
 export type ThemeColor = 'blue' | 'green' | 'purple' | 'peach' | 'beige';

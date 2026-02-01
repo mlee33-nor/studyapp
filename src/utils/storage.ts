@@ -1,4 +1,4 @@
-import type { UserData, UserSettings } from '../types';
+import type { UserData, UserSettings, CollectedAnimal, RarityType, BiomeType } from '../types';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   shortBreakDuration: 5,
   longBreakDuration: 15,
   selectedTheme: 'purple',
+  devModeEnabled: false,
 };
 
 const DEFAULT_USER_DATA: UserData = {
@@ -21,6 +22,18 @@ const DEFAULT_USER_DATA: UserData = {
   settings: DEFAULT_SETTINGS,
   meadowAnimals: [],
   lastResetDate: null,
+  // Collection and Biome fields
+  permanentCollection: [],
+  activeBiome: 'meadow',
+  unlockedBiomes: ['meadow'],
+  lastDailyReset: null,
+  // Selected animal for pomodoro
+  selectedAnimal: {
+    id: 'rabbit',
+    name: 'Rabbit',
+    biome: 'meadow',
+    lottieUrl: 'https://lottie.host/mj0n1o2p-qn4r-4p67-8s45-f012345678/CcCfF9U4X7.json',
+  },
   // Legacy fields for compatibility
   currentStage: 1,
   xp: 0,
@@ -104,7 +117,68 @@ export const toggleAnimalFlip = (animalId: string): void => {
   updateUserData({ meadowAnimals });
 };
 
-export const addCompletedSession = (minutes: number): UserData => {
+// Rarity Rolling Function - Returns a rarity based on probability weights
+// Boosts rarer odds for longer study sessions
+export const rollRarity = (sessionMinutes: number = 25): RarityType => {
+  const rand = Math.random() * 100;
+
+  // Base probability weights: Common 60%, Uncommon 25%, Rare 10%, Epic 4%, Legendary 1%
+  // Bonus: +0.5% legendary chance per minute studied (max +12.5% at 25 min, +50% at 100 min)
+  // This rewards longer focus sessions!
+  const sessionBonus = Math.min(sessionMinutes * 0.5, 50); // Cap bonus at 50%
+
+  let commonChance = 60 - sessionBonus * 0.6; // Decrease common as session gets longer
+  let uncommonChance = 25 - sessionBonus * 0.2; // Slight decrease
+  let rareChance = 10 + sessionBonus * 0.3; // Increase rare chance
+  let epicChance = 4 + sessionBonus * 0.05; // Slight increase
+  // Remaining percentage goes to legendary
+
+  // Ensure probabilities don't go below 0
+  commonChance = Math.max(commonChance, 10);
+  uncommonChance = Math.max(uncommonChance, 10);
+
+  if (rand < commonChance) return 'common';
+  if (rand < commonChance + uncommonChance) return 'uncommon';
+  if (rand < commonChance + uncommonChance + rareChance) return 'rare';
+  if (rand < commonChance + uncommonChance + rareChance + epicChance) return 'epic';
+  return 'legendary';
+};
+
+// Get rarity colors for UI display
+export const getRarityColor = (rarity: RarityType): string => {
+  const colors = {
+    common: 'rgba(167, 139, 250, 0.5)',
+    uncommon: 'rgba(34, 197, 94, 0.6)',
+    rare: 'rgba(59, 130, 246, 0.7)',
+    epic: 'rgba(168, 85, 247, 0.8)',
+    legendary: 'rgba(251, 146, 60, 0.9)',
+  };
+  return colors[rarity];
+};
+
+// Hybrid collection logic - Adds animal to permanent collection
+export const addToCollection = (
+  name: string,
+  biome: BiomeType,
+  lottieUrl: string
+): CollectedAnimal => {
+  const animal: CollectedAnimal = {
+    id: `${Date.now()}-${Math.random()}`,
+    name,
+    biome,
+    rarity: 'common',
+    lottieUrl,
+    collectedAt: new Date().toISOString(),
+  };
+
+  const currentData = getUserData();
+  const updatedCollection = [...currentData.permanentCollection, animal];
+  updateUserData({ permanentCollection: updatedCollection });
+
+  return animal;
+};
+
+export const addCompletedSession = (minutes: number, animalUrl?: string): UserData => {
   const currentData = getUserData();
   const today = new Date().toISOString().split('T')[0];
 
@@ -138,16 +212,16 @@ export const addCompletedSession = (minutes: number): UserData => {
 
   // Spawn new meadow animal with collision-free positioning
   const MEADOW_WIDTH = 400;
-  const MEADOW_HEIGHT = 500;
-  const ANIMAL_SIZE = 80;
-  const MIN_Y = MEADOW_HEIGHT * 0.3; // Can't spawn in far back (top 30%)
+  const MEADOW_HEIGHT = 450;
+  const ANIMAL_SIZE = 60;
+  const MIN_Y = 185; // Start on first color of green
   const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
   const MIN_X = 10;
   const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 
   // Find a valid spawn position that doesn't overlap with existing animals
   const findValidSpawnPosition = (): { x: number; y: number } => {
-    const COLLISION_THRESHOLD = 70;
+    const COLLISION_THRESHOLD = 35; // Allows close proximity, auto-repels when overlapping
     const MAX_ATTEMPTS = 20;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -180,18 +254,36 @@ export const addCompletedSession = (minutes: number): UserData => {
   };
 
   const spawnPos = findValidSpawnPosition();
+
+  // Use the user's selected animal, or default to rabbit if not set
+  const selectedAnimalData = currentData.selectedAnimal || {
+    id: 'rabbit',
+    name: 'Rabbit',
+    biome: 'meadow',
+    lottieUrl: 'https://lottie.host/mj0n1o2p-qn4r-4p67-8s45-f012345678/CcCfF9U4X7.json',
+  };
+
+  const selectedUrl = animalUrl || selectedAnimalData.lottieUrl;
+
+  // Add to permanent collection
+  const collectedAnimal = addToCollection(selectedAnimalData.name, selectedAnimalData.biome, selectedUrl);
+
+  // Create meadow display animal with metadata from collected animal
   const newAnimal = {
-    id: `${Date.now()}-${Math.random()}`,
-    lottieUrl: getRandomAnimalUrl(),
+    id: collectedAnimal.id,
+    name: collectedAnimal.name,
+    lottieUrl: selectedUrl,
     x: spawnPos.x,
     y: spawnPos.y,
     flipped: Math.random() > 0.5, // Random initial flip
+    rarity: collectedAnimal.rarity,
+    biome: collectedAnimal.biome,
   };
   const meadowAnimals = [...currentData.meadowAnimals, newAnimal];
 
   const totalCompletedSessions = currentData.totalCompletedSessions + 1;
 
-  return updateUserData({
+  const updatedData = updateUserData({
     totalCompletedSessions,
     dailyStats,
     weeklyStats,
@@ -199,6 +291,12 @@ export const addCompletedSession = (minutes: number): UserData => {
     lastStudyDate: today,
     meadowAnimals,
   });
+
+  // Add rarity metadata to returned data for UI feedback
+  return {
+    ...updatedData,
+    collectedAnimal,
+  } as any;
 };
 
 const getWeekStart = (date: Date): string => {
@@ -245,5 +343,17 @@ export const resetAllStats = (): UserData => {
     settings: currentData.settings, // Preserve settings
   };
   saveUserData(newData);
+  return newData;
+};
+
+// Dev Mode: Unlock all biomes by setting level to 50
+export const unlockAllBiomes = (): UserData => {
+  const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
+  const newData = updateUserData({
+    level: 50,
+    xp: 25000, // Max XP
+    unlockedBiomes: biomeIds,
+    activeBiome: 'meadow',
+  });
   return newData;
 };

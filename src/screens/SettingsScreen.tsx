@@ -7,7 +7,7 @@ import Character from '../components/Character';
 
 const SettingsScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { userData, updateSettings, resetAllStats } = useUserData();
+  const { userData, updateSettings, resetAllStats, setUserData } = useUserData();
   const { getGradientClass } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -124,6 +124,38 @@ const SettingsScreen: React.FC = () => {
             />
           ))}
         </div>
+      </div>
+
+      {/* Dev Mode */}
+      <div className="bg-purple-50/80 backdrop-blur-sm rounded-3xl p-6 mb-6 shadow-soft border-2 border-purple-200">
+        <div className="flex items-center gap-2 mb-3">
+          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          <h3 className="text-lg font-semibold text-purple-800">Dev Mode</h3>
+        </div>
+        <p className="text-sm text-purple-700 mb-4">
+          Unlock all biomes for testing and exploration.
+        </p>
+        <button
+          onClick={() => {
+            const biomeIds: any[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
+            const newData = {
+              ...userData,
+              level: 50,
+              xp: 25000,
+              unlockedBiomes: biomeIds,
+              activeBiome: 'meadow' as any,
+            };
+            setUserData(newData);
+            setTimeout(() => {
+              navigate('/');
+            }, 100);
+          }}
+          className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-2xl transition-all duration-200 shadow-soft"
+        >
+          Unlock All Biomes
+        </button>
       </div>
 
       {/* Duration Settings */}
