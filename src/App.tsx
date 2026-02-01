@@ -984,6 +984,7 @@ export default function App() {
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [selectedAnimal, setSelectedAnimal] = useState(0); // 0=Bunny, 1=Cat, 2=Corgi
+  const [showAnimalSelector, setShowAnimalSelector] = useState(false);
   const [showRarityReveal, setShowRarityReveal] = useState(false);
   const [unlockedAnimal, setUnlockedAnimal] = useState<any>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
@@ -1305,7 +1306,7 @@ export default function App() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setSelectedAnimal((prev) => (prev + 1) % ANIMALS.length)}
+                onClick={() => setShowAnimalSelector(true)}
                 style={{
                   display: 'flex',
                   justifyContent: 'center',
@@ -1346,6 +1347,98 @@ export default function App() {
               </div>
             </div>
           </GlassCard>
+
+          {/* Animal Selector Card */}
+          {showAnimalSelector && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              style={{
+                marginTop: '12px',
+                background: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? 'rgba(30, 30, 60, 0.85)'
+                  : 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                borderRadius: '20px',
+                padding: '16px',
+                border: `1px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(167, 139, 250, 0.3)' : 'rgba(200, 200, 220, 0.5)'}`,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+              }}
+            >
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 700,
+                color: getTextColor(selectedTheme, 'secondary'),
+                fontFamily: "'Quicksand', sans-serif",
+                textAlign: 'center',
+                marginBottom: '12px',
+              }}>
+                Choose Your Companion
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '12px',
+              }}>
+                {ANIMALS.map((animal, index) => {
+                  const isSelected = selectedAnimal === index;
+                  return (
+                    <motion.button
+                      key={animal.name}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => {
+                        setSelectedAnimal(index);
+                        setShowAnimalSelector(false);
+                      }}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '10px 14px',
+                        borderRadius: '16px',
+                        border: isSelected
+                          ? '2px solid rgba(167, 139, 250, 0.8)'
+                          : `2px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255,255,255,0.1)' : 'rgba(200, 200, 220, 0.4)'}`,
+                        background: isSelected
+                          ? 'rgba(167, 139, 250, 0.2)'
+                          : 'transparent',
+                        cursor: 'pointer',
+                        minWidth: '80px',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div style={{ width: '50px', height: '50px' }}>
+                        {loadedAnimations[`selected-${index}`] ? (
+                          <Lottie
+                            animationData={loadedAnimations[`selected-${index}`]}
+                            loop={true}
+                            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                          />
+                        ) : (
+                          <div style={{ fontSize: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                            {animal.emoji}
+                          </div>
+                        )}
+                      </div>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: isSelected
+                          ? (BACKGROUND_THEMES[selectedTheme].isDark ? '#c4b5fd' : '#7c3aed')
+                          : getTextColor(selectedTheme, 'secondary'),
+                        fontFamily: "'Quicksand', sans-serif",
+                      }}>
+                        {animal.name}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Zone 3 (Bottom): Action Zone - flex-1.5 */}
