@@ -209,14 +209,26 @@ const MeadowScreen: React.FC = () => {
     refreshData();
   };
 
-  // Toggle flip on tap
+  // Double-tap detection for flipping animals
+  const lastTapRef = useRef<Record<string, number>>({});
+
+  // Toggle flip on double tap
   const handleAnimalTap = (animalId: string) => {
-    const currentData = getUserData();
-    const updatedAnimals = currentData.meadowAnimals.map(animal =>
-      animal.id === animalId ? { ...animal, flipped: !animal.flipped } : animal
-    );
-    saveUserData({ ...currentData, meadowAnimals: updatedAnimals });
-    refreshData();
+    const now = Date.now();
+    const lastTap = lastTapRef.current[animalId] || 0;
+
+    if (now - lastTap < 300) {
+      // Double tap detected — flip the animal
+      const currentData = getUserData();
+      const updatedAnimals = currentData.meadowAnimals.map(animal =>
+        animal.id === animalId ? { ...animal, flipped: !animal.flipped } : animal
+      );
+      saveUserData({ ...currentData, meadowAnimals: updatedAnimals });
+      refreshData();
+      lastTapRef.current[animalId] = 0; // Reset to avoid triple-tap
+    } else {
+      lastTapRef.current[animalId] = now;
+    }
   };
 
   // Calculate z-index based on y position (animals further back have lower z-index)
@@ -451,7 +463,7 @@ const MeadowScreen: React.FC = () => {
         {/* Instructions */}
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
           <p className="text-sm text-text-secondary text-center">
-            🌍 Switch biomes • 🐾 Drag animals • 👆 Tap to flip
+            🌍 Switch biomes • 🐾 Drag animals • 👆 Double-tap to flip
           </p>
           <p className="text-xs text-text-secondary text-center mt-2">
             Collect animals daily • Unlock biomes by leveling up • Your collection resets at midnight
