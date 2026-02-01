@@ -406,7 +406,7 @@ const MeadowScreen: React.FC = () => {
                     }}
                     onDragStart={() => {}}
                     onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
-                    onClick={() => handleAnimalTap(animal.id)}
+                    onTap={() => handleAnimalTap(animal.id)}
                     animate={{ x: animal.x, y: animal.y }}
                     transition={{ duration: 0.1, ease: 'easeOut' }}
                     className="absolute cursor-grab active:cursor-grabbing"
