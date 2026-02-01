@@ -347,23 +347,38 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   )
 };
 
+const ALL_BIOME_IDS: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
+
 const MeadowScreen: React.FC = () => {
   const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const meadowRef = useRef<HTMLDivElement>(null);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
+  const [allUnlocked, setAllUnlocked] = useState<boolean>(false);
 
   // Always refresh data from storage when the component mounts (e.g. tab switch)
   useEffect(() => {
     refreshData();
   }, [refreshData]);
 
-  // Determine unlocked biomes: use the stored array if available, otherwise derive from level
-  const unlockedBiomes = (userData.unlockedBiomes && userData.unlockedBiomes.length > 0)
-    ? userData.unlockedBiomes as BiomeType[]
+  // Determine unlocked biomes: if user pressed unlock button, show all; otherwise derive from level
+  const unlockedBiomes: BiomeType[] = allUnlocked
+    ? ALL_BIOME_IDS
     : getUnlockedBiomes(userData.level);
   const biomeAnimals = userData.meadowAnimals.filter(a => a.biome === activeBiome);
   const BiomeBackground = BiomeBackgrounds[activeBiome];
+
+  const handleUnlockAllBiomes = () => {
+    setAllUnlocked(true);
+    // Also persist to storage so it survives tab switches
+    const currentData = getUserData();
+    saveUserData({
+      ...currentData,
+      level: 50,
+      unlockedBiomes: ALL_BIOME_IDS,
+    });
+    refreshData();
+  };
 
   // Load Lottie animations
   useEffect(() => {
@@ -506,6 +521,34 @@ const MeadowScreen: React.FC = () => {
         <p className="text-text-secondary mb-4">
           Explore different biomes and collect unique animals
         </p>
+
+        {/* Unlock All Biomes Button */}
+        {unlockedBiomes.length < ALL_BIOME_IDS.length && (
+          <motion.button
+            onClick={handleUnlockAllBiomes}
+            whileTap={{ scale: 0.97 }}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
+              border: 'none',
+              borderRadius: '16px',
+              color: '#FFFFFF',
+              fontSize: '14px',
+              fontWeight: 700,
+              fontFamily: "'Quicksand', sans-serif",
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
+            }}
+          >
+            Unlock All Biomes
+          </motion.button>
+        )}
 
         {/* Biome Carousel */}
         <div style={{

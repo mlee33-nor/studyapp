@@ -10,7 +10,7 @@ import MeadowScreen from './screens/MeadowScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
-import { addCompletedSession, unlockAllBiomes as unlockAllBiomesStorage, updateUserData as updateStorageUserData } from './utils/storage';
+import { addCompletedSession, updateUserData as updateStorageUserData } from './utils/storage';
 import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
@@ -1202,21 +1202,6 @@ export default function App() {
     saveUserData(newData);
   };
 
-  const handleUnlockAllBiomes = () => {
-    // Update the canonical storage (pomodoroStudyApp key)
-    unlockAllBiomesStorage();
-    // Also sync the local App state
-    const newData = {
-      ...userData,
-      level: 50,
-      xp: 0,
-      unlockedBiomes: ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain']
-    };
-    setUserData(newData);
-    setDevLevel(50);
-    saveUserData(newData);
-  };
-
   const handleStartFocus = () => {
     setShowCategoryModal(true);
   };
@@ -1791,27 +1776,6 @@ export default function App() {
               }}
             />
 
-            <motion.button
-              onClick={handleUnlockAllBiomes}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                width: '100%',
-                padding: '10px 16px',
-                marginTop: '12px',
-                background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)',
-                border: '1px solid rgba(167, 139, 250, 0.6)',
-                borderRadius: '12px',
-                color: getTextColor(selectedTheme, 'primary'),
-                fontSize: '13px',
-                fontWeight: 600,
-                fontFamily: "'Quicksand', sans-serif",
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              🔓 Unlock All Biomes
-            </motion.button>
           </div>
 
           <div style={{
