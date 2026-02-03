@@ -999,7 +999,6 @@ export default function App() {
   const biomeAnimals = getAnimalsForBiome(activeBiome);
   const ANIMALS = biomeAnimals.map(a => ({
     name: a.name,
-    emoji: a.emoji,
     url: a.lottieUrl,
     biome: activeBiome,
   }));
@@ -1347,8 +1346,8 @@ export default function App() {
                     style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                   />
                 ) : (
-                  <div style={{ fontSize: '60px', display: 'flex', alignItems: 'center' }}>
-                    {ANIMALS[selectedAnimal].emoji}
+                  <div style={{ fontSize: '14px', display: 'flex', alignItems: 'center', color: getTextColor(selectedTheme, 'secondary') }}>
+                    Loading...
                   </div>
                 )}
               </motion.div>
@@ -1470,8 +1469,8 @@ export default function App() {
                             style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                           />
                         ) : (
-                          <div style={{ fontSize: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                            {animal.emoji}
+                          <div style={{ fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: getTextColor(selectedTheme, 'tertiary') }}>
+                            ...
                           </div>
                         )}
                       </div>

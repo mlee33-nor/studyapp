@@ -433,8 +433,7 @@ const TimerScreen: React.FC = () => {
                             : 'bg-gray-100 hover:bg-gray-200'
                         }`}
                       >
-                        <div className="text-3xl">{animal.emoji}</div>
-                        <div className="text-xs text-text-primary font-medium text-center line-clamp-2">{animal.name}</div>
+                        <div className="text-sm text-text-primary font-semibold text-center line-clamp-2">{animal.name}</div>
                       </button>
                     ))}
                   </div>

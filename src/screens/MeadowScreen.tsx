@@ -4,7 +4,7 @@ import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType } from '../types';
-import { BIOME_CONFIG, getUnlockedBiomes, getAnimalsForBiome } from '../data/biomes';
+import { BIOME_CONFIG, getUnlockedBiomes } from '../data/biomes';
 import meadowBg from '../assets/biomes/meadows.jpg';
 import safariBg from '../assets/biomes/safari.jpg';
 import forestBg from '../assets/biomes/forest.jpg';
@@ -77,13 +77,6 @@ const MeadowScreen: React.FC = () => {
       unlockedBiomes: ALL_BIOME_IDS,
     });
     refreshData();
-  };
-
-  // Helper: look up emoji for an animal by name from biome data
-  const getAnimalEmoji = (animal: MeadowAnimal): string => {
-    const biomeAnimals = getAnimalsForBiome(animal.biome);
-    const match = biomeAnimals.find(a => a.name === animal.name);
-    return match?.emoji || '🐾';
   };
 
   // Load Lottie animations
@@ -445,11 +438,14 @@ const MeadowScreen: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '54px',
+                        fontSize: '10px',
                         filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
                         pointerEvents: 'none',
+                        color: '#666',
+                        textAlign: 'center',
+                        fontWeight: 600
                       }}>
-                        {getAnimalEmoji(animal)}
+                        {animal.name}
                       </div>
                     )}
                   </motion.div>
