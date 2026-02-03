@@ -1001,6 +1001,7 @@ export default function App() {
     name: a.name,
     url: a.lottieUrl,
     biome: activeBiome,
+    scale: a.scale,
   }));
 
   // Re-read active biome from storage when returning to the timer tab (user may have switched biomes in Sanctuary)
@@ -1343,7 +1344,7 @@ export default function App() {
                   <Lottie
                     animationData={loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`]}
                     loop={true}
-                    style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                    style={{ width: '100%', height: '100%', pointerEvents: 'none', transform: ANIMALS[selectedAnimal]?.scale ? `scale(${ANIMALS[selectedAnimal].scale})` : undefined }}
                   />
                 ) : (
                   <div style={{ fontSize: '14px', display: 'flex', alignItems: 'center', color: getTextColor(selectedTheme, 'secondary') }}>
@@ -1461,12 +1462,12 @@ export default function App() {
                         transition: 'all 0.15s ease',
                       }}
                     >
-                      <div style={{ width: '56px', height: '56px' }}>
+                      <div style={{ width: '56px', height: '56px', overflow: 'hidden' }}>
                         {loadedAnimations[`selected-${activeBiome}-${index}`] ? (
                           <Lottie
                             animationData={loadedAnimations[`selected-${activeBiome}-${index}`]}
                             loop={true}
-                            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                            style={{ width: '100%', height: '100%', pointerEvents: 'none', transform: animal.scale ? `scale(${animal.scale})` : undefined }}
                           />
                         ) : (
                           <div style={{ fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: getTextColor(selectedTheme, 'tertiary') }}>

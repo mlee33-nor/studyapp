@@ -4,7 +4,7 @@ import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType } from '../types';
-import { BIOME_CONFIG, getUnlockedBiomes } from '../data/biomes';
+import { BIOME_CONFIG, getUnlockedBiomes, getAnimalScale } from '../data/biomes';
 import meadowBg from '../assets/biomes/meadows.jpg';
 import safariBg from '../assets/biomes/safari.jpg';
 import forestBg from '../assets/biomes/forest.jpg';
@@ -428,7 +428,8 @@ const MeadowScreen: React.FC = () => {
                         style={{
                           width: '100%',
                           height: '100%',
-                          pointerEvents: 'none'
+                          pointerEvents: 'none',
+                          transform: getAnimalScale(animal.lottieUrl) ? `scale(${getAnimalScale(animal.lottieUrl)})` : undefined,
                         }}
                       />
                     ) : (

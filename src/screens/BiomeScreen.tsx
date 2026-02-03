@@ -4,6 +4,7 @@ import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import BiomeBackgrounds from '../components/BiomeBackgrounds';
 import type { BiomeType } from '../types';
+import { getAnimalScale } from '../data/biomes';
 
 // Biome container dimensions
 const BIOME_HEIGHT = 450;
@@ -221,7 +222,8 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                         style={{
                           width: '100%',
                           height: '100%',
-                          pointerEvents: 'none'
+                          pointerEvents: 'none',
+                          transform: getAnimalScale(animal.lottieUrl) ? `scale(${getAnimalScale(animal.lottieUrl)})` : undefined,
                         }}
                       />
                     )}

@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import type { TimerMode, BiomeType } from '../types';
 import { getWeeklyMinutes } from '../utils/storage';
 import { triggerHapticFeedback } from '../utils/haptics';
-import { getAnimalsForBiome, BIOME_CONFIG } from '../data/biomes';
+import { getAnimalsForBiome, getAnimalScale, BIOME_CONFIG } from '../data/biomes';
 import Lottie from 'lottie-react';
 
 const TimerScreen: React.FC = () => {
@@ -374,6 +374,7 @@ const TimerScreen: React.FC = () => {
                     width: '100%',
                     height: '100%',
                     pointerEvents: 'none',
+                    transform: getAnimalScale(userData.selectedAnimal.lottieUrl) ? `scale(${getAnimalScale(userData.selectedAnimal.lottieUrl)})` : undefined,
                   }}
                 />
               ) : (
