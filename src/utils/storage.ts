@@ -29,10 +29,10 @@ const DEFAULT_USER_DATA: UserData = {
   lastDailyReset: null,
   // Selected animal for pomodoro
   selectedAnimal: {
-    id: 'rabbit',
-    name: 'Rabbit',
+    id: 'bunny',
+    name: 'Bunny',
     biome: 'meadow',
-    lottieUrl: 'https://lottie.host/mj0n1o2p-qn4r-4p67-8s45-f012345678/CcCfF9U4X7.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json',
   },
   // Legacy fields for compatibility
   currentStage: 1,
@@ -215,12 +215,12 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
 
   const spawnPos = findValidSpawnPosition();
 
-  // Use the user's selected animal, or default to rabbit if not set
+  // Use the user's selected animal, or default to bunny if not set
   const selectedAnimalData = currentData.selectedAnimal || {
-    id: 'rabbit',
-    name: 'Rabbit',
+    id: 'bunny',
+    name: 'Bunny',
     biome: 'meadow',
-    lottieUrl: 'https://lottie.host/mj0n1o2p-qn4r-4p67-8s45-f012345678/CcCfF9U4X7.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json',
   };
 
   const selectedUrl = animalUrl || selectedAnimalData.lottieUrl;

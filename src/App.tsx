@@ -1161,7 +1161,7 @@ export default function App() {
     updateStorageUserData({
       ...storageNow,
       selectedAnimal: {
-        id: biomeAnimals[selectedAnimal]?.id || 'rabbit',
+        id: biomeAnimals[selectedAnimal]?.id || 'bunny',
         name: currentAnimal.name,
         biome: activeBiome,
         lottieUrl: currentAnimal.url,
