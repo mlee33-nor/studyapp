@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { BiomeType, CollectedAnimal } from '../types';
-import { RarityDisplay } from '../components/RarityDisplay';
 import { getBiomeConfig, BIOME_CONFIG } from '../data/biomes';
 
 interface GalleryScreenProps {
@@ -35,14 +34,6 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
   const filteredCollection = selectedBiome === 'all'
     ? collection
     : collection.filter(animal => animal.biome === selectedBiome);
-
-  const rarityCount = {
-    common: filteredCollection.filter(a => a.rarity === 'common').length,
-    uncommon: filteredCollection.filter(a => a.rarity === 'uncommon').length,
-    rare: filteredCollection.filter(a => a.rarity === 'rare').length,
-    epic: filteredCollection.filter(a => a.rarity === 'epic').length,
-    legendary: filteredCollection.filter(a => a.rarity === 'legendary').length,
-  };
 
   return (
     <motion.div
@@ -101,45 +92,6 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
               Total Collected
             </div>
           </div>
-        </div>
-
-        {/* Rarity Breakdown */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: '8px'
-        }}>
-          {Object.entries(rarityCount).map(([rarity, count]) => (
-            <div
-              key={rarity}
-              style={{
-                background: 'rgba(255, 255, 255, 0.5)',
-                backdropFilter: 'blur(10px)',
-                padding: '12px 8px',
-                borderRadius: '16px',
-                textAlign: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.3)'
-              }}
-            >
-              <div style={{
-                fontSize: '18px',
-                fontWeight: 600,
-                color: getTextColor(theme, 'primary'),
-                fontFamily: "'Quicksand', sans-serif"
-              }}>
-                {count}
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: getTextColor(theme, 'secondary'),
-                marginTop: '4px',
-                textTransform: 'capitalize',
-                fontFamily: "'Quicksand', sans-serif"
-              }}>
-                {rarity}
-              </div>
-            </div>
-          ))}
         </div>
       </motion.div>
 
@@ -255,11 +207,6 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                 fontFamily: "'Quicksand', sans-serif"
               }}>
                 {animal.name}
-              </div>
-
-              {/* Rarity Badge */}
-              <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center' }}>
-                <RarityDisplay rarity={animal.rarity} size="small" showLabel={false} animated={true} />
               </div>
 
               {/* Collected Date */}

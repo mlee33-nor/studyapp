@@ -1,4 +1,4 @@
-import type { UserData, UserSettings, CollectedAnimal, RarityType, BiomeType } from '../types';
+import type { UserData, UserSettings, CollectedAnimal, BiomeType } from '../types';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
@@ -117,45 +117,6 @@ export const toggleAnimalFlip = (animalId: string): void => {
   updateUserData({ meadowAnimals });
 };
 
-// Rarity Rolling Function - Returns a rarity based on probability weights
-// Boosts rarer odds for longer study sessions
-export const rollRarity = (sessionMinutes: number = 25): RarityType => {
-  const rand = Math.random() * 100;
-
-  // Base probability weights: Common 60%, Uncommon 25%, Rare 10%, Epic 4%, Legendary 1%
-  // Bonus: +0.5% legendary chance per minute studied (max +12.5% at 25 min, +50% at 100 min)
-  // This rewards longer focus sessions!
-  const sessionBonus = Math.min(sessionMinutes * 0.5, 50); // Cap bonus at 50%
-
-  let commonChance = 60 - sessionBonus * 0.6; // Decrease common as session gets longer
-  let uncommonChance = 25 - sessionBonus * 0.2; // Slight decrease
-  let rareChance = 10 + sessionBonus * 0.3; // Increase rare chance
-  let epicChance = 4 + sessionBonus * 0.05; // Slight increase
-  // Remaining percentage goes to legendary
-
-  // Ensure probabilities don't go below 0
-  commonChance = Math.max(commonChance, 10);
-  uncommonChance = Math.max(uncommonChance, 10);
-
-  if (rand < commonChance) return 'common';
-  if (rand < commonChance + uncommonChance) return 'uncommon';
-  if (rand < commonChance + uncommonChance + rareChance) return 'rare';
-  if (rand < commonChance + uncommonChance + rareChance + epicChance) return 'epic';
-  return 'legendary';
-};
-
-// Get rarity colors for UI display
-export const getRarityColor = (rarity: RarityType): string => {
-  const colors = {
-    common: 'rgba(167, 139, 250, 0.5)',
-    uncommon: 'rgba(34, 197, 94, 0.6)',
-    rare: 'rgba(59, 130, 246, 0.7)',
-    epic: 'rgba(168, 85, 247, 0.8)',
-    legendary: 'rgba(251, 146, 60, 0.9)',
-  };
-  return colors[rarity];
-};
-
 // Hybrid collection logic - Adds animal to permanent collection
 export const addToCollection = (
   name: string,
@@ -166,7 +127,6 @@ export const addToCollection = (
     id: `${Date.now()}-${Math.random()}`,
     name,
     biome,
-    rarity: 'common',
     lottieUrl,
     collectedAt: new Date().toISOString(),
   };
@@ -276,7 +236,6 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     x: spawnPos.x,
     y: spawnPos.y,
     flipped: Math.random() > 0.5, // Random initial flip
-    rarity: collectedAnimal.rarity,
     biome: collectedAnimal.biome,
   };
   const meadowAnimals = [...currentData.meadowAnimals, newAnimal];
@@ -292,7 +251,7 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     meadowAnimals,
   });
 
-  // Add rarity metadata to returned data for UI feedback
+  // Add collected animal to returned data for UI feedback
   return {
     ...updatedData,
     collectedAnimal,

@@ -5,19 +5,16 @@ export interface MeadowAnimal {
   x: number;
   y: number;
   flipped?: boolean;
-  rarity: RarityType;
   biome: BiomeType;
 }
 
 // Biome and Collection Types
 export type BiomeType = 'meadow' | 'safari' | 'forest' | 'ocean' | 'arctic' | 'mountain';
-export type RarityType = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 export interface CollectedAnimal {
   id: string;
   name: string;
   biome: BiomeType;
-  rarity: RarityType;
   lottieUrl: string;
   collectedAt: string; // ISO date string
 }

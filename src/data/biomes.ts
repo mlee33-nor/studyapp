@@ -1,4 +1,4 @@
-import type { BiomeType, RarityType } from '../types';
+import type { BiomeType } from '../types';
 
 export interface BiomeConfig {
   id: BiomeType;
@@ -13,8 +13,6 @@ export interface BiomeConfig {
 export interface BiomeAnimal {
   id: string;
   name: string;
-  emoji: string;
-  rarity: RarityType;
   lottieUrl: string;
 }
 
@@ -81,36 +79,26 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
     id: 'giraffe',
     name: 'Giraffe',
-    emoji: '🦒',
-    rarity: 'common',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/de40ba3c-8eef-11ed-8a72-0242ac120002/pBxICCRm0w.json',
   },
   {
     id: 'elephant',
     name: 'Elephant',
-    emoji: '🐘',
-    rarity: 'uncommon',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/61b3f91d-9053-11ed-9e5c-d3a8aaa71d4c/vLzLgXtaMf.json',
   },
   {
     id: 'zebra',
     name: 'Zebra',
-    emoji: '🦓',
-    rarity: 'uncommon',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/e6e20e35-bfb3-11ed-b2b2-02b7a2a6ff73/mRxfcCGj4K.json',
   },
   {
     id: 'lion',
     name: 'Lion',
-    emoji: '🦁',
-    rarity: 'rare',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/35ab8b26-c1be-11ed-b2b2-02b7a2a6ff73/IKCzw3xC6B.json',
   },
   {
     id: 'flamingo',
     name: 'Flamingo',
-    emoji: '🦩',
-    rarity: 'epic',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/ee17f1ec-d053-11ed-b2b2-02b7a2a6ff73/hZ0FiOz7Ng.json',
   },
 ];
@@ -120,37 +108,27 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
   {
     id: 'squirrel',
     name: 'Squirrel',
-    emoji: '🐿️',
-    rarity: 'common',
-    lottieUrl: 'https://lottie.host/ed7a3c41-0f5c-4f89-8d45-3d1f2b8e5a6c/KmJwN3qZpL.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ba0c728-117a-11ee-9eb8-cba5cf43b9a9/SeYh6q2ap3.json',
   },
   {
     id: 'deer',
     name: 'Deer',
-    emoji: '🦌',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/f4e6c2d9-5b8a-4c7f-9e1d-2a3b4c5d6e7f/XyZ9mKlPqR.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b3859ba2-1150-11ee-8f51-2bfeee9af832/5MDZDPhpLm.json',
   },
   {
     id: 'fox',
     name: 'Fox',
-    emoji: '🦊',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/a1b2c3d4-e5f6-4789-0abc-def123456789/VwXyZ1mNpQ.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/9c4b280c-116f-11ee-8e54-17fdd56ae6ce/nZEIpQEdUZ.json',
   },
   {
     id: 'owl',
     name: 'Owl',
-    emoji: '🦉',
-    rarity: 'rare',
-    lottieUrl: 'https://lottie.host/b2c3d4e5-f6a7-4890-1bcd-ef123456789a/UvWxY2lMoP.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
   },
   {
     id: 'bear',
     name: 'Bear',
-    emoji: '🐻',
-    rarity: 'epic',
-    lottieUrl: 'https://lottie.host/c3d4e5f6-a7b8-4901-2cde-f12345678901/TuVwX3kLnO.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7b36d6ac-3cb7-11ee-a573-175a0b884d98/yFrEbfbfVT.json',
   },
 ];
 
@@ -159,37 +137,27 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
   {
     id: 'dolphin',
     name: 'Dolphin',
-    emoji: '🐬',
-    rarity: 'common',
-    lottieUrl: 'https://lottie.host/d4e5f6a7-b8c9-4a12-3def-0123456789ab/SrStU4jKmN.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b9ef8c12-1161-11ee-90f5-a3680064bf0c/Ki9m8yyudV.json',
   },
   {
     id: 'turtle',
     name: 'Turtle',
-    emoji: '🐢',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/e5f6a7b8-c9da-4b23-4e01-123456789abc/RqRsT5iJlM.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/ff3e331e-1151-11ee-be8d-8bfdaec50b6c/8dbUivXsqR.json',
   },
   {
     id: 'tropical_fish',
     name: 'Tropical Fish',
-    emoji: '🐠',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/f6a7b8c9-dae1-4c34-5f12-23456789abcd/PpQqS6hIkL.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/86f8990e-1169-11ee-a6f1-bb14d7c44c2d/lf3mtlvPIx.json',
   },
   {
     id: 'octopus',
     name: 'Octopus',
-    emoji: '🐙',
-    rarity: 'rare',
-    lottieUrl: 'https://lottie.host/a7b8c9da-eb2f-4d45-6g23-3456789abcde/OoOpR7gHjK.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/90babb16-1150-11ee-b77d-ebc1778b3173/815709gE5u.json',
   },
   {
     id: 'whale',
     name: 'Whale',
-    emoji: '🐋',
-    rarity: 'epic',
-    lottieUrl: 'https://lottie.host/b8c9dae1-fc3g-4e56-7h34-456789abcdef/NnNoQ8fGiJ.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/432126fa-1151-11ee-81d6-fbec6e0e68cb/yvKkYB9pgL.json',
   },
 ];
 
@@ -198,37 +166,27 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   {
     id: 'penguin',
     name: 'Penguin',
-    emoji: '🐧',
-    rarity: 'common',
-    lottieUrl: 'https://lottie.host/c9dae1f2-gd4h-4f67-8i45-56789abcdef0/MmMnP9eEhI.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/a57156f0-1150-11ee-a172-2bd10c970bb4/BDf0YnNLA1.json',
   },
   {
     id: 'seal',
     name: 'Seal',
-    emoji: '🦭',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/dae1f2g3-he5i-4g78-9j56-6789abcdef01/LlLmO0dDgH.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/ff3e331e-1151-11ee-be8d-8bfdaec50b6c/8dbUivXsqR.json',
   },
   {
     id: 'arctic_fox',
     name: 'Arctic Fox',
-    emoji: '🦊',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/eb2f3g4h-if6j-4h89-0k67-789abcdef012/KkKlN1cCfG.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/45a7c3d8-1152-11ee-b338-e3b7676f76d8/4VQ09D21yX.json',
   },
   {
     id: 'polar_bear',
     name: 'Polar Bear',
-    emoji: '🐻‍❄️',
-    rarity: 'rare',
-    lottieUrl: 'https://lottie.host/fc3g4h5i-jg7k-4i90-1l78-89abcdef0123/JjJkM2bBeF.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/57bf975c-1153-11ee-9894-77feb79c4931/g7QuM6qVSV.json',
   },
   {
     id: 'aurora',
     name: 'Aurora Borealis',
-    emoji: '✨',
-    rarity: 'epic',
-    lottieUrl: 'https://lottie.host/gd4h5i6j-kh8l-4j01-2m89-9abcdef01234/IiIjL3aAdE.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b64ba894-1188-11ee-ad71-17472cd0978f/svrPtOox1A.json',
   },
 ];
 
@@ -237,37 +195,27 @@ export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
   {
     id: 'eagle',
     name: 'Golden Eagle',
-    emoji: '🦅',
-    rarity: 'common',
-    lottieUrl: 'https://lottie.host/he5i6j7k-li9m-4k12-3n90-abcdef012345/HhHiK4Z9cD.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b30d3932-1173-11ee-af4b-3731ed1db57c/KOjD1FrTn8.json',
   },
   {
     id: 'mountain_goat',
     name: 'Mountain Goat',
-    emoji: '🐐',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/if6j7k8l-mj0n-4l23-4o01-bcdef0123456/GgGhJ5Y8bC.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/21454c8c-116f-11ee-b8b8-f3543a0944a1/psaUM4k0xd.json',
   },
   {
     id: 'snow_leopard',
     name: 'Snow Leopard',
-    emoji: '🐆',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/jg7k8l9m-nk1o-4m34-5p12-cdef01234567/FfFgI6X7aC.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/bbbf7156-1170-11ee-a909-976822febe92/oGgjhV63HT.json',
   },
   {
     id: 'yak',
     name: 'Yak',
-    emoji: '🐮',
-    rarity: 'rare',
-    lottieUrl: 'https://lottie.host/kh8l9m0n-ol2p-4n45-6q23-def012345678/EeEhH7W6Z9.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/71feb22a-0620-11ef-a850-9ba4d00d4ca9/jtmaGxZkus.json',
   },
   {
     id: 'phoenix',
     name: 'Phoenix',
-    emoji: '🔥',
-    rarity: 'epic',
-    lottieUrl: 'https://lottie.host/li9m0n1o-pm3q-4o56-7r34-e0f12345678/DdDgG8V5Y8.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/c9471362-117d-11ee-9f06-d76a368bf2f8/C3dWG6j7NP.json',
   },
 ];
 
@@ -276,37 +224,27 @@ export const MEADOW_ANIMALS: BiomeAnimal[] = [
   {
     id: 'rabbit',
     name: 'Rabbit',
-    emoji: '🐰',
-    rarity: 'common',
-    lottieUrl: 'https://lottie.host/mj0n1o2p-qn4r-4p67-8s45-f012345678/CcCfF9U4X7.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/0f885906-117b-11ee-963a-87246b5c6094/QbJsHRpZK8.json',
   },
   {
     id: 'butterfly',
     name: 'Butterfly',
-    emoji: '🦋',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/nk1o2p3q-ro5s-4q78-9t56-0123456789/BbBeE0T3W6.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/eb7d7328-1177-11ee-84cc-cb9110efefbf/C6YQhXqNZO.json',
   },
   {
     id: 'hedgehog',
     name: 'Hedgehog',
-    emoji: '🦔',
-    rarity: 'uncommon',
-    lottieUrl: 'https://lottie.host/ol2p3q4r-sp6t-4r89-0u67-123456789a/AaAdD1S2V5.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/217eea54-1152-11ee-80aa-bb89673ffc3b/GtbajlQ7yk.json',
   },
   {
     id: 'ladybug',
     name: 'Ladybug',
-    emoji: '🐞',
-    rarity: 'rare',
-    lottieUrl: 'https://lottie.host/pm3q4r5s-tq7u-4s90-1v78-23456789ab/99Ac2R1U4.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/86f8990e-1169-11ee-a6f1-bb14d7c44c2d/lf3mtlvPIx.json',
   },
   {
     id: 'unicorn',
     name: 'Unicorn',
-    emoji: '🦄',
-    rarity: 'epic',
-    lottieUrl: 'https://lottie.host/qn4r5s6t-ur8v-4t01-2w89-3456789abc/88Bb3Q0T3.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/331cb362-1171-11ee-a9e7-5344551976a1/2vP342VdfO.json',
   },
 ];
 
@@ -348,22 +286,4 @@ export const getNextBiomeToUnlock = (level: number): BiomeConfig | null => {
     .filter(biome => biome.unlockLevel > level)
     .sort((a, b) => a.unlockLevel - b.unlockLevel)[0];
   return nextBiome || null;
-};
-
-// Rarity tier colors for UI
-export const RARITY_COLORS: Record<RarityType, string> = {
-  common: '#8B5CF6',      // Purple
-  uncommon: '#10B981',    // Green
-  rare: '#0369A1',        // Blue
-  epic: '#9333EA',        // Violet
-  legendary: '#EA580C',   // Orange
-};
-
-// Rarity text colors for contrast
-export const RARITY_TEXT_COLORS: Record<RarityType, string> = {
-  common: '#FFFFFF',
-  uncommon: '#FFFFFF',
-  rare: '#FFFFFF',
-  epic: '#FFFFFF',
-  legendary: '#FFFFFF',
 };

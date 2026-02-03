@@ -991,8 +991,6 @@ export default function App() {
     const storageData = getStorageUserData();
     return (storageData.activeBiome as BiomeType) || 'meadow';
   });
-  const [showRarityReveal, setShowRarityReveal] = useState(false);
-  const [unlockedAnimal, setUnlockedAnimal] = useState<any>(null);
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
 
   const theme = selectedTheme;
@@ -1172,13 +1170,7 @@ export default function App() {
     });
 
     // Add completed session to storage (this spawns biome animal automatically)
-    const result = addCompletedSession(timerMinutes, currentAnimal.url);
-
-    // Extract the collected animal for rarity reveal
-    if (result && (result as any).collectedAnimal) {
-      setUnlockedAnimal((result as any).collectedAnimal);
-      setShowRarityReveal(true);
-    }
+    addCompletedSession(timerMinutes, currentAnimal.url);
 
     // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
     // Bonus: +0.5% XP per minute (longer sessions get better odds for animals)
@@ -1978,123 +1970,6 @@ export default function App() {
         {renderContent()}
       </div>
     </motion.div>
-
-      {/* Rarity Reveal Modal */}
-      {showRarityReveal && unlockedAnimal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setShowRarityReveal(false)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2500,
-            padding: '20px',
-          }}
-        >
-          <motion.div
-            initial={{ scale: 0.8, y: 40 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 30 }}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(30, 30, 50, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-              backdropFilter: 'blur(30px)',
-              borderRadius: '32px',
-              padding: '40px 24px',
-              maxWidth: '320px',
-              textAlign: 'center',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-            }}
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-              style={{
-                fontSize: '80px',
-                marginBottom: '20px',
-                display: 'inline-block'
-              }}
-            >
-              ✨
-            </motion.div>
-
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: 700,
-              color: getTextColor(selectedTheme, 'primary'),
-              marginBottom: '12px',
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              Amazing Work!
-            </h2>
-
-            <div style={{
-              fontSize: '14px',
-              color: getTextColor(selectedTheme, 'secondary'),
-              marginBottom: '24px',
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              You unlocked a{unlockedAnimal.rarity !== 'common' && unlockedAnimal.rarity !== 'uncommon' ? 'n' : ''} {unlockedAnimal.rarity} animal!
-            </div>
-
-            {/* Rarity Badge */}
-            <div style={{
-              background: unlockedAnimal.rarity === 'legendary' ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' :
-                         unlockedAnimal.rarity === 'epic' ? 'linear-gradient(135deg, #9333EA 0%, #7C3AED 100%)' :
-                         unlockedAnimal.rarity === 'rare' ? 'linear-gradient(135deg, #0369A1 0%, #06B6D4 100%)' :
-                         unlockedAnimal.rarity === 'uncommon' ? 'linear-gradient(135deg, #10B981 0%, #34D399 100%)' :
-                         'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
-              padding: '16px 24px',
-              borderRadius: '20px',
-              marginBottom: '24px',
-              fontSize: '16px',
-              fontWeight: 600,
-              color: '#FFFFFF',
-              fontFamily: "'Quicksand', sans-serif",
-              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.2)',
-              textTransform: 'capitalize'
-            }}>
-              {unlockedAnimal.rarity === 'legendary' ? '🟡' :
-               unlockedAnimal.rarity === 'epic' ? '🟣' :
-               unlockedAnimal.rarity === 'rare' ? '🔵' :
-               unlockedAnimal.rarity === 'uncommon' ? '🟢' : '⚪'} {unlockedAnimal.rarity}
-            </div>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowRarityReveal(false)}
-              style={{
-                background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(139, 92, 246, 0.4) 100%)',
-                border: '1px solid rgba(167, 139, 250, 0.6)',
-                color: getTextColor(selectedTheme, 'primary'),
-                padding: '12px 28px',
-                borderRadius: '20px',
-                fontSize: '14px',
-                fontWeight: 600,
-                fontFamily: "'Quicksand', sans-serif",
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                width: '100%'
-              }}
-            >
-              View in Gallery →
-            </motion.button>
-          </motion.div>
-        </motion.div>
-      )}
 
       {/* Fixed Navigation - Always visible */}
       <div style={{

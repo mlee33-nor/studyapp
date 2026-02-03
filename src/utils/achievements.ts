@@ -94,16 +94,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'collection',
   },
   {
-    id: 'rare_find',
-    name: 'Rare Discovery',
-    description: 'Collect your first rare animal',
-    emoji: '💎',
-    unlocked: false,
-    progress: 0,
-    requirement: 1,
-    category: 'collection',
-  },
-  {
     id: 'level_ten',
     name: 'Rising Scholar',
     description: 'Reach level 10',
@@ -160,14 +150,6 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
       case 'twenty_animals':
         progress = Math.min(userData.permanentCollection.length, achievement.requirement);
         unlocked = userData.permanentCollection.length >= achievement.requirement;
-        break;
-
-      case 'rare_find':
-        const hasRare = userData.permanentCollection.some(
-          animal => animal.rarity === 'rare' || animal.rarity === 'epic' || animal.rarity === 'legendary'
-        );
-        progress = hasRare ? 1 : 0;
-        unlocked = hasRare;
         break;
 
       case 'level_ten':
