@@ -222,9 +222,9 @@ export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
 // Meadow Animals - Real Lottie Animation URLs (for Level 0)
 export const MEADOW_ANIMALS: BiomeAnimal[] = [
   {
-    id: 'rabbit',
-    name: 'Rabbit',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/0f885906-117b-11ee-963a-87246b5c6094/QbJsHRpZK8.json',
+    id: 'bunny',
+    name: 'Bunny',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json',
   },
   {
     id: 'butterfly',
