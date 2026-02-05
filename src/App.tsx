@@ -226,7 +226,6 @@ const BACKGROUND_THEMES = {
     name: 'Daylight',
     emoji: '🌅',
     gradient: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
-    bottomColor: '#F0FFF5',
     orbs: [
       { color: 'rgba(230, 210, 255, 0.4)', size: 500, x: '10%', y: '10%' },
       { color: 'rgba(200, 255, 230, 0.4)', size: 450, x: '70%', y: '30%' },
@@ -240,7 +239,6 @@ const BACKGROUND_THEMES = {
     name: 'Twilight',
     emoji: '🌆',
     gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
-    bottomColor: '#312E81',
     orbs: [
       { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
       { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
@@ -254,7 +252,6 @@ const BACKGROUND_THEMES = {
     name: 'Golden',
     emoji: '🌇',
     gradient: 'linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%)',
-    bottomColor: '#FBBF24',
     orbs: [
       { color: 'rgba(251, 191, 36, 0.4)', size: 500, x: '10%', y: '10%' },
       { color: 'rgba(249, 115, 22, 0.4)', size: 450, x: '70%', y: '30%' },
@@ -268,7 +265,6 @@ const BACKGROUND_THEMES = {
     name: 'Midnight',
     emoji: '🌌',
     gradient: 'linear-gradient(180deg, #000000 0%, #0F172A 50%, #1E1B4B 100%)',
-    bottomColor: '#1E1B4B',
     orbs: [
       { color: 'rgba(59, 130, 246, 0.3)', size: 500, x: '10%', y: '10%' },
       { color: 'rgba(139, 92, 246, 0.3)', size: 450, x: '70%', y: '30%' },
@@ -1877,21 +1873,6 @@ export default function App() {
     >
       <LivingAuroraBackground theme={theme} />
     </motion.div>
-
-    {/* Safe area bottom fill - explicitly covers the home indicator area with solid color */}
-    <motion.div
-      animate={{ background: BACKGROUND_THEMES[theme].bottomColor }}
-      transition={{ duration: 2, ease: "easeInOut" }}
-      style={{
-        position: 'fixed',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: 'calc(env(safe-area-inset-bottom, 0px) + 50px)',
-        zIndex: 1,
-        pointerEvents: 'none',
-      }}
-    />
 
     {/* Content container with safe area padding */}
     <div
