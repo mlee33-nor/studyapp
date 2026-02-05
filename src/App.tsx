@@ -1874,6 +1874,21 @@ export default function App() {
       <LivingAuroraBackground theme={theme} />
     </motion.div>
 
+    {/* Safe area bottom fill - explicitly covers the home indicator area */}
+    <motion.div
+      animate={{ background: BACKGROUND_THEMES[theme].gradient }}
+      transition={{ duration: 2, ease: "easeInOut" }}
+      style={{
+        position: 'fixed',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: 'calc(env(safe-area-inset-bottom, 0px) + 50px)',
+        zIndex: 1,
+        pointerEvents: 'none',
+      }}
+    />
+
     {/* Content container with safe area padding */}
     <div
       style={{
