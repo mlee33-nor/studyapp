@@ -105,14 +105,14 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: 'rgba(255, 255, 255, 0.6)',
+          background: 'rgba(167, 139, 250, 0.25)',
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
           borderRadius: '32px',
           padding: '24px',
           marginBottom: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-          boxShadow: '0 8px 32px rgba(147, 197, 253, 0.2)',
+          border: '1px solid rgba(167, 139, 250, 0.4)',
+          boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
         }}
       >
         <div style={{
@@ -162,10 +162,10 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedBiome(biomeId)}
               style={{
-                background: isActive ? 'rgba(167, 139, 250, 0.3)' : 'rgba(255, 255, 255, 0.5)',
+                background: isActive ? 'rgba(167, 139, 250, 0.3)' : 'rgba(167, 139, 250, 0.15)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: isActive ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(255, 255, 255, 0.3)',
+                border: isActive ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(167, 139, 250, 0.3)',
                 borderRadius: '20px',
                 padding: '8px 16px',
                 cursor: 'pointer',
@@ -190,14 +190,14 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
       {/* Gallery Grid */}
       {groupedAnimals.length === 0 ? (
         <div style={{
-          background: 'rgba(255, 255, 255, 0.6)',
+          background: 'rgba(167, 139, 250, 0.25)',
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
           borderRadius: '32px',
           padding: '60px 24px',
           textAlign: 'center',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-          boxShadow: '0 8px 32px rgba(147, 197, 253, 0.2)',
+          border: '1px solid rgba(167, 139, 250, 0.4)',
+          boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>
             {selectedBiome === 'all' ? '🌍' : getBiomeConfig(selectedBiome as BiomeType)?.emoji}
@@ -238,13 +238,13 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                 transition={{ delay: index * 0.05 }}
                 whileHover={{ scale: 1.05 }}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.6)',
+                  background: 'rgba(167, 139, 250, 0.25)',
                   backdropFilter: 'blur(25px)',
                   WebkitBackdropFilter: 'blur(25px)',
                   borderRadius: '24px',
                   padding: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.5)',
-                  boxShadow: '0 8px 32px rgba(147, 197, 253, 0.2)',
+                  border: '1px solid rgba(167, 139, 250, 0.4)',
+                  boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
                   textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',
