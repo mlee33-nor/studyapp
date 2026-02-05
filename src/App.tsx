@@ -981,9 +981,8 @@ export default function App() {
 
   const theme = selectedTheme;
 
-  // Update meta theme-color tag and background colors for full screen coverage
+  // Update meta theme-color tag for browser UI
   useEffect(() => {
-    // Use TOP colors for meta theme-color (browser status bar)
     const themeColorMap = {
       morning: '#F0F4FF',
       twilight: '#0F172A',
@@ -991,30 +990,20 @@ export default function App() {
       midnight: '#000000'
     };
 
-    // Use BOTTOM colors for background fallback (matches gradient bottom for safe area coverage)
-    const bottomColorMap = {
-      morning: '#F0FFF5',    // Bottom of morning gradient
-      twilight: '#312E81',   // Bottom of twilight gradient
-      golden: '#FBBF24',     // Bottom of golden gradient
-      midnight: '#1E1B4B'    // Bottom of midnight gradient
-    };
+    const color = themeColorMap[selectedTheme];
 
-    const topColor = themeColorMap[selectedTheme];
-    const bottomColor = bottomColorMap[selectedTheme];
-
-    // Update meta theme-color for browser UI (uses top color)
+    // Update meta theme-color for browser UI
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', topColor);
+      metaThemeColor.setAttribute('content', color);
     }
 
-    // Set background on html, body, and root using BOTTOM color
-    // This ensures any safe area gap at the bottom matches the gradient
-    document.documentElement.style.backgroundColor = bottomColor;
-    document.body.style.backgroundColor = bottomColor;
+    // Make html, body, and root transparent so the fixed gradient background shows through
+    document.documentElement.style.backgroundColor = 'transparent';
+    document.body.style.backgroundColor = 'transparent';
     const root = document.getElementById('root');
     if (root) {
-      root.style.backgroundColor = bottomColor;
+      root.style.backgroundColor = 'transparent';
     }
   }, [selectedTheme]);
 
@@ -1854,14 +1843,6 @@ export default function App() {
     );
   };
 
-  // Bottom colors for safe area coverage (matches gradient bottom)
-  const safeAreaBottomColor = {
-    morning: '#F0FFF5',
-    twilight: '#312E81',
-    golden: '#FBBF24',
-    midnight: '#1E1B4B'
-  }[theme];
-
   return (
     <>
     {/* Fixed background that covers entire screen including safe areas */}
@@ -1879,21 +1860,6 @@ export default function App() {
     >
       <LivingAuroraBackground theme={theme} />
     </motion.div>
-
-    {/* Safe area bottom cover - ensures the bottom safe area is always filled with the correct color */}
-    <motion.div
-      animate={{ backgroundColor: safeAreaBottomColor }}
-      transition={{ duration: 2, ease: "easeInOut" }}
-      style={{
-        position: 'fixed',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: 'env(safe-area-inset-bottom, 0px)',
-        zIndex: 0,
-        pointerEvents: 'none',
-      }}
-    />
 
     {/* Content container with safe area padding */}
     <div
