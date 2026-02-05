@@ -1845,6 +1845,7 @@ export default function App() {
         minHeight: '100vh',
         position: 'relative',
         overflow: 'hidden',
+        paddingTop: 'env(safe-area-inset-top)',
       }}
     >
       <LivingAuroraBackground theme={theme} />
