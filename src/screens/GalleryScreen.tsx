@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import Lottie from 'lottie-react';
 import type { BiomeType, CollectedAnimal } from '../types';
-import { getBiomeConfig, BIOME_CONFIG } from '../data/biomes';
+import { getBiomeConfig, BIOME_CONFIG, getAnimalScale } from '../data/biomes';
 
 interface GalleryScreenProps {
   collection: CollectedAnimal[];
   theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+}
+
+interface GroupedAnimal {
+  name: string;
+  biome: BiomeType;
+  lottieUrl: string;
+  count: number;
 }
 
 const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'tertiary') => {
@@ -29,11 +37,49 @@ const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', typ
 
 const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
   const [selectedBiome, setSelectedBiome] = useState<BiomeType | 'all'>('all');
+  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
 
   const biomes = Object.keys(BIOME_CONFIG) as BiomeType[];
   const filteredCollection = selectedBiome === 'all'
     ? collection
     : collection.filter(animal => animal.biome === selectedBiome);
+
+  // Group animals by name+biome, counting duplicates
+  const groupedAnimals = useMemo(() => {
+    const groups: Record<string, GroupedAnimal> = {};
+    for (const animal of filteredCollection) {
+      const key = `${animal.name}-${animal.biome}`;
+      if (groups[key]) {
+        groups[key].count += 1;
+      } else {
+        groups[key] = {
+          name: animal.name,
+          biome: animal.biome,
+          lottieUrl: animal.lottieUrl,
+          count: 1,
+        };
+      }
+    }
+    return Object.values(groups);
+  }, [filteredCollection]);
+
+  // Load Lottie animations for unique animals
+  useEffect(() => {
+    const urlsToLoad = groupedAnimals
+      .map(a => a.lottieUrl)
+      .filter(url => url && !loadedAnimations[url]);
+
+    for (const url of urlsToLoad) {
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          setLoadedAnimations(prev => ({ ...prev, [url]: data }));
+        })
+        .catch(() => {});
+    }
+  }, [groupedAnimals]);
+
+  const totalCount = filteredCollection.length;
 
   return (
     <motion.div
@@ -82,7 +128,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
               color: getTextColor(theme, 'primary'),
               fontFamily: "'Quicksand', sans-serif"
             }}>
-              {filteredCollection.length} Animals
+              {totalCount} Animals
             </div>
             <div style={{
               fontSize: '13px',
@@ -142,7 +188,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
       </div>
 
       {/* Gallery Grid */}
-      {filteredCollection.length === 0 ? (
+      {groupedAnimals.length === 0 ? (
         <div style={{
           background: 'rgba(255, 255, 255, 0.6)',
           backdropFilter: 'blur(25px)',
@@ -179,46 +225,85 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
           gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
           gap: '16px'
         }}>
-          {filteredCollection.map((animal, index) => (
-            <motion.div
-              key={animal.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ scale: 1.05 }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.6)',
-                backdropFilter: 'blur(25px)',
-                WebkitBackdropFilter: 'blur(25px)',
-                borderRadius: '24px',
-                padding: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.5)',
-                boxShadow: '0 8px 32px rgba(147, 197, 253, 0.2)',
-                textAlign: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              {/* Animal Name */}
-              <div style={{
-                fontSize: '13px',
-                fontWeight: 600,
-                color: getTextColor(theme, 'primary'),
-                marginBottom: '12px',
-                fontFamily: "'Quicksand', sans-serif"
-              }}>
-                {animal.name}
-              </div>
+          {groupedAnimals.map((animal, index) => {
+            const scale = getAnimalScale(animal.lottieUrl);
+            const lottieSize = 80;
+            const innerSize = scale ? lottieSize * scale : lottieSize;
 
-              {/* Collected Date */}
-              <div style={{
-                fontSize: '11px',
-                color: getTextColor(theme, 'tertiary'),
-                fontFamily: "'Quicksand', sans-serif"
-              }}>
-                {new Date(animal.collectedAt).toLocaleDateString()}
-              </div>
-            </motion.div>
-          ))}
+            return (
+              <motion.div
+                key={`${animal.name}-${animal.biome}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ scale: 1.05 }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.6)',
+                  backdropFilter: 'blur(25px)',
+                  WebkitBackdropFilter: 'blur(25px)',
+                  borderRadius: '24px',
+                  padding: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.5)',
+                  boxShadow: '0 8px 32px rgba(147, 197, 253, 0.2)',
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                {/* Lottie Animation */}
+                <div style={{
+                  width: `${lottieSize}px`,
+                  height: `${lottieSize}px`,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '16px',
+                }}>
+                  {loadedAnimations[animal.lottieUrl] ? (
+                    <div style={{
+                      width: `${innerSize}px`,
+                      height: `${innerSize}px`,
+                      flexShrink: 0,
+                    }}>
+                      <Lottie
+                        animationData={loadedAnimations[animal.lottieUrl]}
+                        loop={true}
+                        style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                      />
+                    </div>
+                  ) : (
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: 'rgba(167, 139, 250, 0.15)',
+                    }} />
+                  )}
+                </div>
+
+                {/* Animal Name with Multiplier */}
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  color: getTextColor(theme, 'primary'),
+                  fontFamily: "'Quicksand', sans-serif",
+                }}>
+                  {animal.name}{animal.count > 1 && (
+                    <span style={{
+                      color: getTextColor(theme, 'secondary'),
+                      fontWeight: 500,
+                      marginLeft: '4px',
+                    }}>
+                      x{animal.count}
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </motion.div>
