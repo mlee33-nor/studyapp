@@ -985,7 +985,7 @@ export default function App() {
 
   const theme = selectedTheme;
 
-  // Update meta theme-color tag and body background based on selected theme
+  // Update meta theme-color tag and background colors for full screen coverage
   useEffect(() => {
     const themeColorMap = {
       morning: '#F0F4FF',
@@ -994,13 +994,21 @@ export default function App() {
       midnight: '#000000'
     };
 
+    const color = themeColorMap[selectedTheme];
+
+    // Update meta theme-color for browser UI
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', themeColorMap[selectedTheme]);
+      metaThemeColor.setAttribute('content', color);
     }
 
-    // Set body background to match theme for safe area coverage
-    document.body.style.backgroundColor = themeColorMap[selectedTheme];
+    // Set background on html, body, and root for complete safe area coverage
+    document.documentElement.style.backgroundColor = color;
+    document.body.style.backgroundColor = color;
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.backgroundColor = color;
+    }
   }, [selectedTheme]);
 
   // Build companion list from the active biome's animals
