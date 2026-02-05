@@ -306,11 +306,11 @@ const getNavBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight')
   return isDarkText ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
 };
 
-const getNavBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const getNavBorder = (_theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
   return 'transparent';
 };
 
-const getNavShadow = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const getNavShadow = (_theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
   return 'none';
 };
 
