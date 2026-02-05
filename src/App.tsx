@@ -952,7 +952,7 @@ export default function App() {
   const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'twilight' | 'golden' | 'midnight'>(getSelectedTheme());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
-  const [focusHistory, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
+  const [, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [selectedAnimal, setSelectedAnimal] = useState(0);
