@@ -121,15 +121,15 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
     name: 'Owl',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
   },
+  {
+    id: 'hedgehog',
+    name: 'Hedgehog',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/217eea54-1152-11ee-80aa-bb89673ffc3b/GtbajlQ7yk.json',
+  },
 ];
 
 // Ocean Animals - Real Lottie Animation URLs
 export const OCEAN_ANIMALS: BiomeAnimal[] = [
-  {
-    id: 'dolphin',
-    name: 'Dolphin',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b9ef8c12-1161-11ee-90f5-a3680064bf0c/Ki9m8yyudV.json',
-  },
   {
     id: 'turtle',
     name: 'Turtle',
@@ -174,11 +174,6 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
     name: 'Polar Bear',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/57bf975c-1153-11ee-9894-77feb79c4931/g7QuM6qVSV.json',
   },
-  {
-    id: 'aurora',
-    name: 'Aurora Borealis',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b64ba894-1188-11ee-ad71-17472cd0978f/svrPtOox1A.json',
-  },
 ];
 
 // Mountain Animals - Real Lottie Animation URLs
@@ -217,11 +212,6 @@ export const MEADOW_ANIMALS: BiomeAnimal[] = [
     name: 'Butterfly',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/eb7d7328-1177-11ee-84cc-cb9110efefbf/C6YQhXqNZO.json',
     scale: 3.5,
-  },
-  {
-    id: 'hedgehog',
-    name: 'Hedgehog',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/217eea54-1152-11ee-80aa-bb89673ffc3b/GtbajlQ7yk.json',
   },
   {
     id: 'kitten',
