@@ -127,6 +127,12 @@ export const ACHIEVEMENTS: Achievement[] = [
 
 // Get achievements with updated progress based on user data
 export const getAchievementsWithProgress = (userData: UserData): Achievement[] => {
+  // Safely get values with defaults to prevent NaN
+  const totalSessions = userData?.totalCompletedSessions ?? 0;
+  const streak = userData?.studyStreak ?? 0;
+  const collectionLength = userData?.permanentCollection?.length ?? 0;
+  const level = userData?.level ?? 1;
+
   return ACHIEVEMENTS.map(achievement => {
     let progress = 0;
     let unlocked = false;
@@ -136,27 +142,27 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
       case 'ten_sessions':
       case 'fifty_sessions':
       case 'hundred_sessions':
-        progress = Math.min(userData.totalCompletedSessions, achievement.requirement);
-        unlocked = userData.totalCompletedSessions >= achievement.requirement;
+        progress = Math.min(totalSessions, achievement.requirement);
+        unlocked = totalSessions >= achievement.requirement;
         break;
 
       case 'seven_day_streak':
       case 'thirty_day_streak':
-        progress = Math.min(userData.studyStreak, achievement.requirement);
-        unlocked = userData.studyStreak >= achievement.requirement;
+        progress = Math.min(streak, achievement.requirement);
+        unlocked = streak >= achievement.requirement;
         break;
 
       case 'five_animals':
       case 'twenty_animals':
-        progress = Math.min(userData.permanentCollection.length, achievement.requirement);
-        unlocked = userData.permanentCollection.length >= achievement.requirement;
+        progress = Math.min(collectionLength, achievement.requirement);
+        unlocked = collectionLength >= achievement.requirement;
         break;
 
       case 'level_ten':
       case 'level_twenty':
       case 'level_thirty':
-        progress = Math.min(userData.level, achievement.requirement);
-        unlocked = userData.level >= achievement.requirement;
+        progress = Math.min(level, achievement.requirement);
+        unlocked = level >= achievement.requirement;
         break;
 
       default:
