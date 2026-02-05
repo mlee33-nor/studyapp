@@ -83,24 +83,19 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json',
   },
   {
-    id: 'leopard',
-    name: 'Leopard',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/bbbf7156-1170-11ee-a909-976822febe92/oGgjhV63HT.json',
+    id: 'safari_bear',
+    name: 'Bear',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7b36d6ac-3cb7-11ee-a573-175a0b884d98/yFrEbfbfVT.json',
   },
   {
-    id: 'safari_fox',
-    name: 'Fox',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/9c4b280c-116f-11ee-8e54-17fdd56ae6ce/nZEIpQEdUZ.json',
+    id: 'safari_eagle',
+    name: 'Eagle',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b30d3932-1173-11ee-af4b-3731ed1db57c/KOjD1FrTn8.json',
   },
   {
-    id: 'safari_owl',
-    name: 'Owl',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
-  },
-  {
-    id: 'safari_deer',
-    name: 'Deer',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b3859ba2-1150-11ee-8f51-2bfeee9af832/5MDZDPhpLm.json',
+    id: 'parrot',
+    name: 'Parrot',
+    lottieUrl: 'https://lottie.host/31b0c1dc-5ff1-45df-b96c-fa1200c8c554/QTcdtW0332.json',
   },
 ];
 
@@ -125,11 +120,6 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
     id: 'owl',
     name: 'Owl',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
-  },
-  {
-    id: 'bear',
-    name: 'Bear',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7b36d6ac-3cb7-11ee-a573-175a0b884d98/yFrEbfbfVT.json',
   },
 ];
 
@@ -193,11 +183,6 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
 
 // Mountain Animals - Real Lottie Animation URLs
 export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
-  {
-    id: 'eagle',
-    name: 'Golden Eagle',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b30d3932-1173-11ee-af4b-3731ed1db57c/KOjD1FrTn8.json',
-  },
   {
     id: 'mountain_goat',
     name: 'Mountain Goat',
