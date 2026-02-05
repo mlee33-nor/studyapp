@@ -58,14 +58,14 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: 'rgba(255, 255, 255, 0.6)',
+          background: 'rgba(167, 139, 250, 0.25)',
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
           borderRadius: '32px',
           padding: '24px',
           marginBottom: '24px',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-          boxShadow: '0 8px 32px rgba(147, 197, 253, 0.2)',
+          border: '1px solid rgba(167, 139, 250, 0.4)',
+          boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
         }}
       >
         <div style={{
@@ -155,13 +155,13 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.5)',
+                  background: 'rgba(167, 139, 250, 0.2)',
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   padding: '16px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  boxShadow: '0 4px 15px rgba(147, 197, 253, 0.1)',
+                  border: '1px solid rgba(167, 139, 250, 0.35)',
+                  boxShadow: '0 4px 15px rgba(167, 139, 250, 0.15)',
                 }}
               >
                 <div style={{
@@ -317,12 +317,12 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
               <motion.div
                 key={achievement.id}
                 style={{
-                  background: 'rgba(200, 220, 255, 0.2)',
+                  background: 'rgba(167, 139, 250, 0.15)',
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   padding: '16px 12px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(200, 220, 255, 0.3)',
+                  border: '1px solid rgba(167, 139, 250, 0.3)',
                   textAlign: 'center',
                   opacity: 0.6
                 }}
