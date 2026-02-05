@@ -1841,19 +1841,32 @@ export default function App() {
 
   return (
     <>
+    {/* Fixed background that covers entire screen including safe areas */}
     <motion.div
       animate={{ background: BACKGROUND_THEMES[theme].gradient }}
       transition={{ duration: 2, ease: "easeInOut" }}
       style={{
-        minHeight: 'calc(100vh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 0,
+      }}
+    >
+      <LivingAuroraBackground theme={theme} />
+    </motion.div>
+
+    {/* Content container with safe area padding */}
+    <div
+      style={{
         position: 'relative',
-        overflow: 'hidden',
+        zIndex: 1,
+        minHeight: '100vh',
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      <LivingAuroraBackground theme={theme} />
-
       {/* Category Selection Modal */}
       <CategorySelectionModal
         isOpen={showCategoryModal}
@@ -1870,7 +1883,7 @@ export default function App() {
       }}>
         {renderContent()}
       </div>
-    </motion.div>
+    </div>
 
       {/* Fixed Navigation - Always visible */}
       <div style={{
