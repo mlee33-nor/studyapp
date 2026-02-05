@@ -63,6 +63,21 @@ body {
   bottom: 0;
   touch-action: manipulation;
   background: #1E1B4B;
+  /* Extend background into safe areas for iOS PWA */
+  padding-bottom: env(safe-area-inset-bottom);
+  box-sizing: border-box;
+}
+
+/* Ensure background covers iOS PWA bottom safe area */
+html::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: env(safe-area-inset-bottom, 34px);
+  background: #1E1B4B;
+  z-index: -1;
 }
 
 * {

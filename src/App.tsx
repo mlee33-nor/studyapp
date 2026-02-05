@@ -1868,6 +1868,7 @@ export default function App() {
         left: 0,
         right: 0,
         bottom: 0,
+        minHeight: 'calc(100vh + env(safe-area-inset-bottom, 0px))',
         zIndex: 0,
       }}
     >
