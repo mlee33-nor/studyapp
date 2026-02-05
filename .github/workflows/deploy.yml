@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - claude/gamified-pomodoro-timer-A265m
+      - claude/remove-duplicate-bars-QybDT
 
 permissions:
   contents: read
