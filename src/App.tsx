@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, BarChart2, Settings as SettingsIcon, User, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image } from 'lucide-react';
+import { Home, Settings as SettingsIcon, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -214,7 +214,6 @@ const MeadowIcon = ({ color, size, strokeWidth }: { color: string; size: number;
 
 const NAV_TABS = [
   { id: 'Timer', icon: Home },
-  { id: 'Stats', icon: BarChart2 },
   { id: 'Reports', icon: FileText },
   { id: 'Meadow', icon: MeadowIcon },
   { id: 'Collection', icon: Image },
@@ -688,35 +687,6 @@ const InteractiveTimerRing: React.FC<{
     </div>
   );
 };
-// --- SOFT STATS CHART ---
-const SoftStatsChart: React.FC<{ theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ theme }) => {
-  const data = [35, 50, 30, 45, 65, 55, 25];
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, gap: '12px' }}>
-      {data.map((val, i) => (
-        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-          <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: `${(val / 70) * 100}%` }}
-            transition={{ ...SOFT_SPRING, delay: i * 0.08 }}
-            style={{
-              width: '100%',
-              background: i % 2 === 0
-                ? 'linear-gradient(180deg, rgba(167, 139, 250, 0.6) 0%, rgba(167, 139, 250, 0.3) 100%)'
-                : 'linear-gradient(180deg, rgba(147, 197, 253, 0.6) 0%, rgba(147, 197, 253, 0.3) 100%)',
-              borderRadius: '12px',
-              boxShadow: i % 2 === 0 ? '0 4px 15px rgba(167, 139, 250, 0.2)' : '0 4px 15px rgba(147, 197, 253, 0.2)',
-            }}
-          />
-          <span style={{ fontSize: '12px', color: getTextColor(theme, 'secondary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 // --- SOFT TOGGLE SWITCH ---
 const SoftToggle: React.FC<{ enabled: boolean; onToggle: () => void }> = ({ enabled, onToggle }) => (
   <motion.div
@@ -1538,124 +1508,6 @@ export default function App() {
 
         </div>
       </div>
-    );
-
-    if (activeTab === 'Stats') return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={SOFT_SPRING}
-        style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
-      >
-        <h1 style={{
-          fontSize: '1.5rem',
-          fontWeight: 500,
-          color: getTextColor(selectedTheme, 'primary'),
-          marginBottom: '32px',
-          letterSpacing: '0.05em',
-          fontFamily: "'Quicksand', sans-serif"
-        }}>
-          Statistics
-        </h1>
-
-        <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
-          <h3 style={{ margin: '0 0 24px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-            Weekly Activity
-          </h3>
-          <SoftStatsChart theme={selectedTheme} />
-        </GlassCard>
-
-        <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              background: 'rgba(167, 139, 250, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 15px rgba(167, 139, 250, 0.2)'
-            }}>
-              <User size={24} color="rgba(139, 92, 246, 0.8)" strokeWidth={2.5} />
-            </div>
-            <div>
-              <div style={{ fontSize: '18px', fontWeight: 600, color: getTextColor(selectedTheme, 'primary'), fontFamily: "'Quicksand', sans-serif" }}>
-                {userData.sessionsCompleted} Sessions
-              </div>
-              <div style={{ fontSize: '14px', color: getTextColor(selectedTheme, 'tertiary'), fontFamily: "'Quicksand', sans-serif" }}>
-                Total Completed
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-
-        <GlassCard theme={selectedTheme}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', color: getTextColor(selectedTheme, 'primary'), fontWeight: 600, fontFamily: "'Quicksand', sans-serif" }}>
-            Recent Sessions
-          </h3>
-          {focusHistory.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '24px',
-              color: getTextColor(selectedTheme, 'tertiary'),
-              fontSize: '14px',
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              No sessions yet. Complete a focus session to see your history!
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {focusHistory.slice(-5).reverse().map((session) => (
-                <div
-                  key={session.id}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.5)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    padding: '12px 16px',
-                    borderRadius: '16px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxShadow: '0 2px 10px rgba(147, 197, 253, 0.1)'
-                  }}
-                >
-                  <div>
-                    <div style={{
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: getTextColor(selectedTheme, 'primary'),
-                      fontFamily: "'Quicksand', sans-serif"
-                    }}>
-                      📚 {session.category}
-                    </div>
-                    <div style={{
-                      fontSize: '12px',
-                      color: getTextColor(selectedTheme, 'tertiary'),
-                      marginTop: '2px',
-                      fontFamily: "'Quicksand', sans-serif"
-                    }}>
-                      {new Date(session.date).toLocaleDateString()} at {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                  <div style={{
-                    background: 'rgba(167, 139, 250, 0.2)',
-                    padding: '6px 12px',
-                    borderRadius: '12px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: 'rgba(139, 92, 246, 0.9)',
-                    fontFamily: "'Quicksand', sans-serif"
-                  }}>
-                    {session.duration} min
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </GlassCard>
-      </motion.div>
     );
 
     if (activeTab === 'Reports') {
