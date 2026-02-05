@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { UserData } from '../types';
 import type { Achievement } from '../utils/achievements';
@@ -85,6 +85,11 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
   const nextAchievements = getNextAchievements(userData, 3);
   const unlockedAchievements = stats.achievements.filter(a => a.unlocked);
   const lockedAchievements = stats.achievements.filter(a => !a.unlocked);
+  const [flippedCard, setFlippedCard] = useState<string | null>(null);
+
+  const handleCardClick = (achievementId: string) => {
+    setFlippedCard(flippedCard === achievementId ? null : achievementId);
+  };
 
   return (
     <motion.div
@@ -302,46 +307,119 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
             gap: '12px',
             marginBottom: '24px'
           }}>
-            {unlockedAchievements.map((achievement: Achievement, index: number) => (
-              <motion.div
-                key={achievement.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.05 }}
-                style={{
-                  background: getCardBackground(theme, 'unlocked'),
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  padding: '16px 12px',
-                  borderRadius: '20px',
-                  border: `1px solid ${getCardBorder(theme, 'unlocked')}`,
-                  boxShadow: getCardShadow(theme, 'unlocked'),
-                  textAlign: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ fontSize: '32px', marginBottom: '8px' }}>
-                  {achievement.emoji}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: getTextColor(theme, 'primary'),
-                  marginBottom: '4px',
-                  fontFamily: "'Quicksand', sans-serif"
-                }}>
-                  {achievement.name}
-                </div>
-                <div style={{
-                  fontSize: '10px',
-                  color: 'rgba(139, 92, 246, 0.8)',
-                  fontFamily: "'Quicksand', sans-serif"
-                }}>
-                  ✓ Unlocked
-                </div>
-              </motion.div>
-            ))}
+            {unlockedAchievements.map((achievement: Achievement, index: number) => {
+              const isFlipped = flippedCard === achievement.id;
+              return (
+                <motion.div
+                  key={achievement.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => handleCardClick(achievement.id)}
+                  style={{
+                    perspective: '1000px',
+                    cursor: 'pointer',
+                    height: '140px'
+                  }}
+                >
+                  <motion.div
+                    animate={{ rotateY: isFlipped ? 180 : 0 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      position: 'relative',
+                      transformStyle: 'preserve-3d'
+                    }}
+                  >
+                    {/* Front of card */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        background: getCardBackground(theme, 'unlocked'),
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        padding: '16px 12px',
+                        borderRadius: '20px',
+                        border: `1px solid ${getCardBorder(theme, 'unlocked')}`,
+                        boxShadow: getCardShadow(theme, 'unlocked'),
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: '32px', marginBottom: '8px' }}>
+                        {achievement.emoji}
+                      </div>
+                      <div style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: getTextColor(theme, 'primary'),
+                        marginBottom: '4px',
+                        fontFamily: "'Quicksand', sans-serif"
+                      }}>
+                        {achievement.name}
+                      </div>
+                      <div style={{
+                        fontSize: '10px',
+                        color: 'rgba(139, 92, 246, 0.8)',
+                        fontFamily: "'Quicksand', sans-serif"
+                      }}>
+                        ✓ Unlocked
+                      </div>
+                    </div>
+
+                    {/* Back of card */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)',
+                        background: getCardBackground(theme, 'unlocked'),
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        padding: '16px 12px',
+                        borderRadius: '20px',
+                        border: `1px solid ${getCardBorder(theme, 'unlocked')}`,
+                        boxShadow: getCardShadow(theme, 'unlocked'),
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div style={{
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        color: getTextColor(theme, 'primary'),
+                        marginBottom: '8px',
+                        fontFamily: "'Quicksand', sans-serif",
+                        lineHeight: '1.4'
+                      }}>
+                        {achievement.description}
+                      </div>
+                      <div style={{
+                        fontSize: '10px',
+                        color: 'rgba(139, 92, 246, 0.8)',
+                        fontFamily: "'Quicksand', sans-serif"
+                      }}>
+                        Tap to flip back
+                      </div>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              );
+            })}
           </div>
         </>
       )}
