@@ -1335,17 +1335,21 @@ export default function App() {
                 style={{
                   display: 'flex',
                   justifyContent: 'center',
+                  alignItems: 'center',
                   width: '80px',
                   height: '80px',
                   cursor: 'pointer',
+                  overflow: 'hidden',
                 }}
               >
                 {loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`] ? (
-                  <Lottie
-                    animationData={loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`]}
-                    loop={true}
-                    style={{ width: '100%', height: '100%', pointerEvents: 'none', transform: ANIMALS[selectedAnimal]?.scale ? `scale(${ANIMALS[selectedAnimal].scale})` : undefined }}
-                  />
+                  <div style={{ width: ANIMALS[selectedAnimal]?.scale ? `${80 * ANIMALS[selectedAnimal].scale}px` : '80px', height: ANIMALS[selectedAnimal]?.scale ? `${80 * ANIMALS[selectedAnimal].scale}px` : '80px', flexShrink: 0 }}>
+                    <Lottie
+                      animationData={loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`]}
+                      loop={true}
+                      style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                    />
+                  </div>
                 ) : (
                   <div style={{ fontSize: '14px', display: 'flex', alignItems: 'center', color: getTextColor(selectedTheme, 'secondary') }}>
                     Loading...
@@ -1462,13 +1466,15 @@ export default function App() {
                         transition: 'all 0.15s ease',
                       }}
                     >
-                      <div style={{ width: '56px', height: '56px', overflow: 'hidden' }}>
+                      <div style={{ width: '56px', height: '56px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {loadedAnimations[`selected-${activeBiome}-${index}`] ? (
-                          <Lottie
-                            animationData={loadedAnimations[`selected-${activeBiome}-${index}`]}
-                            loop={true}
-                            style={{ width: '100%', height: '100%', pointerEvents: 'none', transform: animal.scale ? `scale(${animal.scale})` : undefined }}
-                          />
+                          <div style={{ width: animal.scale ? `${56 * animal.scale}px` : '56px', height: animal.scale ? `${56 * animal.scale}px` : '56px', flexShrink: 0 }}>
+                            <Lottie
+                              animationData={loadedAnimations[`selected-${activeBiome}-${index}`]}
+                              loop={true}
+                              style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                            />
+                          </div>
                         ) : (
                           <div style={{ fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: getTextColor(selectedTheme, 'tertiary') }}>
                             ...

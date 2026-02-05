@@ -409,6 +409,10 @@ const MeadowScreen: React.FC = () => {
                       top: 0,
                       width: `${size}px`,
                       height: `${size}px`,
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       zIndex: getZIndex(animal.y),
                       transform: animal.flipped ? 'scaleX(-1)' : 'scaleX(1)',
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
@@ -422,16 +426,23 @@ const MeadowScreen: React.FC = () => {
                     whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
                   >
                     {loadedAnimations[animal.id] ? (
-                      <Lottie
-                        animationData={loadedAnimations[animal.id]}
-                        loop={true}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          pointerEvents: 'none',
-                          transform: getAnimalScale(animal.lottieUrl) ? `scale(${getAnimalScale(animal.lottieUrl)})` : undefined,
-                        }}
-                      />
+                      (() => {
+                        const animalScale = getAnimalScale(animal.lottieUrl);
+                        const scaledSize = animalScale ? size * animalScale : size;
+                        return (
+                          <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                            <Lottie
+                              animationData={loadedAnimations[animal.id]}
+                              loop={true}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'none',
+                              }}
+                            />
+                          </div>
+                        );
+                      })()
                     ) : (
                       <div style={{
                         width: '100%',
