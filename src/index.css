@@ -38,6 +38,9 @@ html {
   height: 100%;
   height: -webkit-fill-available;
   overflow: hidden;
+  /* Extend into safe areas */
+  padding: 0;
+  margin: 0;
 }
 
 body {
@@ -59,6 +62,9 @@ body {
   right: 0;
   bottom: 0;
   touch-action: manipulation;
+  /* Explicitly extend into safe areas on iOS */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-sizing: border-box;
 }
 
 * {
@@ -104,6 +110,22 @@ body {
 
 .safe-area-inset-top {
   padding-top: env(safe-area-inset-top);
+}
+
+/* PWA Safe Area Coverage - Critical for iOS home indicator area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  html::after {
+    content: '';
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: env(safe-area-inset-bottom);
+    /* Background color is set dynamically via JS, this is a fallback */
+    background: inherit;
+    z-index: -1;
+    pointer-events: none;
+  }
 }
 
 /* Custom animations */
