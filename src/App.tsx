@@ -1892,7 +1892,7 @@ export default function App() {
       {/* Fixed Navigation - Always visible */}
       <div style={{
         position: 'fixed',
-        bottom: 12,
+        bottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,
