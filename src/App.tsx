@@ -985,7 +985,7 @@ export default function App() {
 
   const theme = selectedTheme;
 
-  // Update meta theme-color tag based on selected theme
+  // Update meta theme-color tag and body background based on selected theme
   useEffect(() => {
     const themeColorMap = {
       morning: '#F0F4FF',
@@ -998,6 +998,9 @@ export default function App() {
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', themeColorMap[selectedTheme]);
     }
+
+    // Set body background to match theme for safe area coverage
+    document.body.style.backgroundColor = themeColorMap[selectedTheme];
   }, [selectedTheme]);
 
   // Build companion list from the active biome's animals
@@ -1842,10 +1845,11 @@ export default function App() {
       animate={{ background: BACKGROUND_THEMES[theme].gradient }}
       transition={{ duration: 2, ease: "easeInOut" }}
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))',
         position: 'relative',
         overflow: 'hidden',
         paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       <LivingAuroraBackground theme={theme} />
