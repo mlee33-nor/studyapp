@@ -981,7 +981,7 @@ export default function App() {
 
   const theme = selectedTheme;
 
-  // Update meta theme-color tag for browser UI
+  // Update meta theme-color and body background for full safe area coverage
   useEffect(() => {
     const themeColorMap = {
       morning: '#F0F4FF',
@@ -990,7 +990,16 @@ export default function App() {
       midnight: '#000000'
     };
 
+    // Gradients that match BACKGROUND_THEMES - used for body fallback
+    const gradientMap = {
+      morning: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
+      twilight: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
+      golden: 'linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%)',
+      midnight: 'linear-gradient(180deg, #000000 0%, #0F0F23 50%, #1E1B4B 100%)'
+    };
+
     const color = themeColorMap[selectedTheme];
+    const gradient = gradientMap[selectedTheme];
 
     // Update meta theme-color for browser UI
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
@@ -998,9 +1007,13 @@ export default function App() {
       metaThemeColor.setAttribute('content', color);
     }
 
-    // Make html, body, and root transparent so the fixed gradient background shows through
-    document.documentElement.style.backgroundColor = 'transparent';
-    document.body.style.backgroundColor = 'transparent';
+    // Set the gradient on html and body as fallback for iOS safe area
+    // This ensures the safe area shows the correct gradient instead of a solid color
+    document.documentElement.style.background = gradient;
+    document.documentElement.style.backgroundAttachment = 'fixed';
+    document.body.style.background = gradient;
+    document.body.style.backgroundAttachment = 'fixed';
+
     const root = document.getElementById('root');
     if (root) {
       root.style.backgroundColor = 'transparent';

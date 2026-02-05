@@ -40,7 +40,7 @@ html {
   overflow: hidden;
   padding: 0;
   margin: 0;
-  background: transparent;
+  /* Background is set dynamically via JS to match current theme gradient */
 }
 
 body {
@@ -62,7 +62,7 @@ body {
   right: 0;
   bottom: 0;
   touch-action: manipulation;
-  background: transparent;
+  /* Background is set dynamically via JS to match current theme gradient */
 }
 
 * {
