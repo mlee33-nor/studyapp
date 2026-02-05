@@ -93,9 +93,9 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/9c4b280c-116f-11ee-8e54-17fdd56ae6ce/nZEIpQEdUZ.json',
   },
   {
-    id: 'safari_bear',
-    name: 'Bear',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7b36d6ac-3cb7-11ee-a573-175a0b884d98/yFrEbfbfVT.json',
+    id: 'safari_owl',
+    name: 'Owl',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
   },
   {
     id: 'safari_deer',
