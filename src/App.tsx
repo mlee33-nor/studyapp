@@ -1172,6 +1172,10 @@ export default function App() {
     // Add completed session to storage (this spawns biome animal automatically)
     addCompletedSession(timerMinutes, currentAnimal.url);
 
+    // Read back updated data from canonical storage (pomodoroStudyApp key)
+    // This includes the new permanentCollection and meadowAnimals
+    const updatedStorage = getStorageUserData();
+
     // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
     // Bonus: +0.5% XP per minute (longer sessions get better odds for animals)
     const xpGained = timerMinutes * 10;
@@ -1185,12 +1189,13 @@ export default function App() {
       newLevel += 1;
     }
 
-    // Update local userData (keep old structure for compatibility)
+    // Update local userData - sync permanentCollection and meadowAnimals from canonical storage
     const newData = {
       level: newLevel,
       xp: remainingXp,
       sessionsCompleted: userData.sessionsCompleted + 1,
-      meadowAnimals: userData.meadowAnimals || [],
+      meadowAnimals: updatedStorage.meadowAnimals || [],
+      permanentCollection: updatedStorage.permanentCollection || [],
       lastMeadowReset: userData.lastMeadowReset
     };
 
