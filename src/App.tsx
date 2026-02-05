@@ -323,6 +323,26 @@ const getInactiveIconColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnig
   return isDarkText ? 'rgba(100, 116, 139, 0.6)' : 'rgba(255, 255, 255, 0.6)';
 };
 
+const getTabBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', isActive: boolean) => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+
+  if (isActive) {
+    return 'rgba(167, 139, 250, 0.2)';
+  }
+
+  return isLightTheme ? 'rgba(255, 255, 255, 0.5)' : 'rgba(167, 139, 250, 0.1)';
+};
+
+const getTabBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', isActive: boolean) => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+
+  if (isActive) {
+    return '2px solid rgba(167, 139, 250, 0.6)';
+  }
+
+  return isLightTheme ? '1px solid rgba(200, 200, 200, 0.3)' : '1px solid rgba(167, 139, 250, 0.2)';
+};
+
 // --- LIVING AURORA MESH BACKGROUND ---
 const LivingAuroraBackground: React.FC<{ theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ theme }) => {
   const orbs = BACKGROUND_THEMES[theme].orbs;
@@ -965,6 +985,21 @@ export default function App() {
 
   const theme = selectedTheme;
 
+  // Update meta theme-color tag based on selected theme
+  useEffect(() => {
+    const themeColorMap = {
+      morning: '#F0F4FF',
+      twilight: '#0F172A',
+      golden: '#FEF3C7',
+      midnight: '#000000'
+    };
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', themeColorMap[selectedTheme]);
+    }
+  }, [selectedTheme]);
+
   // Build companion list from the active biome's animals
   const biomeAnimals = getAnimalsForBiome(activeBiome);
   const ANIMALS = biomeAnimals.map(a => ({
@@ -1543,8 +1578,8 @@ export default function App() {
                 flex: 1,
                 padding: '12px 16px',
                 borderRadius: '16px',
-                border: collectionViewMode === 'gallery' ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(200, 200, 200, 0.3)',
-                background: collectionViewMode === 'gallery' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                border: getTabBorder(selectedTheme, collectionViewMode === 'gallery'),
+                background: getTabBackground(selectedTheme, collectionViewMode === 'gallery'),
                 backdropFilter: 'blur(10px)',
                 color: getTextColor(selectedTheme, 'primary'),
                 fontSize: '14px',
@@ -1564,8 +1599,8 @@ export default function App() {
                 flex: 1,
                 padding: '12px 16px',
                 borderRadius: '16px',
-                border: collectionViewMode === 'achievements' ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(200, 200, 200, 0.3)',
-                background: collectionViewMode === 'achievements' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                border: getTabBorder(selectedTheme, collectionViewMode === 'achievements'),
+                background: getTabBackground(selectedTheme, collectionViewMode === 'achievements'),
                 backdropFilter: 'blur(10px)',
                 color: getTextColor(selectedTheme, 'primary'),
                 fontSize: '14px',
