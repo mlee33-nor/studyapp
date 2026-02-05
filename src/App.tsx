@@ -303,19 +303,15 @@ const getBorderColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') =
 
 const getNavBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
   const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
-  return isDarkText ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.4)';
+  return isDarkText ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
 };
 
 const getNavBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
-  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
-  return isDarkText ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+  return 'transparent';
 };
 
 const getNavShadow = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
-  const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
-  return isDarkText
-    ? '0 8px 32px rgba(100, 116, 139, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.5)'
-    : '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.05)';
+  return 'none';
 };
 
 const getInactiveIconColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
@@ -1896,7 +1892,7 @@ export default function App() {
       {/* Fixed Navigation - Always visible */}
       <div style={{
         position: 'fixed',
-        bottom: 32,
+        bottom: 12,
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,
