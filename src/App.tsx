@@ -1194,10 +1194,8 @@ export default function App() {
       lastMeadowReset: userData.lastMeadowReset
     };
 
-    setUserData(newData);
-    saveUserData(newData);
-
-    // Trigger Success Burst celebration with bubbles and leaves!
+    setUserData({ ...userData, ...newData });
+    saveUserData({ ...userData, ...newData });
     triggerCelebration();
   };
 
