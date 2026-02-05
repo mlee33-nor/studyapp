@@ -35,6 +35,53 @@ const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', typ
   return isDarkText ? colorMap.dark[type] : colorMap.light[type];
 };
 
+const getCardBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'active' | 'inactive') => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+
+  const colorMap = {
+    light: {
+      primary: 'rgba(255, 255, 255, 0.7)',
+      secondary: 'rgba(255, 255, 255, 0.5)',
+      active: 'rgba(167, 139, 250, 0.25)',
+      inactive: 'rgba(255, 255, 255, 0.4)'
+    },
+    dark: {
+      primary: 'rgba(167, 139, 250, 0.25)',
+      secondary: 'rgba(167, 139, 250, 0.2)',
+      active: 'rgba(167, 139, 250, 0.3)',
+      inactive: 'rgba(167, 139, 250, 0.15)'
+    }
+  };
+
+  return isLightTheme ? colorMap.light[type] : colorMap.dark[type];
+};
+
+const getCardBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'active' | 'inactive') => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+
+  const colorMap = {
+    light: {
+      primary: 'rgba(255, 255, 255, 0.6)',
+      secondary: 'rgba(255, 255, 255, 0.4)',
+      active: 'rgba(167, 139, 250, 0.6)',
+      inactive: 'rgba(255, 255, 255, 0.3)'
+    },
+    dark: {
+      primary: 'rgba(167, 139, 250, 0.4)',
+      secondary: 'rgba(167, 139, 250, 0.35)',
+      active: 'rgba(167, 139, 250, 0.6)',
+      inactive: 'rgba(167, 139, 250, 0.3)'
+    }
+  };
+
+  return isLightTheme ? colorMap.light[type] : colorMap.dark[type];
+};
+
+const getCardShadow = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+  return isLightTheme ? '0 8px 32px rgba(147, 197, 253, 0.15)' : '0 8px 32px rgba(167, 139, 250, 0.2)';
+};
+
 const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
   const [selectedBiome, setSelectedBiome] = useState<BiomeType | 'all'>('all');
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
@@ -105,14 +152,14 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: 'rgba(167, 139, 250, 0.25)',
+          background: getCardBackground(theme, 'primary'),
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
           borderRadius: '32px',
           padding: '24px',
           marginBottom: '24px',
-          border: '1px solid rgba(167, 139, 250, 0.4)',
-          boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
+          border: `1px solid ${getCardBorder(theme, 'primary')}`,
+          boxShadow: getCardShadow(theme),
         }}
       >
         <div style={{
@@ -162,10 +209,10 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
               whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedBiome(biomeId)}
               style={{
-                background: isActive ? 'rgba(167, 139, 250, 0.3)' : 'rgba(167, 139, 250, 0.15)',
+                background: getCardBackground(theme, isActive ? 'active' : 'inactive'),
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: isActive ? '2px solid rgba(167, 139, 250, 0.6)' : '1px solid rgba(167, 139, 250, 0.3)',
+                border: isActive ? `2px solid ${getCardBorder(theme, 'active')}` : `1px solid ${getCardBorder(theme, 'inactive')}`,
                 borderRadius: '20px',
                 padding: '8px 16px',
                 cursor: 'pointer',
@@ -190,14 +237,14 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
       {/* Gallery Grid */}
       {groupedAnimals.length === 0 ? (
         <div style={{
-          background: 'rgba(167, 139, 250, 0.25)',
+          background: getCardBackground(theme, 'primary'),
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
           borderRadius: '32px',
           padding: '60px 24px',
           textAlign: 'center',
-          border: '1px solid rgba(167, 139, 250, 0.4)',
-          boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
+          border: `1px solid ${getCardBorder(theme, 'primary')}`,
+          boxShadow: getCardShadow(theme),
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>
             {selectedBiome === 'all' ? '🌍' : getBiomeConfig(selectedBiome as BiomeType)?.emoji}
@@ -238,13 +285,13 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                 transition={{ delay: index * 0.05 }}
                 whileHover={{ scale: 1.05 }}
                 style={{
-                  background: 'rgba(167, 139, 250, 0.25)',
+                  background: getCardBackground(theme, 'primary'),
                   backdropFilter: 'blur(25px)',
                   WebkitBackdropFilter: 'blur(25px)',
                   borderRadius: '24px',
                   padding: '16px',
-                  border: '1px solid rgba(167, 139, 250, 0.4)',
-                  boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
+                  border: `1px solid ${getCardBorder(theme, 'primary')}`,
+                  boxShadow: getCardShadow(theme),
                   textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',

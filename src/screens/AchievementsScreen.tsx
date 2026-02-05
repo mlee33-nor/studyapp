@@ -28,6 +28,58 @@ const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', typ
   return isDarkText ? colorMap.dark[type] : colorMap.light[type];
 };
 
+const getCardBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'unlocked' | 'locked') => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+
+  const colorMap = {
+    light: {
+      primary: 'rgba(255, 255, 255, 0.7)',
+      secondary: 'rgba(255, 255, 255, 0.5)',
+      unlocked: 'linear-gradient(135deg, rgba(167, 139, 250, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%)',
+      locked: 'rgba(255, 255, 255, 0.4)'
+    },
+    dark: {
+      primary: 'rgba(167, 139, 250, 0.25)',
+      secondary: 'rgba(167, 139, 250, 0.2)',
+      unlocked: 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)',
+      locked: 'rgba(167, 139, 250, 0.15)'
+    }
+  };
+
+  return isLightTheme ? colorMap.light[type] : colorMap.dark[type];
+};
+
+const getCardBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'unlocked' | 'locked') => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+
+  const colorMap = {
+    light: {
+      primary: 'rgba(255, 255, 255, 0.6)',
+      secondary: 'rgba(255, 255, 255, 0.4)',
+      unlocked: 'rgba(167, 139, 250, 0.4)',
+      locked: 'rgba(255, 255, 255, 0.3)'
+    },
+    dark: {
+      primary: 'rgba(167, 139, 250, 0.4)',
+      secondary: 'rgba(167, 139, 250, 0.35)',
+      unlocked: 'rgba(167, 139, 250, 0.5)',
+      locked: 'rgba(167, 139, 250, 0.3)'
+    }
+  };
+
+  return isLightTheme ? colorMap.light[type] : colorMap.dark[type];
+};
+
+const getCardShadow = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type?: 'primary' | 'unlocked') => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+
+  if (type === 'unlocked') {
+    return isLightTheme ? '0 4px 15px rgba(167, 139, 250, 0.15)' : '0 4px 15px rgba(167, 139, 250, 0.2)';
+  }
+
+  return isLightTheme ? '0 8px 32px rgba(147, 197, 253, 0.15)' : '0 8px 32px rgba(167, 139, 250, 0.2)';
+};
+
 const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme }) => {
   const stats = getAchievementStats(userData);
   const nextAchievements = getNextAchievements(userData, 3);
@@ -58,14 +110,14 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: 'rgba(167, 139, 250, 0.25)',
+          background: getCardBackground(theme, 'primary'),
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
           borderRadius: '32px',
           padding: '24px',
           marginBottom: '24px',
-          border: '1px solid rgba(167, 139, 250, 0.4)',
-          boxShadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
+          border: `1px solid ${getCardBorder(theme, 'primary')}`,
+          boxShadow: getCardShadow(theme),
         }}
       >
         <div style={{
@@ -155,13 +207,13 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
                 style={{
-                  background: 'rgba(167, 139, 250, 0.2)',
+                  background: getCardBackground(theme, 'secondary'),
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   padding: '16px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(167, 139, 250, 0.35)',
-                  boxShadow: '0 4px 15px rgba(167, 139, 250, 0.15)',
+                  border: `1px solid ${getCardBorder(theme, 'secondary')}`,
+                  boxShadow: getCardShadow(theme, 'unlocked'),
                 }}
               >
                 <div style={{
@@ -258,13 +310,13 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
                 transition={{ delay: index * 0.05 }}
                 whileHover={{ scale: 1.05 }}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)',
+                  background: getCardBackground(theme, 'unlocked'),
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   padding: '16px 12px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(167, 139, 250, 0.5)',
-                  boxShadow: '0 4px 15px rgba(167, 139, 250, 0.2)',
+                  border: `1px solid ${getCardBorder(theme, 'unlocked')}`,
+                  boxShadow: getCardShadow(theme, 'unlocked'),
                   textAlign: 'center',
                   cursor: 'pointer'
                 }}
@@ -317,12 +369,12 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
               <motion.div
                 key={achievement.id}
                 style={{
-                  background: 'rgba(167, 139, 250, 0.15)',
+                  background: getCardBackground(theme, 'locked'),
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   padding: '16px 12px',
                   borderRadius: '20px',
-                  border: '1px solid rgba(167, 139, 250, 0.3)',
+                  border: `1px solid ${getCardBorder(theme, 'locked')}`,
                   textAlign: 'center',
                   opacity: 0.6
                 }}
