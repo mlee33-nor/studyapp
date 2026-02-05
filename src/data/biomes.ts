@@ -75,32 +75,32 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
   },
 };
 
-// Safari Animals - Real Lottie Animation URLs
+// Safari Animals - Using working CDN URLs (original -11ed- batch URLs were broken)
 export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
-    id: 'giraffe',
-    name: 'Giraffe',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/de40ba3c-8eef-11ed-8a72-0242ac120002/pBxICCRm0w.json',
+    id: 'corgi',
+    name: 'Corgi',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json',
   },
   {
-    id: 'elephant',
-    name: 'Elephant',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/61b3f91d-9053-11ed-9e5c-d3a8aaa71d4c/vLzLgXtaMf.json',
+    id: 'leopard',
+    name: 'Leopard',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/bbbf7156-1170-11ee-a909-976822febe92/oGgjhV63HT.json',
   },
   {
-    id: 'zebra',
-    name: 'Zebra',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/e6e20e35-bfb3-11ed-b2b2-02b7a2a6ff73/mRxfcCGj4K.json',
+    id: 'safari_fox',
+    name: 'Fox',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/9c4b280c-116f-11ee-8e54-17fdd56ae6ce/nZEIpQEdUZ.json',
   },
   {
-    id: 'lion',
-    name: 'Lion',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/35ab8b26-c1be-11ed-b2b2-02b7a2a6ff73/IKCzw3xC6B.json',
+    id: 'safari_bear',
+    name: 'Bear',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7b36d6ac-3cb7-11ee-a573-175a0b884d98/yFrEbfbfVT.json',
   },
   {
-    id: 'flamingo',
-    name: 'Flamingo',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/ee17f1ec-d053-11ed-b2b2-02b7a2a6ff73/hZ0FiOz7Ng.json',
+    id: 'safari_deer',
+    name: 'Deer',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b3859ba2-1150-11ee-8f51-2bfeee9af832/5MDZDPhpLm.json',
   },
 ];
 
