@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import type { TimerMode, BiomeType } from '../types';
 import { getWeeklyMinutes } from '../utils/storage';
 import { triggerHapticFeedback } from '../utils/haptics';
-import { getAnimalsForBiome, BIOME_CONFIG } from '../data/biomes';
+import { getAnimalsForBiome, getAnimalScale, BIOME_CONFIG } from '../data/biomes';
 import Lottie from 'lottie-react';
 
 const TimerScreen: React.FC = () => {
@@ -365,17 +365,25 @@ const TimerScreen: React.FC = () => {
             className="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white/80 backdrop-blur-sm shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
           >
             <div className="text-sm text-text-secondary font-medium">Next Animal:</div>
-            <div className="w-20 h-20 pointer-events-none">
+            <div className="w-20 h-20 pointer-events-none" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {loadedAnimations[userData.selectedAnimal.id] ? (
-                <Lottie
-                  animationData={loadedAnimations[userData.selectedAnimal.id]}
-                  loop={true}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    pointerEvents: 'none',
-                  }}
-                />
+                (() => {
+                  const animalScale = getAnimalScale(userData.selectedAnimal.lottieUrl);
+                  const scaledSize = animalScale ? 80 * animalScale : 80;
+                  return (
+                    <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                      <Lottie
+                        animationData={loadedAnimations[userData.selectedAnimal.id]}
+                        loop={true}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    </div>
+                  );
+                })()
               ) : (
                 <div className="flex items-center justify-center h-full text-2xl">
                   {userData.selectedAnimal.name}

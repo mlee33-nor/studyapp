@@ -14,6 +14,7 @@ export interface BiomeAnimal {
   id: string;
   name: string;
   lottieUrl: string;
+  scale?: number; // Optional scale factor for animations that render too small
 }
 
 // Biome Definitions
@@ -230,6 +231,7 @@ export const MEADOW_ANIMALS: BiomeAnimal[] = [
     id: 'butterfly',
     name: 'Butterfly',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/eb7d7328-1177-11ee-84cc-cb9110efefbf/C6YQhXqNZO.json',
+    scale: 3.5,
   },
   {
     id: 'hedgehog',
@@ -237,9 +239,9 @@ export const MEADOW_ANIMALS: BiomeAnimal[] = [
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/217eea54-1152-11ee-80aa-bb89673ffc3b/GtbajlQ7yk.json',
   },
   {
-    id: 'ladybug',
-    name: 'Ladybug',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/86f8990e-1169-11ee-a6f1-bb14d7c44c2d/lf3mtlvPIx.json',
+    id: 'kitten',
+    name: 'Kitten',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json',
   },
   {
     id: 'unicorn',
@@ -278,6 +280,16 @@ export const getUnlockedBiomes = (level: number): BiomeType[] => {
   return Object.values(BIOME_CONFIG)
     .filter(biome => biome.unlockLevel <= level)
     .map(biome => biome.id);
+};
+
+// Get scale factor for an animal by its lottieUrl
+const ALL_BIOME_ANIMALS = () => [
+  ...SAFARI_ANIMALS, ...FOREST_ANIMALS, ...OCEAN_ANIMALS,
+  ...ARCTIC_ANIMALS, ...MOUNTAIN_ANIMALS, ...MEADOW_ANIMALS,
+];
+
+export const getAnimalScale = (lottieUrl: string): number | undefined => {
+  return ALL_BIOME_ANIMALS().find(a => a.lottieUrl === lottieUrl)?.scale;
 };
 
 // Get next biome to unlock

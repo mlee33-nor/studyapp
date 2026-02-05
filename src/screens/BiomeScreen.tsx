@@ -4,6 +4,7 @@ import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import BiomeBackgrounds from '../components/BiomeBackgrounds';
 import type { BiomeType } from '../types';
+import { getAnimalScale } from '../data/biomes';
 
 // Biome container dimensions
 const BIOME_HEIGHT = 450;
@@ -204,6 +205,10 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                       top: `${Math.random() * 40 + 30}%`,
                       width: `${ANIMAL_SIZE}px`,
                       height: `${ANIMAL_SIZE}px`,
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       zIndex: 6,
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
                       transform: 'translate(-50%, -50%)',
@@ -215,15 +220,23 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                     whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
                   >
                     {loadedAnimations[animal.id] && (
-                      <Lottie
-                        animationData={loadedAnimations[animal.id]}
-                        loop={true}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          pointerEvents: 'none'
-                        }}
-                      />
+                      (() => {
+                        const animalScale = getAnimalScale(animal.lottieUrl);
+                        const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
+                        return (
+                          <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                            <Lottie
+                              animationData={loadedAnimations[animal.id]}
+                              loop={true}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                pointerEvents: 'none',
+                              }}
+                            />
+                          </div>
+                        );
+                      })()
                     )}
                   </motion.div>
                 ))
