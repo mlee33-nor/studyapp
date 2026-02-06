@@ -109,7 +109,7 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
   {
     id: 'deer',
     name: 'Deer',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b3859ba2-1150-11ee-8f51-2bfeee9af832/5MDZDPhpLm.json',
+    lottieUrl: 'https://lottie.host/3d97c65d-4b1e-495f-bad2-da8cb5245a21/6hkZVUxz8V.json',
   },
   {
     id: 'fox',
@@ -143,7 +143,7 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
   {
     id: 'octopus',
     name: 'Octopus',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/90babb16-1150-11ee-b77d-ebc1778b3173/815709gE5u.json',
+    lottieUrl: 'https://lottie.host/48a2faaa-163a-4cb4-acd1-37e90bf015bc/762D1b9pb1.json',
   },
   {
     id: 'whale',
@@ -157,7 +157,7 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   {
     id: 'penguin',
     name: 'Penguin',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/a57156f0-1150-11ee-a172-2bd10c970bb4/BDf0YnNLA1.json',
+    lottieUrl: 'https://lottie.host/3b760413-869e-41dd-b2f1-23970e2cb311/kFKn3tyA3E.json',
   },
   {
     id: 'seal',
@@ -167,12 +167,12 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   {
     id: 'arctic_fox',
     name: 'Arctic Fox',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/45a7c3d8-1152-11ee-b338-e3b7676f76d8/4VQ09D21yX.json',
+    lottieUrl: 'https://lottie.host/5bce72d6-1650-4822-b6d6-910d93a3122e/EEMUntSED3.json',
   },
   {
     id: 'polar_bear',
     name: 'Polar Bear',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/57bf975c-1153-11ee-9894-77feb79c4931/g7QuM6qVSV.json',
+    lottieUrl: 'https://lottie.host/22db9151-bf0a-411d-b178-8a906267b28c/wP2cRjqZ4n.json',
   },
 ];
 
