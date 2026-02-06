@@ -112,6 +112,7 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
     id: 'deer',
     name: 'Deer',
     lottieUrl: 'https://lottie.host/a6cc2cb5-934a-4637-bcc9-9f0c1147e82b/3uiijvVcIR.json',
+    scale: 2,
   },
   {
     id: 'fox',
@@ -166,7 +167,7 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   {
     id: 'seal',
     name: 'Seal',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/ff3e331e-1151-11ee-be8d-8bfdaec50b6c/8dbUivXsqR.json',
+    lottieUrl: 'https://lottie.host/fa56c077-a5e1-47d8-aaba-91f76f11f542/IewZGzxcEl.json',
   },
   {
     id: 'arctic_fox',
