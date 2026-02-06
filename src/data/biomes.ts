@@ -80,7 +80,7 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
     id: 'corgi',
     name: 'Corgi',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json',
+    lottieUrl: 'https://lottie.host/fa46edd8-fe5d-4204-a103-c6c96515d942/Ct0AEttiW0.json',
   },
   {
     id: 'safari_bear',
