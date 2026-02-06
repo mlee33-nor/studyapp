@@ -106,7 +106,7 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
     id: 'squirrel',
     name: 'Squirrel',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ba0c728-117a-11ee-9eb8-cba5cf43b9a9/SeYh6q2ap3.json',
-    scale: 2,
+    scale: 1.5,
   },
   {
     id: 'deer',
@@ -117,7 +117,7 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
     id: 'fox',
     name: 'Fox',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/9c4b280c-116f-11ee-8e54-17fdd56ae6ce/nZEIpQEdUZ.json',
-    scale: 2,
+    scale: 1.5,
   },
   {
     id: 'owl',
