@@ -91,6 +91,7 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     id: 'safari_eagle',
     name: 'Eagle',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/b30d3932-1173-11ee-af4b-3731ed1db57c/KOjD1FrTn8.json',
+    scale: 2.5,
   },
   {
     id: 'parrot',
