@@ -172,7 +172,7 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   {
     id: 'arctic_fox',
     name: 'Arctic Fox',
-    lottieUrl: 'https://lottie.host/5bce72d6-1650-4822-b6d6-910d93a3122e/EEMUntSED3.json',
+    lottieUrl: 'https://lottie.host/226eb447-61c3-4d99-8a0e-d21b0e860046/ULZiA0dyma.json',
   },
   {
     id: 'polar_bear',
