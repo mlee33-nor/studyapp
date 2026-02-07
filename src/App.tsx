@@ -1077,17 +1077,18 @@ export default function App() {
     };
 
     const loadAllAnimals = async () => {
-      for (let i = 0; i < ANIMALS.length; i++) {
+      const promises = ANIMALS.map(async (animal, i) => {
         const animalKey = `selected-${activeBiome}-${i}`;
         if (!loadedAnimations[animalKey]) {
           try {
-            const data = await fetchWithRetry(ANIMALS[i].url);
+            const data = await fetchWithRetry(animal.url);
             setLoadedAnimations(prev => ({ ...prev, [animalKey]: data }));
           } catch (error) {
             console.error(`Error loading animal ${i} after retries:`, error);
           }
         }
-      }
+      });
+      await Promise.all(promises);
     };
     loadAllAnimals();
   }, [activeBiome]);

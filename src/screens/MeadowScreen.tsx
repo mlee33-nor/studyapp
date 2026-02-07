@@ -82,25 +82,31 @@ const MeadowScreen: React.FC = () => {
   // Load Lottie animations
   useEffect(() => {
     const loadAnimations = async () => {
-      const animations: Record<string, any> = {};
-      const failed: string[] = [];
-
-      for (const animal of userData.meadowAnimals) {
-        if (!loadedAnimations[animal.id] && !failedAnimations.has(animal.id)) {
+      const toLoad = userData.meadowAnimals.filter(
+        a => !loadedAnimations[a.id] && !failedAnimations.has(a.id)
+      );
+      const results = await Promise.all(
+        toLoad.map(async (animal) => {
           try {
             const response = await fetch(animal.lottieUrl);
-            if (!response.ok) {
-              failed.push(animal.id);
-              continue;
-            }
+            if (!response.ok) return { id: animal.id, failed: true };
             const data = await response.json();
-            animations[animal.id] = data;
-          } catch (error) {
-            failed.push(animal.id);
+            return { id: animal.id, data, failed: false };
+          } catch {
+            return { id: animal.id, failed: true };
           }
+        })
+      );
+
+      const animations: Record<string, any> = {};
+      const failed: string[] = [];
+      for (const result of results) {
+        if (result.failed) {
+          failed.push(result.id);
+        } else {
+          animations[result.id] = result.data;
         }
       }
-
       if (Object.keys(animations).length > 0) {
         setLoadedAnimations(prev => ({ ...prev, ...animations }));
       }
