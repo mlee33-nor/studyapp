@@ -148,7 +148,7 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
   {
     id: 'octopus',
     name: 'Octopus',
-    lottieUrl: 'https://lottie.host/48a2faaa-163a-4cb4-acd1-37e90bf015bc/762D1b9pb1.json',
+    lottieUrl: 'https://lottie.host/47b9c759-50cb-4bc5-9461-b649b5e9d4a8/Wm0OQMHHjm.json',
   },
   {
     id: 'whale',
