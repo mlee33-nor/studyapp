@@ -79,8 +79,8 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
 export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
     id: 'corgi',
-    name: 'Corgi',
-    lottieUrl: 'https://lottie.host/e11b6044-35cc-441a-872f-9dc33f4dd4fe/pgFELcgxEB.json',
+    name: 'Dog',
+    lottieUrl: 'https://lottie.host/8dfb9eb5-a82b-46e7-9f99-f219f965289f/aNZrfBaezt.json',
   },
   {
     id: 'safari_bear',
