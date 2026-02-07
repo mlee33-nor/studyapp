@@ -162,7 +162,7 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   {
     id: 'penguin',
     name: 'Penguin',
-    lottieUrl: 'https://lottie.host/b14b0e08-55ec-4d6d-b255-aeb48dc7f9e8/GJfFzRE1x3.json',
+    lottieUrl: 'https://lottie.host/d914f30d-98b8-49b6-9b30-45d41c744b26/1gVkyH9G4b.json',
   },
   {
     id: 'seal',
