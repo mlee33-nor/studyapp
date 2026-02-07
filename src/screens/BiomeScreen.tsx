@@ -44,20 +44,24 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
   // Load Lottie animations
   useEffect(() => {
     const loadAnimations = async () => {
-      const animations: Record<string, any> = {};
-
-      for (const animal of biomeAnimals) {
-        if (!loadedAnimations[animal.id]) {
+      const toLoad = biomeAnimals.filter(a => !loadedAnimations[a.id]);
+      const results = await Promise.all(
+        toLoad.map(async (animal) => {
           try {
             const response = await fetch(animal.lottieUrl);
             const data = await response.json();
-            animations[animal.id] = data;
+            return { id: animal.id, data };
           } catch (error) {
             console.error('Error loading animation:', animal.id, error);
+            return null;
           }
-        }
-      }
+        })
+      );
 
+      const animations: Record<string, any> = {};
+      for (const result of results) {
+        if (result) animations[result.id] = result.data;
+      }
       if (Object.keys(animations).length > 0) {
         setLoadedAnimations(prev => ({ ...prev, ...animations }));
       }
