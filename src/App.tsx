@@ -1060,16 +1060,31 @@ export default function App() {
 
   // Load all animal animations for selector and timer display (re-runs when biome changes)
   useEffect(() => {
+    const fetchWithRetry = async (url: string, retries = 3, delay = 1000): Promise<any> => {
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return await response.json();
+        } catch (error) {
+          if (attempt < retries) {
+            await new Promise(r => setTimeout(r, delay * (attempt + 1)));
+          } else {
+            throw error;
+          }
+        }
+      }
+    };
+
     const loadAllAnimals = async () => {
       for (let i = 0; i < ANIMALS.length; i++) {
         const animalKey = `selected-${activeBiome}-${i}`;
         if (!loadedAnimations[animalKey]) {
           try {
-            const response = await fetch(ANIMALS[i].url);
-            const data = await response.json();
+            const data = await fetchWithRetry(ANIMALS[i].url);
             setLoadedAnimations(prev => ({ ...prev, [animalKey]: data }));
           } catch (error) {
-            console.error(`Error loading animal ${i}:`, error);
+            console.error(`Error loading animal ${i} after retries:`, error);
           }
         }
       }
