@@ -111,7 +111,7 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
   {
     id: 'deer',
     name: 'Deer',
-    lottieUrl: 'https://lottie.host/b14b0e08-55ec-4d6d-b255-aeb48dc7f9e8/GJfFzRE1x3.json',
+    lottieUrl: 'https://lottie.host/de7d1371-7cff-47ab-8d27-9c0d61b8565d/scC3gKzoFf.json',
     scale: 2,
   },
   {
