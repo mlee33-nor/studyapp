@@ -80,7 +80,7 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
     id: 'corgi',
     name: 'Corgi',
-    lottieUrl: 'https://lottie.host/fa46edd8-fe5d-4204-a103-c6c96515d942/Ct0AEttiW0.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/f049f0d0-1167-11ee-a923-67dbc9989221/EQDE7OOv8Q.json',
   },
   {
     id: 'safari_bear',
@@ -96,7 +96,7 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
     id: 'parrot',
     name: 'Parrot',
-    lottieUrl: 'https://lottie.host/44a757d3-3161-4c8e-9026-bfbc684f2ee3/iFOeAFQMyt.json',
+    lottieUrl: 'https://lottie.host/31b0c1dc-5ff1-45df-b96c-fa1200c8c554/QTcdtW0332.json',
   },
 ];
 
@@ -167,7 +167,7 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   {
     id: 'seal',
     name: 'Seal',
-    lottieUrl: 'https://lottie.host/fa56c077-a5e1-47d8-aaba-91f76f11f542/IewZGzxcEl.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/ff3e331e-1151-11ee-be8d-8bfdaec50b6c/8dbUivXsqR.json',
   },
   {
     id: 'arctic_fox',
