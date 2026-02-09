@@ -75,30 +75,30 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
   },
 };
 
-// Safari Animals - Animated African savanna animals
+// Safari Animals - Animated African savanna animals (verified working URLs)
 export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
     id: 'giraffe',
     name: 'Giraffe',
-    lottieUrl: 'https://lottie.host/e24cd515-3729-4b94-ae54-f58ff2cf75f7/MLRR53eC4x.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/8942ad9c-1189-11ee-8b52-3f0a09f0ff93/IiSumWkAzb.json',
     scale: 2,
   },
   {
     id: 'lion',
     name: 'Lion',
-    lottieUrl: 'https://lottie.host/b8c3a9e9-d0e5-4e95-94eb-f4d8c28f8f3d/zfkz3qmMBB.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/e0d520ae-1165-11ee-8596-1bcd321f9665/6gtyvPUYur.json',
     scale: 1.8,
   },
   {
     id: 'elephant',
     name: 'Elephant',
-    lottieUrl: 'https://lottie.host/3e7b88fa-1c5e-4b8a-bb55-5cae57a3cb63/HoNPYAe7qz.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ad2abee-8ab1-11ee-8fae-d7b22e00dcc5/Q3wSZsw2nW.json',
     scale: 2,
   },
   {
     id: 'zebra',
     name: 'Zebra',
-    lottieUrl: 'https://lottie.host/a9f1ee94-e2d2-4e95-b3e5-8c8e3f4d9c6a/xKLM2nBvRp.json',
+    lottieUrl: 'https://assets-v2.lottiefiles.com/a/a558ee9c-1161-11ee-944c-57f5f40b44e0/OUngvrr96t.json',
     scale: 1.8,
   },
 ];
