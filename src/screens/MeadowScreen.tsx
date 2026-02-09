@@ -1,10 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
-import type { MeadowAnimal, BiomeType } from '../types';
+import type { MeadowAnimal, BiomeType, CollectedAnimal } from '../types';
 import { BIOME_CONFIG, getUnlockedBiomes, getAnimalScale } from '../data/biomes';
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  isWithinInterval,
+  addWeeks,
+  subWeeks,
+  addMonths,
+  subMonths,
+  addYears,
+  subYears,
+  isSameWeek,
+  isSameMonth,
+} from 'date-fns';
 import meadowBg from '../assets/biomes/meadows.jpg';
 import safariBg from '../assets/biomes/safari.jpg';
 import forestBg from '../assets/biomes/forest.jpg';
@@ -24,6 +42,39 @@ const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20; // Bottom boundary with padding
 
 // Safe horizontal bounds
 const MIN_X = 10;
+
+type SanctuaryViewMode = 'today' | 'weekly' | 'monthly' | 'yearly';
+
+// Timeline grid config — scales down as time range grows
+const TIMELINE_CONFIG = {
+  weekly: {
+    gridColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+    lottieSize: 70,
+    gap: '12px',
+    padding: '12px',
+    borderRadius: '20px',
+    showName: true,
+    fontSize: '12px',
+  },
+  monthly: {
+    gridColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
+    lottieSize: 44,
+    gap: '8px',
+    padding: '8px',
+    borderRadius: '14px',
+    showName: true,
+    fontSize: '10px',
+  },
+  yearly: {
+    gridColumns: 'repeat(auto-fill, minmax(38px, 1fr))',
+    lottieSize: 30,
+    gap: '5px',
+    padding: '5px',
+    borderRadius: '10px',
+    showName: false,
+    fontSize: '0px',
+  },
+};
 
 // Biome background components
 const biomeBackgroundStyle = (bgImage: string): React.CSSProperties => ({
@@ -55,6 +106,10 @@ const MeadowScreen: React.FC = () => {
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
   const [allUnlocked, setAllUnlocked] = useState<boolean>(false);
 
+  // Timeline state
+  const [viewMode, setViewMode] = useState<SanctuaryViewMode>('today');
+  const [currentDate, setCurrentDate] = useState(new Date());
+
   // Always refresh data from storage when the component mounts (e.g. tab switch)
   useEffect(() => {
     refreshData();
@@ -67,9 +122,58 @@ const MeadowScreen: React.FC = () => {
   const biomeAnimals = userData.meadowAnimals.filter(a => a.biome === activeBiome);
   const BiomeBackground = BiomeBackgrounds[activeBiome];
 
+  // Timeline: filter permanentCollection by date range and active biome
+  const timelineAnimals = useMemo(() => {
+    if (viewMode === 'today') return [];
+
+    let start: Date;
+    let end: Date;
+
+    if (viewMode === 'weekly') {
+      start = startOfWeek(currentDate);
+      end = endOfWeek(currentDate);
+    } else if (viewMode === 'monthly') {
+      start = startOfMonth(currentDate);
+      end = endOfMonth(currentDate);
+    } else {
+      start = startOfYear(currentDate);
+      end = endOfYear(currentDate);
+    }
+
+    const collection = userData.permanentCollection || [];
+    return collection.filter((animal: CollectedAnimal) => {
+      const collectedDate = new Date(animal.collectedAt);
+      const inRange = isWithinInterval(collectedDate, { start, end });
+      const matchesBiome = animal.biome === activeBiome;
+      return inRange && matchesBiome;
+    });
+  }, [viewMode, currentDate, userData.permanentCollection, activeBiome]);
+
+  // Collect unique lottie URLs for timeline animals
+  const timelineUrls = useMemo(() => {
+    const urls = new Set<string>();
+    for (const animal of timelineAnimals) {
+      if (animal.lottieUrl) urls.add(animal.lottieUrl);
+    }
+    return Array.from(urls);
+  }, [timelineAnimals]);
+
+  // Load timeline Lottie animations (keyed by URL)
+  const [timelineLoadedAnimations, setTimelineLoadedAnimations] = useState<Record<string, any>>({});
+  useEffect(() => {
+    const urlsToLoad = timelineUrls.filter(url => !timelineLoadedAnimations[url]);
+    for (const url of urlsToLoad) {
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          setTimelineLoadedAnimations(prev => ({ ...prev, [url]: data }));
+        })
+        .catch(() => {});
+    }
+  }, [timelineUrls]);
+
   const handleUnlockAllBiomes = () => {
     setAllUnlocked(true);
-    // Also persist to storage so it survives tab switches
     const currentData = getUserData();
     saveUserData({
       ...currentData,
@@ -79,7 +183,7 @@ const MeadowScreen: React.FC = () => {
     refreshData();
   };
 
-  // Load Lottie animations
+  // Load Lottie animations for today's diorama
   useEffect(() => {
     const loadAnimations = async () => {
       const toLoad = userData.meadowAnimals.filter(
@@ -136,11 +240,9 @@ const MeadowScreen: React.FC = () => {
 
   // Check if position is in a valid zone (not in sky, not too close to another animal)
   const isValidPosition = (animalId: string, newX: number, newY: number): boolean => {
-    // Sky threshold - animals must be below this line
     const SKY_THRESHOLD = MIN_Y;
     if (newY < SKY_THRESHOLD) return false;
 
-    // Collision threshold - must be at least this far from other animals
     const COLLISION_THRESHOLD = 45;
     for (const animal of userData.meadowAnimals) {
       if (animal.id === animalId) continue;
@@ -153,33 +255,27 @@ const MeadowScreen: React.FC = () => {
     return true;
   };
 
-  // Handle drag end - place exactly where user drops, allow close positioning
+  // Handle drag end
   const handleDragEnd = (animalId: string, _event: any, info: any) => {
     const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
-    if (!currentAnimal) {
-      return;
-    }
+    if (!currentAnimal) return;
 
-    // Calculate desired position based on drag offset
     let newX = currentAnimal.x + info.offset.x;
     let newY = currentAnimal.y + info.offset.y;
 
-    // Apply boundary constraints first
     const constrained = constrainPosition(newX, newY);
     newX = constrained.x;
     newY = constrained.y;
 
-    // Check if position is valid (not in sky, not directly on another animal)
     if (!isValidPosition(animalId, newX, newY)) {
-      // Try nearby positions in priority order
       const attempts = [
-        { dx: 0, dy: 0 },      // Try exact position first
-        { dx: 30, dy: 0 },     // Try slightly right
-        { dx: -30, dy: 0 },    // Try slightly left
-        { dx: 0, dy: 30 },     // Try down
-        { dx: 0, dy: -20 },    // Try up slightly
-        { dx: 30, dy: 30 },    // Diagonal
-        { dx: -30, dy: 30 },   // Diagonal
+        { dx: 0, dy: 0 },
+        { dx: 30, dy: 0 },
+        { dx: -30, dy: 0 },
+        { dx: 0, dy: 30 },
+        { dx: 0, dy: -20 },
+        { dx: 30, dy: 30 },
+        { dx: -30, dy: 30 },
       ];
 
       let foundValid = false;
@@ -196,14 +292,12 @@ const MeadowScreen: React.FC = () => {
         }
       }
 
-      // If still no valid position, keep original position
       if (!foundValid) {
         newX = currentAnimal.x;
         newY = currentAnimal.y;
       }
     }
 
-    // Update position and refresh
     updateAnimalPosition(animalId, newX, newY);
     refreshData();
   };
@@ -211,26 +305,23 @@ const MeadowScreen: React.FC = () => {
   // Double-tap detection for flipping animals
   const lastTapRef = useRef<Record<string, number>>({});
 
-  // Toggle flip on double tap
   const handleAnimalTap = (animalId: string) => {
     const now = Date.now();
     const lastTap = lastTapRef.current[animalId] || 0;
 
     if (now - lastTap < 300) {
-      // Double tap detected — flip the animal
       const currentData = getUserData();
       const updatedAnimals = currentData.meadowAnimals.map(animal =>
         animal.id === animalId ? { ...animal, flipped: !animal.flipped } : animal
       );
       saveUserData({ ...currentData, meadowAnimals: updatedAnimals });
       refreshData();
-      lastTapRef.current[animalId] = 0; // Reset to avoid triple-tap
+      lastTapRef.current[animalId] = 0;
     } else {
       lastTapRef.current[animalId] = now;
     }
   };
 
-  // Calculate z-index based on y position (animals further back have lower z-index)
   const getZIndex = (y: number) => Math.floor(y / 10) + 5;
 
   const handleBiomeSwitch = (biomeId: BiomeType) => {
@@ -238,6 +329,40 @@ const MeadowScreen: React.FC = () => {
     const currentData = getUserData();
     saveUserData({ ...currentData, activeBiome: biomeId });
   };
+
+  // Timeline navigation
+  const handlePrevious = () => {
+    if (viewMode === 'weekly') setCurrentDate(prev => subWeeks(prev, 1));
+    else if (viewMode === 'monthly') setCurrentDate(prev => subMonths(prev, 1));
+    else setCurrentDate(prev => subYears(prev, 1));
+  };
+
+  const handleNext = () => {
+    if (viewMode === 'weekly') setCurrentDate(prev => addWeeks(prev, 1));
+    else if (viewMode === 'monthly') setCurrentDate(prev => addMonths(prev, 1));
+    else setCurrentDate(prev => addYears(prev, 1));
+  };
+
+  const handleToday = () => setCurrentDate(new Date());
+
+  // Period display text
+  const getDisplayText = () => {
+    if (viewMode === 'weekly') {
+      const ws = startOfWeek(currentDate);
+      const we = endOfWeek(currentDate);
+      return `${format(ws, 'MMM d')} – ${format(we, 'MMM d, yyyy')}`;
+    }
+    if (viewMode === 'monthly') return format(currentDate, 'MMMM yyyy');
+    return format(currentDate, 'yyyy');
+  };
+
+  const isCurrentPeriod = () => {
+    if (viewMode === 'weekly') return isSameWeek(currentDate, new Date());
+    if (viewMode === 'monthly') return isSameMonth(currentDate, new Date());
+    return currentDate.getFullYear() === new Date().getFullYear();
+  };
+
+  const periodLabel = viewMode === 'weekly' ? 'this week' : viewMode === 'monthly' ? 'this month' : 'this year';
 
   return (
     <div className="min-h-screen pb-24 pt-8 px-6" style={{ background: 'linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%)' }}>
@@ -321,166 +446,449 @@ const MeadowScreen: React.FC = () => {
           })}
         </div>
 
-        {/* Stats Card */}
+        {/* View Mode Toggle: Today / Weekly / Monthly / Yearly */}
+        <div style={{
+          display: 'flex',
+          gap: '6px',
+          marginBottom: '16px',
+          padding: '5px',
+          background: 'rgba(255, 255, 255, 0.6)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+        }}>
+          {(['today', 'weekly', 'monthly', 'yearly'] as SanctuaryViewMode[]).map(mode => (
+            <motion.button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                flex: 1,
+                padding: '10px 4px',
+                borderRadius: '12px',
+                border: 'none',
+                background: viewMode === mode
+                  ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(244, 114, 182, 0.2) 100%)'
+                  : 'transparent',
+                color: viewMode === mode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(100, 116, 139, 0.6)',
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textTransform: 'capitalize',
+                fontFamily: "'Quicksand', sans-serif"
+              }}
+            >
+              {mode}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Time Navigator (only for non-today modes) */}
+        {viewMode !== 'today' && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px',
+              padding: '10px 14px',
+              background: 'rgba(255, 255, 255, 0.6)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
+            }}
+          >
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={handlePrevious}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'rgba(51, 65, 85, 0.8)',
+                fontSize: '20px',
+              }}
+            >
+              ‹
+            </motion.button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                color: 'rgba(15, 23, 42, 0.9)',
+                fontFamily: "'Quicksand', sans-serif"
+              }}>
+                {getDisplayText()}
+              </span>
+              {!isCurrentPeriod() && (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleToday}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(244, 114, 182, 0.2) 100%)',
+                    border: 'none',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    color: 'rgba(15, 23, 42, 0.9)',
+                    fontFamily: "'Quicksand', sans-serif"
+                  }}
+                >
+                  Today
+                </motion.button>
+              )}
+            </div>
+
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={handleNext}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'rgba(51, 65, 85, 0.8)',
+                fontSize: '20px',
+              }}
+            >
+              ›
+            </motion.button>
+          </motion.div>
+        )}
+
+        {/* Stats Card — context-aware */}
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 mb-6 shadow-soft">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Today in {BIOME_CONFIG[activeBiome].name}</p>
+              <p className="text-sm text-text-secondary">
+                {viewMode === 'today'
+                  ? `Today in ${BIOME_CONFIG[activeBiome].name}`
+                  : `${BIOME_CONFIG[activeBiome].name} — ${periodLabel}`
+                }
+              </p>
               <p className="text-2xl font-bold text-text-primary">
-                {biomeAnimals.length} Animals
+                {viewMode === 'today'
+                  ? `${biomeAnimals.length} Animals`
+                  : `${timelineAnimals.length} Animals`
+                }
               </p>
             </div>
             <div className="text-4xl">{BIOME_CONFIG[activeBiome].emoji}</div>
           </div>
         </div>
 
-        {/* 3D Biome Diorama Container */}
-        <div style={{ perspective: '1200px', marginBottom: '20px', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
-          <div
-            style={{
-              padding: '0',
-              overflow: 'hidden',
-              borderRadius: '28px',
-              transform: 'rotateX(8deg)',
-              transformStyle: 'preserve-3d',
-            }}
-          >
-            <div
-              ref={meadowRef}
-              style={{
-                position: 'relative',
-                height: `${MEADOW_HEIGHT}px`,
-                borderRadius: '28px',
-                overflow: 'hidden',
-                boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)'
-              }}
+        <AnimatePresence mode="wait">
+          {viewMode === 'today' ? (
+            /* ===== TODAY: Interactive 3D Diorama ===== */
+            <motion.div
+              key="today-diorama"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
             >
-              <BiomeBackground />
+              <div style={{ perspective: '1200px', marginBottom: '20px', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
+                <div
+                  style={{
+                    padding: '0',
+                    overflow: 'hidden',
+                    borderRadius: '28px',
+                    transform: 'rotateX(8deg)',
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+                  <div
+                    ref={meadowRef}
+                    style={{
+                      position: 'relative',
+                      height: `${MEADOW_HEIGHT}px`,
+                      borderRadius: '28px',
+                      overflow: 'hidden',
+                      boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <BiomeBackground />
 
-              {/* Animals */}
-              {biomeAnimals.length === 0 ? (
+                    {biomeAnimals.length === 0 ? (
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        zIndex: 10
+                      }}>
+                        <div style={{ fontSize: '64px', marginBottom: '16px' }}>{BIOME_CONFIG[activeBiome].emoji}</div>
+                        <div style={{
+                          fontSize: '16px',
+                          color: 'rgba(255,255,255,0.95)',
+                          fontFamily: "'Quicksand', sans-serif",
+                          fontWeight: 600,
+                          textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}>
+                          Explore {BIOME_CONFIG[activeBiome].name}...
+                        </div>
+                        <div style={{
+                          fontSize: '13px',
+                          color: 'rgba(255,255,255,0.8)',
+                          marginTop: '8px',
+                          fontFamily: "'Quicksand', sans-serif",
+                          textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                        }}>
+                          Complete study sessions to discover animals here!
+                        </div>
+                      </div>
+                    ) : (
+                      biomeAnimals.map((animal: MeadowAnimal) => {
+                        const hasLottie = !!loadedAnimations[animal.id];
+                        const size = hasLottie ? ANIMAL_SIZE : EMOJI_SIZE;
+                        return (
+                        <motion.div
+                          key={animal.id}
+                          drag
+                          dragMomentum={false}
+                          dragElastic={0}
+                          dragConstraints={{
+                            left: MIN_X,
+                            right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - size - 10,
+                            top: MIN_Y,
+                            bottom: MAX_Y,
+                          }}
+                          onDragStart={() => {}}
+                          onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
+                          onTap={() => handleAnimalTap(animal.id)}
+                          animate={{ x: animal.x, y: animal.y }}
+                          transition={{ duration: 0.1, ease: 'easeOut' }}
+                          className="absolute cursor-grab active:cursor-grabbing"
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: 0,
+                            width: `${size}px`,
+                            height: `${size}px`,
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: getZIndex(animal.y),
+                            transform: animal.flipped ? 'scaleX(-1)' : 'scaleX(1)',
+                            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                            x: animal.x,
+                            y: animal.y
+                          }}
+                          whileHover={{
+                            scale: 1.05,
+                            filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))'
+                          }}
+                          whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
+                        >
+                          {loadedAnimations[animal.id] ? (
+                            (() => {
+                              const animalScale = getAnimalScale(animal.lottieUrl);
+                              const scaledSize = animalScale ? size * animalScale : size;
+                              return (
+                                <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                                  <Lottie
+                                    animationData={loadedAnimations[animal.id]}
+                                    loop={true}
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      pointerEvents: 'none',
+                                    }}
+                                  />
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <div style={{
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '10px',
+                              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                              pointerEvents: 'none',
+                              color: '#666',
+                              textAlign: 'center',
+                              fontWeight: 600
+                            }}>
+                              {animal.name}
+                            </div>
+                          )}
+                        </motion.div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            /* ===== TIMELINE: Scaled Grid of All Animals ===== */
+            <motion.div
+              key={`timeline-${viewMode}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              style={{ marginBottom: '20px' }}
+            >
+              {timelineAnimals.length === 0 ? (
                 <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(25px)',
+                  borderRadius: '28px',
+                  padding: '50px 24px',
                   textAlign: 'center',
-                  zIndex: 10
+                  border: '1px solid rgba(255, 255, 255, 0.5)',
+                  boxShadow: '0 8px 32px rgba(147, 197, 253, 0.15)',
                 }}>
-                  <div style={{ fontSize: '64px', marginBottom: '16px' }}>{BIOME_CONFIG[activeBiome].emoji}</div>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+                    {BIOME_CONFIG[activeBiome].emoji}
+                  </div>
                   <div style={{
                     fontSize: '16px',
-                    color: 'rgba(255,255,255,0.95)',
-                    fontFamily: "'Quicksand', sans-serif",
                     fontWeight: 600,
-                    textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                    color: 'rgba(15, 23, 42, 0.9)',
+                    marginBottom: '8px',
+                    fontFamily: "'Quicksand', sans-serif"
                   }}>
-                    Explore {BIOME_CONFIG[activeBiome].name}...
+                    No animals collected {periodLabel}
                   </div>
                   <div style={{
                     fontSize: '13px',
-                    color: 'rgba(255,255,255,0.8)',
-                    marginTop: '8px',
-                    fontFamily: "'Quicksand', sans-serif",
-                    textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                    color: 'rgba(100, 116, 139, 0.7)',
+                    fontFamily: "'Quicksand', sans-serif"
                   }}>
-                    Complete study sessions to discover animals here!
+                    Start a study session to fill your sanctuary!
                   </div>
                 </div>
               ) : (
-                biomeAnimals.map((animal: MeadowAnimal) => {
-                  const hasLottie = !!loadedAnimations[animal.id];
-                  const size = hasLottie ? ANIMAL_SIZE : EMOJI_SIZE;
-                  return (
-                  <motion.div
-                    key={animal.id}
-                    drag
-                    dragMomentum={false}
-                    dragElastic={0}
-                    dragConstraints={{
-                      left: MIN_X,
-                      right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - size - 10,
-                      top: MIN_Y,
-                      bottom: MAX_Y,
-                    }}
-                    onDragStart={() => {}}
-                    onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
-                    onTap={() => handleAnimalTap(animal.id)}
-                    animate={{ x: animal.x, y: animal.y }}
-                    transition={{ duration: 0.1, ease: 'easeOut' }}
-                    className="absolute cursor-grab active:cursor-grabbing"
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: 0,
-                      width: `${size}px`,
-                      height: `${size}px`,
-                      overflow: 'hidden',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: getZIndex(animal.y),
-                      transform: animal.flipped ? 'scaleX(-1)' : 'scaleX(1)',
-                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                      x: animal.x,
-                      y: animal.y
-                    }}
-                    whileHover={{
-                      scale: 1.05,
-                      filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))'
-                    }}
-                    whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
-                  >
-                    {loadedAnimations[animal.id] ? (
-                      (() => {
-                        const animalScale = getAnimalScale(animal.lottieUrl);
-                        const scaledSize = animalScale ? size * animalScale : size;
-                        return (
-                          <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
-                            <Lottie
-                              animationData={loadedAnimations[animal.id]}
-                              loop={true}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                pointerEvents: 'none',
-                              }}
-                            />
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.5)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: '28px',
+                  padding: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  boxShadow: '0 8px 32px rgba(147, 197, 253, 0.12)',
+                }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gridColumns,
+                    gap: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gap,
+                  }}>
+                    {timelineAnimals.map((animal: CollectedAnimal, index: number) => {
+                      const cfg = TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG];
+                      const animalScale = getAnimalScale(animal.lottieUrl);
+                      const lottieSize = cfg.lottieSize;
+                      const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
+
+                      return (
+                        <motion.div
+                          key={`${animal.id}-${index}`}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: Math.min(index * 0.02, 0.8) }}
+                          whileHover={{ scale: 1.1 }}
+                          title={animal.name}
+                          style={{
+                            background: 'rgba(255, 255, 255, 0.6)',
+                            borderRadius: cfg.borderRadius,
+                            padding: cfg.padding,
+                            border: '1px solid rgba(255, 255, 255, 0.5)',
+                            boxShadow: '0 2px 8px rgba(147, 197, 253, 0.1)',
+                            textAlign: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: cfg.showName ? '4px' : '0px',
+                          }}
+                        >
+                          <div style={{
+                            width: `${lottieSize}px`,
+                            height: `${lottieSize}px`,
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: viewMode === 'yearly' ? '6px' : '12px',
+                          }}>
+                            {timelineLoadedAnimations[animal.lottieUrl] ? (
+                              <div style={{
+                                width: `${innerSize}px`,
+                                height: `${innerSize}px`,
+                                flexShrink: 0,
+                              }}>
+                                <Lottie
+                                  animationData={timelineLoadedAnimations[animal.lottieUrl]}
+                                  loop={true}
+                                  style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                                />
+                              </div>
+                            ) : (
+                              <div style={{
+                                width: `${lottieSize * 0.5}px`,
+                                height: `${lottieSize * 0.5}px`,
+                                borderRadius: '50%',
+                                background: 'rgba(167, 139, 250, 0.15)',
+                              }} />
+                            )}
                           </div>
-                        );
-                      })()
-                    ) : (
-                      <div style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '10px',
-                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                        pointerEvents: 'none',
-                        color: '#666',
-                        textAlign: 'center',
-                        fontWeight: 600
-                      }}>
-                        {animal.name}
-                      </div>
-                    )}
-                  </motion.div>
-                  );
-                })
+
+                          {cfg.showName && (
+                            <div style={{
+                              fontSize: cfg.fontSize,
+                              fontWeight: 600,
+                              color: 'rgba(15, 23, 42, 0.85)',
+                              fontFamily: "'Quicksand', sans-serif",
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              maxWidth: '100%',
+                            }}>
+                              {animal.name}
+                            </div>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Instructions */}
         <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
           <p className="text-sm text-text-secondary text-center">
-            🌍 Switch biomes • 🐾 Drag animals • 👆 Double-tap to flip
+            {viewMode === 'today'
+              ? '🌍 Switch biomes • 🐾 Drag animals • 👆 Double-tap to flip'
+              : '🌍 Switch biomes • ‹ › Navigate time • See your full collection'
+            }
           </p>
           <p className="text-xs text-text-secondary text-center mt-2">
-            Collect animals daily • Unlock biomes by leveling up • Your collection resets at midnight
+            {viewMode === 'today'
+              ? 'Collect animals daily • Unlock biomes by leveling up • Your collection resets at midnight'
+              : `Viewing all ${BIOME_CONFIG[activeBiome].name} animals collected ${periodLabel}`
+            }
           </p>
         </div>
       </div>

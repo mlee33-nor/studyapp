@@ -339,17 +339,33 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
     ? dateFilteredCollection
     : dateFilteredCollection.filter(animal => animal.biome === selectedBiome);
 
-  // Each animal rendered individually (not grouped) for sanctuary effect
-  const animalsToRender = filteredCollection;
+  // Group animals by name+biome with count (e.g. Bunny x5)
+  const groupedAnimals = useMemo(() => {
+    const groups: Record<string, { name: string; biome: string; lottieUrl: string; count: number }> = {};
+    for (const animal of filteredCollection) {
+      const key = `${animal.name}-${animal.biome}`;
+      if (groups[key]) {
+        groups[key].count += 1;
+      } else {
+        groups[key] = {
+          name: animal.name,
+          biome: animal.biome,
+          lottieUrl: animal.lottieUrl,
+          count: 1,
+        };
+      }
+    }
+    return Object.values(groups);
+  }, [filteredCollection]);
 
   // Collect unique lottie URLs to load
   const uniqueUrls = useMemo(() => {
     const urls = new Set<string>();
-    for (const animal of animalsToRender) {
+    for (const animal of groupedAnimals) {
       if (animal.lottieUrl) urls.add(animal.lottieUrl);
     }
     return Array.from(urls);
-  }, [animalsToRender]);
+  }, [groupedAnimals]);
 
   // Load Lottie animations
   useEffect(() => {
@@ -518,8 +534,8 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         })}
       </div>
 
-      {/* Sanctuary Grid */}
-      {animalsToRender.length === 0 ? (
+      {/* Gallery Grid */}
+      {groupedAnimals.length === 0 ? (
         <div style={{
           background: getCardBackground(theme, 'primary'),
           backdropFilter: 'blur(25px)',
@@ -562,19 +578,19 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
             gap: config.gap,
           }}
         >
-          {animalsToRender.map((animal, index) => {
+          {groupedAnimals.map((animal, index) => {
             const animalScale = getAnimalScale(animal.lottieUrl);
             const lottieSize = config.lottieSize;
             const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
 
             return (
               <motion.div
-                key={`${animal.id}-${index}`}
+                key={`${animal.name}-${animal.biome}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: Math.min(index * 0.02, 1) }}
+                transition={{ delay: Math.min(index * 0.03, 1) }}
                 whileHover={{ scale: 1.08 }}
-                title={animal.name}
+                title={`${animal.name}${animal.count > 1 ? ` x${animal.count}` : ''}`}
                 style={{
                   background: getCardBackground(theme, 'primary'),
                   backdropFilter: 'blur(25px)',
@@ -599,6 +615,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderRadius: viewMode === 'yearly' ? '8px' : '16px',
+                  position: 'relative',
                 }}>
                   {loadedAnimations[animal.lottieUrl] ? (
                     <div style={{
@@ -622,7 +639,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                   )}
                 </div>
 
-                {/* Animal Name (hidden in yearly view) */}
+                {/* Animal Name + Count */}
                 {config.showName && (
                   <div style={{
                     fontSize: config.fontSize,
@@ -635,6 +652,27 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                     maxWidth: '100%',
                   }}>
                     {animal.name}
+                    {animal.count > 1 && (
+                      <span style={{
+                        color: getTextColor(theme, 'secondary'),
+                        fontWeight: 500,
+                        marginLeft: '3px',
+                      }}>
+                        x{animal.count}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Count badge for yearly view (no name shown) */}
+                {!config.showName && animal.count > 1 && (
+                  <div style={{
+                    fontSize: '9px',
+                    fontWeight: 700,
+                    color: getTextColor(theme, 'secondary'),
+                    fontFamily: "'Quicksand', sans-serif",
+                  }}>
+                    x{animal.count}
                   </div>
                 )}
               </motion.div>
