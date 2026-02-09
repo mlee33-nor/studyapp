@@ -1551,7 +1551,8 @@ export default function App() {
           alignItems: 'center',
           justifyContent: 'flex-start',
           width: '100%',
-          padding: '0 1.25rem'
+          padding: '0 1.25rem',
+          paddingBottom: '80px',
         }}>
           {/* Start/Stop Buttons */}
           <div style={{
@@ -1560,7 +1561,6 @@ export default function App() {
             gap: '10px',
             maxWidth: '280px',
             width: '100%',
-            marginBottom: '3rem'
           }}>
             {!isRunning ? (
               <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
