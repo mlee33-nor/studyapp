@@ -75,29 +75,31 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
   },
 };
 
-// Safari Animals - Using working CDN URLs (original -11ed- batch URLs were broken)
+// Safari Animals - Animated African savanna animals
 export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
-    id: 'corgi',
-    name: 'Dog',
-    lottieUrl: 'https://lottie.host/8dfb9eb5-a82b-46e7-9f99-f219f965289f/aNZrfBaezt.json',
+    id: 'giraffe',
+    name: 'Giraffe',
+    lottieUrl: 'https://lottie.host/e24cd515-3729-4b94-ae54-f58ff2cf75f7/MLRR53eC4x.json',
     scale: 2,
   },
   {
-    id: 'safari_bear',
-    name: 'Bear',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7b36d6ac-3cb7-11ee-a573-175a0b884d98/yFrEbfbfVT.json',
+    id: 'lion',
+    name: 'Lion',
+    lottieUrl: 'https://lottie.host/b8c3a9e9-d0e5-4e95-94eb-f4d8c28f8f3d/zfkz3qmMBB.json',
+    scale: 1.8,
   },
   {
-    id: 'safari_eagle',
-    name: 'Eagle',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/b30d3932-1173-11ee-af4b-3731ed1db57c/KOjD1FrTn8.json',
-    scale: 2.5,
+    id: 'elephant',
+    name: 'Elephant',
+    lottieUrl: 'https://lottie.host/3e7b88fa-1c5e-4b8a-bb55-5cae57a3cb63/HoNPYAe7qz.json',
+    scale: 2,
   },
   {
-    id: 'parrot',
-    name: 'Parrot',
-    lottieUrl: 'https://lottie.host/619c3872-655c-4239-9a6c-085b60bffee8/YqbmX6npok.json',
+    id: 'zebra',
+    name: 'Zebra',
+    lottieUrl: 'https://lottie.host/a9f1ee94-e2d2-4e95-b3e5-8c8e3f4d9c6a/xKLM2nBvRp.json',
+    scale: 1.8,
   },
 ];
 
@@ -225,9 +227,10 @@ export const MEADOW_ANIMALS: BiomeAnimal[] = [
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json',
   },
   {
-    id: 'unicorn',
-    name: 'Unicorn',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/331cb362-1171-11ee-a9e7-5344551976a1/2vP342VdfO.json',
+    id: 'dog',
+    name: 'Dog',
+    lottieUrl: 'https://lottie.host/8dfb9eb5-a82b-46e7-9f99-f219f965289f/aNZrfBaezt.json',
+    scale: 2,
   },
 ];
 

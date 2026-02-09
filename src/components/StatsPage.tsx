@@ -315,7 +315,6 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         <CategoryHabitCards
           categoryStats={categoryStats}
           colors={colors}
-          onCategoryClick={handleCategoryClick}
         />
       )}
     </div>
@@ -1065,8 +1064,7 @@ const MonthlyCalendarHeatmap: React.FC<{
 const CategoryHabitCards: React.FC<{
   categoryStats: CategoryStatsType[];
   colors: ReturnType<typeof getThemeColors>;
-  onCategoryClick: (category: CategoryStatsType) => void;
-}> = ({ categoryStats, colors, onCategoryClick }) => {
+}> = ({ categoryStats, colors }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1090,7 +1088,6 @@ const CategoryHabitCards: React.FC<{
             category={cat}
             delay={index * 0.05}
             colors={colors}
-            onClick={() => onCategoryClick(cat)}
           />
         ))}
       </div>
@@ -1103,8 +1100,7 @@ const CategoryCard: React.FC<{
   category: CategoryStatsType;
   delay: number;
   colors: ReturnType<typeof getThemeColors>;
-  onClick: () => void;
-}> = ({ category, delay, colors, onClick }) => {
+}> = ({ category, delay, colors }) => {
   const hours = Math.floor(category.totalMinutes / 60);
   const minutes = category.totalMinutes % 60;
 
@@ -1113,17 +1109,13 @@ const CategoryCard: React.FC<{
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ ...SOFT_SPRING, delay }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
       style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `2px solid ${category.themeColor}40`,
-        padding: '20px',
-        cursor: 'pointer'
+        padding: '20px'
       }}
     >
       {/* Header */}
