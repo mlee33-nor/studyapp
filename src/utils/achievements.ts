@@ -8,16 +8,17 @@ export interface Achievement {
   unlocked: boolean;
   progress: number; // 0-100
   requirement: number;
-  category: 'sessions' | 'streak' | 'collection' | 'level' | 'special';
+  category: 'sessions' | 'streak' | 'collection' | 'level' | 'time' | 'perfect' | 'special';
 }
 
 // Achievement Definitions
 export const ACHIEVEMENTS: Achievement[] = [
+  // Session Achievements
   {
     id: 'first_session',
-    name: 'Getting Started',
+    name: 'First Step',
     description: 'Complete your first study session',
-    emoji: '📚',
+    emoji: '🎯',
     unlocked: false,
     progress: 0,
     requirement: 1,
@@ -25,9 +26,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'ten_sessions',
-    name: 'Dedicated Studier',
+    name: 'Building Momentum',
     description: 'Complete 10 study sessions',
-    emoji: '📖',
+    emoji: '📚',
     unlocked: false,
     progress: 0,
     requirement: 10,
@@ -35,9 +36,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'fifty_sessions',
-    name: 'Study Warrior',
+    name: 'Dedicated Learner',
     description: 'Complete 50 study sessions',
-    emoji: '⚔️',
+    emoji: '🏆',
     unlocked: false,
     progress: 0,
     requirement: 50,
@@ -45,7 +46,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'hundred_sessions',
-    name: 'Century Master',
+    name: 'Study Veteran',
     description: 'Complete 100 study sessions',
     emoji: '💯',
     unlocked: false,
@@ -54,10 +55,32 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'sessions',
   },
   {
+    id: 'two_fifty_sessions',
+    name: 'Academic Powerhouse',
+    description: 'Complete 250 study sessions',
+    emoji: '⚡',
+    unlocked: false,
+    progress: 0,
+    requirement: 250,
+    category: 'sessions',
+  },
+
+  // Streak Achievements
+  {
+    id: 'three_day_streak',
+    name: 'Starting Strong',
+    description: 'Study for 3 days in a row',
+    emoji: '🔥',
+    unlocked: false,
+    progress: 0,
+    requirement: 3,
+    category: 'streak',
+  },
+  {
     id: 'seven_day_streak',
     name: 'Week Warrior',
     description: 'Maintain a 7-day study streak',
-    emoji: '🔥',
+    emoji: '📅',
     unlocked: false,
     progress: 0,
     requirement: 7,
@@ -65,8 +88,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'thirty_day_streak',
-    name: 'Month Master',
-    description: 'Maintain a 30-day study streak',
+    name: 'Monthly Marathon',
+    description: 'Study every day for a month',
     emoji: '🌟',
     unlocked: false,
     progress: 0,
@@ -74,9 +97,95 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'streak',
   },
   {
+    id: 'sixty_day_streak',
+    name: 'Unstoppable Force',
+    description: 'Maintain a 60-day study streak',
+    emoji: '💪',
+    unlocked: false,
+    progress: 0,
+    requirement: 60,
+    category: 'streak',
+  },
+  {
+    id: 'hundred_day_streak',
+    name: 'Century of Dedication',
+    description: 'Study for 100 consecutive days',
+    emoji: '🏅',
+    unlocked: false,
+    progress: 0,
+    requirement: 100,
+    category: 'streak',
+  },
+
+  // Time-based Achievements
+  {
+    id: 'ten_hours',
+    name: 'Time Investment',
+    description: 'Study for 10 total hours',
+    emoji: '⏰',
+    unlocked: false,
+    progress: 0,
+    requirement: 600, // minutes
+    category: 'time',
+  },
+  {
+    id: 'fifty_hours',
+    name: 'Dedicated Scholar',
+    description: 'Accumulate 50 hours of study time',
+    emoji: '📖',
+    unlocked: false,
+    progress: 0,
+    requirement: 3000,
+    category: 'time',
+  },
+  {
+    id: 'hundred_hours',
+    name: 'Master of Time',
+    description: 'Reach 100 hours of total study time',
+    emoji: '⌛',
+    unlocked: false,
+    progress: 0,
+    requirement: 6000,
+    category: 'time',
+  },
+
+  // Perfect Day Achievements
+  {
+    id: 'first_perfect',
+    name: 'Perfect Execution',
+    description: 'Complete your first perfect study day',
+    emoji: '✨',
+    unlocked: false,
+    progress: 0,
+    requirement: 1,
+    category: 'perfect',
+  },
+  {
+    id: 'ten_perfect',
+    name: 'Excellence Habit',
+    description: 'Achieve 10 perfect study days',
+    emoji: '🌈',
+    unlocked: false,
+    progress: 0,
+    requirement: 10,
+    category: 'perfect',
+  },
+  {
+    id: 'thirty_perfect',
+    name: 'Perfectionist',
+    description: 'Complete 30 perfect study days',
+    emoji: '💎',
+    unlocked: false,
+    progress: 0,
+    requirement: 30,
+    category: 'perfect',
+  },
+
+  // Collection Achievements
+  {
     id: 'five_animals',
-    name: 'Pet Collector',
-    description: 'Collect 5 animals',
+    name: 'Animal Friend',
+    description: 'Collect 5 study companions',
     emoji: '🐾',
     unlocked: false,
     progress: 0,
@@ -84,20 +193,42 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'collection',
   },
   {
+    id: 'ten_animals',
+    name: 'Growing Menagerie',
+    description: 'Collect 10 unique animals',
+    emoji: '🦊',
+    unlocked: false,
+    progress: 0,
+    requirement: 10,
+    category: 'collection',
+  },
+  {
     id: 'twenty_animals',
-    name: 'Animal Park',
-    description: 'Collect 20 animals',
+    name: 'Wildlife Sanctuary',
+    description: 'Collect 20 different animals',
     emoji: '🦁',
     unlocked: false,
     progress: 0,
     requirement: 20,
     category: 'collection',
   },
+
+  // Level Achievements
+  {
+    id: 'level_five',
+    name: 'Novice Scholar',
+    description: 'Reach level 5',
+    emoji: '📝',
+    unlocked: false,
+    progress: 0,
+    requirement: 5,
+    category: 'level',
+  },
   {
     id: 'level_ten',
-    name: 'Rising Scholar',
+    name: 'Rising Star',
     description: 'Reach level 10',
-    emoji: '📈',
+    emoji: '⭐',
     unlocked: false,
     progress: 0,
     requirement: 10,
@@ -105,7 +236,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'level_twenty',
-    name: 'Master Scholar',
+    name: 'Expert Learner',
     description: 'Reach level 20',
     emoji: '🎓',
     unlocked: false,
@@ -115,12 +246,22 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'level_thirty',
-    name: 'Legendary Scholar',
+    name: 'Academic Elite',
     description: 'Reach level 30',
-    emoji: '✨',
+    emoji: '👑',
     unlocked: false,
     progress: 0,
     requirement: 30,
+    category: 'level',
+  },
+  {
+    id: 'level_fifty',
+    name: 'Legendary Scholar',
+    description: 'Reach the legendary level 50',
+    emoji: '🌟',
+    unlocked: false,
+    progress: 0,
+    requirement: 50,
     category: 'level',
   },
 ];
@@ -133,36 +274,45 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
   const collectionLength = userData?.permanentCollection?.length ?? 0;
   const level = userData?.level ?? 1;
 
+  // Calculate total study time from daily stats
+  const totalMinutes = Object.values(userData?.dailyStats ?? {}).reduce((sum, mins) => sum + mins, 0);
+
+  // Calculate perfect days (days with 3+ hours of study = 180+ minutes)
+  const perfectDays = Object.values(userData?.dailyStats ?? {}).filter(mins => mins >= 180).length;
+
   return ACHIEVEMENTS.map(achievement => {
     let progress = 0;
     let unlocked = false;
 
-    switch (achievement.id) {
-      case 'first_session':
-      case 'ten_sessions':
-      case 'fifty_sessions':
-      case 'hundred_sessions':
+    switch (achievement.category) {
+      case 'sessions':
         progress = Math.min(totalSessions, achievement.requirement);
         unlocked = totalSessions >= achievement.requirement;
         break;
 
-      case 'seven_day_streak':
-      case 'thirty_day_streak':
+      case 'streak':
         progress = Math.min(streak, achievement.requirement);
         unlocked = streak >= achievement.requirement;
         break;
 
-      case 'five_animals':
-      case 'twenty_animals':
+      case 'collection':
         progress = Math.min(collectionLength, achievement.requirement);
         unlocked = collectionLength >= achievement.requirement;
         break;
 
-      case 'level_ten':
-      case 'level_twenty':
-      case 'level_thirty':
+      case 'level':
         progress = Math.min(level, achievement.requirement);
         unlocked = level >= achievement.requirement;
+        break;
+
+      case 'time':
+        progress = Math.min(totalMinutes, achievement.requirement);
+        unlocked = totalMinutes >= achievement.requirement;
+        break;
+
+      case 'perfect':
+        progress = Math.min(perfectDays, achievement.requirement);
+        unlocked = perfectDays >= achievement.requirement;
         break;
 
       default:
