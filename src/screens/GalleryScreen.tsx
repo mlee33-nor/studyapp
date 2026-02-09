@@ -1,20 +1,36 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Lottie from 'lottie-react';
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  isWithinInterval,
+  addWeeks,
+  subWeeks,
+  addMonths,
+  subMonths,
+  addYears,
+  subYears,
+  isSameWeek,
+  isSameMonth,
+} from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { BiomeType, CollectedAnimal } from '../types';
 import { getBiomeConfig, BIOME_CONFIG, getAnimalScale } from '../data/biomes';
+
+type TimelineViewMode = 'weekly' | 'monthly' | 'yearly';
 
 interface GalleryScreenProps {
   collection: CollectedAnimal[];
   theme: 'morning' | 'twilight' | 'golden' | 'midnight';
 }
 
-interface GroupedAnimal {
-  name: string;
-  biome: BiomeType;
-  lottieUrl: string;
-  count: number;
-}
+const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 
 const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'tertiary') => {
   const isDarkText = theme === 'morning' || theme === 'golden' ? true : false;
@@ -82,39 +98,262 @@ const getCardShadow = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') =>
   return isLightTheme ? '0 8px 32px rgba(147, 197, 253, 0.15)' : '0 8px 32px rgba(167, 139, 250, 0.2)';
 };
 
+const getGradient = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+  const isLightTheme = theme === 'morning' || theme === 'golden';
+  return isLightTheme
+    ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(244, 114, 182, 0.15) 100%)'
+    : 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.3) 100%)';
+};
+
+// View mode grid/size configuration
+const VIEW_CONFIG = {
+  weekly: {
+    gridColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+    lottieSize: 80,
+    gap: '16px',
+    padding: '16px',
+    borderRadius: '24px',
+    showName: true,
+    fontSize: '14px',
+  },
+  monthly: {
+    gridColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
+    lottieSize: 50,
+    gap: '10px',
+    padding: '10px',
+    borderRadius: '16px',
+    showName: true,
+    fontSize: '11px',
+  },
+  yearly: {
+    gridColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
+    lottieSize: 32,
+    gap: '6px',
+    padding: '6px',
+    borderRadius: '12px',
+    showName: false,
+    fontSize: '0px',
+  },
+};
+
+// View Mode Toggle
+const ViewModeToggle: React.FC<{
+  viewMode: TimelineViewMode;
+  setViewMode: (mode: TimelineViewMode) => void;
+  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+}> = ({ viewMode, setViewMode, theme }) => {
+  const modes: TimelineViewMode[] = ['weekly', 'monthly', 'yearly'];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={SOFT_SPRING}
+      style={{
+        display: 'flex',
+        gap: '8px',
+        marginBottom: '20px',
+        padding: '6px',
+        background: getCardBackground(theme, 'primary'),
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '16px',
+        border: `1px solid ${getCardBorder(theme, 'primary')}`,
+      }}
+    >
+      {modes.map(mode => (
+        <motion.button
+          key={mode}
+          onClick={() => setViewMode(mode)}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            flex: 1,
+            padding: '12px',
+            borderRadius: '12px',
+            border: 'none',
+            background: viewMode === mode ? getGradient(theme) : 'transparent',
+            color: viewMode === mode ? getTextColor(theme, 'primary') : getTextColor(theme, 'tertiary'),
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textTransform: 'capitalize',
+            fontFamily: "'Quicksand', sans-serif"
+          }}
+        >
+          {mode}
+        </motion.button>
+      ))}
+    </motion.div>
+  );
+};
+
+// Time Navigator
+const TimeNavigator: React.FC<{
+  viewMode: TimelineViewMode;
+  currentDate: Date;
+  onPrevious: () => void;
+  onNext: () => void;
+  onToday: () => void;
+  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+}> = ({ viewMode, currentDate, onPrevious, onNext, onToday, theme }) => {
+  let displayText: string;
+  let isCurrentPeriod: boolean;
+
+  if (viewMode === 'weekly') {
+    const weekStart = startOfWeek(currentDate);
+    const weekEnd = endOfWeek(currentDate);
+    displayText = `${format(weekStart, 'MMM d')} – ${format(weekEnd, 'MMM d, yyyy')}`;
+    isCurrentPeriod = isSameWeek(currentDate, new Date());
+  } else if (viewMode === 'monthly') {
+    displayText = format(currentDate, 'MMMM yyyy');
+    isCurrentPeriod = isSameMonth(currentDate, new Date());
+  } else {
+    displayText = format(currentDate, 'yyyy');
+    isCurrentPeriod = currentDate.getFullYear() === new Date().getFullYear();
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SOFT_SPRING}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '20px',
+        padding: '12px 16px',
+        background: getCardBackground(theme, 'primary'),
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '16px',
+        border: `1px solid ${getCardBorder(theme, 'primary')}`,
+      }}
+    >
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={onPrevious}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '8px',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: getTextColor(theme, 'secondary')
+        }}
+      >
+        <ChevronLeft size={20} />
+      </motion.button>
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <span style={{
+          fontSize: '1rem',
+          fontWeight: 600,
+          color: getTextColor(theme, 'primary'),
+          fontFamily: "'Quicksand', sans-serif"
+        }}>
+          {displayText}
+        </span>
+        {!isCurrentPeriod && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={onToday}
+            style={{
+              background: getGradient(theme),
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              color: getTextColor(theme, 'primary'),
+              fontFamily: "'Quicksand', sans-serif"
+            }}
+          >
+            Today
+          </motion.button>
+        )}
+      </div>
+
+      <motion.button
+        whileTap={{ scale: 0.95 }}
+        onClick={onNext}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '8px',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: getTextColor(theme, 'secondary')
+        }}
+      >
+        <ChevronRight size={20} />
+      </motion.button>
+    </motion.div>
+  );
+};
+
 const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
   const [selectedBiome, setSelectedBiome] = useState<BiomeType | 'all'>('all');
+  const [viewMode, setViewMode] = useState<TimelineViewMode>('weekly');
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
 
   const biomes = Object.keys(BIOME_CONFIG) as BiomeType[];
-  const filteredCollection = selectedBiome === 'all'
-    ? collection
-    : collection.filter(animal => animal.biome === selectedBiome);
 
-  // Group animals by name+biome, counting duplicates
-  const groupedAnimals = useMemo(() => {
-    const groups: Record<string, GroupedAnimal> = {};
-    for (const animal of filteredCollection) {
-      const key = `${animal.name}-${animal.biome}`;
-      if (groups[key]) {
-        groups[key].count += 1;
-      } else {
-        groups[key] = {
-          name: animal.name,
-          biome: animal.biome,
-          lottieUrl: animal.lottieUrl,
-          count: 1,
-        };
-      }
+  // Filter collection by date range
+  const dateFilteredCollection = useMemo(() => {
+    let start: Date;
+    let end: Date;
+
+    if (viewMode === 'weekly') {
+      start = startOfWeek(currentDate);
+      end = endOfWeek(currentDate);
+    } else if (viewMode === 'monthly') {
+      start = startOfMonth(currentDate);
+      end = endOfMonth(currentDate);
+    } else {
+      start = startOfYear(currentDate);
+      end = endOfYear(currentDate);
     }
-    return Object.values(groups);
-  }, [filteredCollection]);
 
-  // Load Lottie animations for unique animals
+    return collection.filter(animal => {
+      const collectedDate = new Date(animal.collectedAt);
+      return isWithinInterval(collectedDate, { start, end });
+    });
+  }, [collection, viewMode, currentDate]);
+
+  // Apply biome filter on top of date filter
+  const filteredCollection = selectedBiome === 'all'
+    ? dateFilteredCollection
+    : dateFilteredCollection.filter(animal => animal.biome === selectedBiome);
+
+  // Each animal rendered individually (not grouped) for sanctuary effect
+  const animalsToRender = filteredCollection;
+
+  // Collect unique lottie URLs to load
+  const uniqueUrls = useMemo(() => {
+    const urls = new Set<string>();
+    for (const animal of animalsToRender) {
+      if (animal.lottieUrl) urls.add(animal.lottieUrl);
+    }
+    return Array.from(urls);
+  }, [animalsToRender]);
+
+  // Load Lottie animations
   useEffect(() => {
-    const urlsToLoad = groupedAnimals
-      .map(a => a.lottieUrl)
-      .filter(url => url && !loadedAnimations[url]);
+    const urlsToLoad = uniqueUrls.filter(url => !loadedAnimations[url]);
 
     for (const url of urlsToLoad) {
       fetch(url)
@@ -124,9 +363,37 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         })
         .catch(() => {});
     }
-  }, [groupedAnimals]);
+  }, [uniqueUrls]);
 
-  const totalCount = filteredCollection.length;
+  // Navigation handlers
+  const handlePrevious = () => {
+    if (viewMode === 'weekly') {
+      setCurrentDate(prev => subWeeks(prev, 1));
+    } else if (viewMode === 'monthly') {
+      setCurrentDate(prev => subMonths(prev, 1));
+    } else {
+      setCurrentDate(prev => subYears(prev, 1));
+    }
+  };
+
+  const handleNext = () => {
+    if (viewMode === 'weekly') {
+      setCurrentDate(prev => addWeeks(prev, 1));
+    } else if (viewMode === 'monthly') {
+      setCurrentDate(prev => addMonths(prev, 1));
+    } else {
+      setCurrentDate(prev => addYears(prev, 1));
+    }
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  // Period label for stats summary
+  const periodLabel = viewMode === 'weekly' ? 'this week' : viewMode === 'monthly' ? 'this month' : 'this year';
+
+  const config = VIEW_CONFIG[viewMode];
 
   return (
     <motion.div
@@ -144,10 +411,23 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         letterSpacing: '0.05em',
         fontFamily: "'Quicksand', sans-serif"
       }}>
-        Collection Gallery
+        Animal Sanctuary
       </h1>
 
-      {/* Stats Card */}
+      {/* View Mode Toggle */}
+      <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} theme={theme} />
+
+      {/* Time Navigator */}
+      <TimeNavigator
+        viewMode={viewMode}
+        currentDate={currentDate}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onToday={handleToday}
+        theme={theme}
+      />
+
+      {/* Stats Summary Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -156,35 +436,39 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
           borderRadius: '32px',
-          padding: '24px',
-          marginBottom: '24px',
+          padding: '20px 24px',
+          marginBottom: '20px',
           border: `1px solid ${getCardBorder(theme, 'primary')}`,
           boxShadow: getCardShadow(theme),
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '16px'
-        }}>
-          <div>
-            <div style={{
-              fontSize: '24px',
-              fontWeight: 700,
-              color: getTextColor(theme, 'primary'),
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              {totalCount} Animals
-            </div>
-            <div style={{
-              fontSize: '13px',
-              color: getTextColor(theme, 'secondary'),
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              Total Collected
-            </div>
+        <div>
+          <div style={{
+            fontSize: '24px',
+            fontWeight: 700,
+            color: getTextColor(theme, 'primary'),
+            fontFamily: "'Quicksand', sans-serif"
+          }}>
+            {filteredCollection.length} {filteredCollection.length === 1 ? 'Animal' : 'Animals'}
           </div>
+          <div style={{
+            fontSize: '13px',
+            color: getTextColor(theme, 'secondary'),
+            fontFamily: "'Quicksand', sans-serif"
+          }}>
+            Collected {periodLabel}
+          </div>
+        </div>
+        <div style={{
+          fontSize: '13px',
+          color: getTextColor(theme, 'tertiary'),
+          fontFamily: "'Quicksand', sans-serif",
+          textAlign: 'right',
+        }}>
+          {collection.length} total all time
         </div>
       </motion.div>
 
@@ -234,8 +518,8 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         })}
       </div>
 
-      {/* Gallery Grid */}
-      {groupedAnimals.length === 0 ? (
+      {/* Sanctuary Grid */}
+      {animalsToRender.length === 0 ? (
         <div style={{
           background: getCardBackground(theme, 'primary'),
           backdropFilter: 'blur(25px)',
@@ -247,7 +531,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
           boxShadow: getCardShadow(theme),
         }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>
-            {selectedBiome === 'all' ? '🌍' : getBiomeConfig(selectedBiome as BiomeType)?.emoji}
+            {selectedBiome === 'all' ? '🌿' : getBiomeConfig(selectedBiome as BiomeType)?.emoji}
           </div>
           <div style={{
             fontSize: '16px',
@@ -256,47 +540,54 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
             marginBottom: '8px',
             fontFamily: "'Quicksand', sans-serif"
           }}>
-            No animals collected yet
+            No animals collected {periodLabel} yet
           </div>
           <div style={{
             fontSize: '13px',
             color: getTextColor(theme, 'secondary'),
             fontFamily: "'Quicksand', sans-serif"
           }}>
-            Complete study sessions to collect animals!
+            Start a study session to collect animals!
           </div>
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
-          gap: '16px'
-        }}>
-          {groupedAnimals.map((animal, index) => {
-            const scale = getAnimalScale(animal.lottieUrl);
-            const lottieSize = 80;
-            const innerSize = scale ? lottieSize * scale : lottieSize;
+        <motion.div
+          key={viewMode}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: config.gridColumns,
+            gap: config.gap,
+          }}
+        >
+          {animalsToRender.map((animal, index) => {
+            const animalScale = getAnimalScale(animal.lottieUrl);
+            const lottieSize = config.lottieSize;
+            const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
 
             return (
               <motion.div
-                key={`${animal.name}-${animal.biome}`}
+                key={`${animal.id}-${index}`}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.05 }}
+                transition={{ delay: Math.min(index * 0.02, 1) }}
+                whileHover={{ scale: 1.08 }}
+                title={animal.name}
                 style={{
                   background: getCardBackground(theme, 'primary'),
                   backdropFilter: 'blur(25px)',
                   WebkitBackdropFilter: 'blur(25px)',
-                  borderRadius: '24px',
-                  padding: '16px',
+                  borderRadius: config.borderRadius,
+                  padding: config.padding,
                   border: `1px solid ${getCardBorder(theme, 'primary')}`,
                   boxShadow: getCardShadow(theme),
                   textAlign: 'center',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '8px',
+                  gap: config.showName ? '6px' : '0px',
                 }}
               >
                 {/* Lottie Animation */}
@@ -307,7 +598,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '16px',
+                  borderRadius: viewMode === 'yearly' ? '8px' : '16px',
                 }}>
                   {loadedAnimations[animal.lottieUrl] ? (
                     <div style={{
@@ -323,35 +614,33 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
                     </div>
                   ) : (
                     <div style={{
-                      width: '40px',
-                      height: '40px',
+                      width: `${lottieSize * 0.5}px`,
+                      height: `${lottieSize * 0.5}px`,
                       borderRadius: '50%',
                       background: 'rgba(167, 139, 250, 0.15)',
                     }} />
                   )}
                 </div>
 
-                {/* Animal Name with Multiplier */}
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: getTextColor(theme, 'primary'),
-                  fontFamily: "'Quicksand', sans-serif",
-                }}>
-                  {animal.name}{animal.count > 1 && (
-                    <span style={{
-                      color: getTextColor(theme, 'secondary'),
-                      fontWeight: 500,
-                      marginLeft: '4px',
-                    }}>
-                      x{animal.count}
-                    </span>
-                  )}
-                </div>
+                {/* Animal Name (hidden in yearly view) */}
+                {config.showName && (
+                  <div style={{
+                    fontSize: config.fontSize,
+                    fontWeight: 600,
+                    color: getTextColor(theme, 'primary'),
+                    fontFamily: "'Quicksand', sans-serif",
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '100%',
+                  }}>
+                    {animal.name}
+                  </div>
+                )}
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
     </motion.div>
   );
