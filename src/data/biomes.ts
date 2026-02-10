@@ -99,7 +99,7 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     id: 'zebra',
     name: 'Zebra',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/a558ee9c-1161-11ee-944c-57f5f40b44e0/OUngvrr96t.json',
-    scale: 1.3,
+    scale: 0.8,
   },
 ];
 
