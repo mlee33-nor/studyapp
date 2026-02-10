@@ -81,25 +81,25 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     id: 'giraffe',
     name: 'Giraffe',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/8942ad9c-1189-11ee-8b52-3f0a09f0ff93/IiSumWkAzb.json',
-    scale: 2,
+    scale: 1.4,
   },
   {
     id: 'lion',
     name: 'Lion',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/e0d520ae-1165-11ee-8596-1bcd321f9665/6gtyvPUYur.json',
-    scale: 1.8,
+    scale: 1.3,
   },
   {
     id: 'elephant',
     name: 'Elephant',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ad2abee-8ab1-11ee-8fae-d7b22e00dcc5/Q3wSZsw2nW.json',
-    scale: 2,
+    scale: 1.4,
   },
   {
     id: 'zebra',
     name: 'Zebra',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/a558ee9c-1161-11ee-944c-57f5f40b44e0/OUngvrr96t.json',
-    scale: 1.8,
+    scale: 1.3,
   },
 ];
 
