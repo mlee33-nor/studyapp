@@ -337,7 +337,12 @@ const MeadowScreen: React.FC = () => {
     const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
     if (!currentAnimal) return;
 
-    let newX = currentAnimal.x + info.offset.x;
+    // For giraffes, the saved x is stale (they walk), so read from the motion value
+    // which framer-motion already updated with the drag offset.
+    const giraffeInst = currentAnimal.name === 'Giraffe'
+      ? giraffeInstancesRef.current[animalId]
+      : null;
+    let newX = giraffeInst ? giraffeInst.x.get() : currentAnimal.x + info.offset.x;
     let newY = currentAnimal.y + info.offset.y;
 
     const constrained = constrainPosition(newX, newY);
@@ -379,12 +384,9 @@ const MeadowScreen: React.FC = () => {
     refreshData();
 
     // Resume giraffe auto-movement from constrained position
-    if (currentAnimal.name === 'Giraffe') {
-      const inst = giraffeInstancesRef.current[animalId];
-      if (inst) {
-        inst.x.set(newX);
-        inst.isDragging = false;
-      }
+    if (giraffeInst) {
+      giraffeInst.x.set(newX);
+      giraffeInst.isDragging = false;
     }
   };
 
