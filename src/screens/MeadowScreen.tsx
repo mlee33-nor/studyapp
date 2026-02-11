@@ -110,20 +110,26 @@ const MeadowScreen: React.FC = () => {
   // Giraffe auto-movement — per-instance state
   interface GiraffeInstance {
     x: MotionValue<number>;
+    y: MotionValue<number>;
     direction: 1 | -1;
     isDragging: boolean;
     initialized: boolean;
+    dragStartX: number;
+    dragStartY: number;
   }
   const giraffeInstancesRef = useRef<Record<string, GiraffeInstance>>({});
   const [giraffeFlips, setGiraffeFlips] = useState<Record<string, boolean>>({});
 
-  const getGiraffeInstance = (id: string, initialX: number): GiraffeInstance => {
+  const getGiraffeInstance = (id: string, initialX: number, initialY: number): GiraffeInstance => {
     if (!giraffeInstancesRef.current[id]) {
       giraffeInstancesRef.current[id] = {
         x: motionValue(initialX),
+        y: motionValue(initialY),
         direction: 1,
         isDragging: false,
         initialized: false,
+        dragStartX: 0,
+        dragStartY: 0,
       };
     }
     return giraffeInstancesRef.current[id];
@@ -252,9 +258,10 @@ const MeadowScreen: React.FC = () => {
 
     // Ensure each giraffe has its own instance
     for (const g of giraffes) {
-      const inst = getGiraffeInstance(g.id, g.x);
+      const inst = getGiraffeInstance(g.id, g.x, g.y);
       if (!inst.initialized) {
         inst.x.set(g.x);
+        inst.y.set(g.y);
         inst.initialized = true;
       }
     }
@@ -337,13 +344,17 @@ const MeadowScreen: React.FC = () => {
     const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
     if (!currentAnimal) return;
 
-    // For giraffes, the saved x is stale (they walk), so read from the motion value
-    // which framer-motion already updated with the drag offset.
+    // For giraffes, the saved position is stale (they walk), so use the position
+    // captured at drag start + the drag offset for an exact drop.
     const giraffeInst = currentAnimal.name === 'Giraffe'
       ? giraffeInstancesRef.current[animalId]
       : null;
-    let newX = giraffeInst ? giraffeInst.x.get() : currentAnimal.x + info.offset.x;
-    let newY = currentAnimal.y + info.offset.y;
+    let newX = giraffeInst
+      ? giraffeInst.dragStartX + info.offset.x
+      : currentAnimal.x + info.offset.x;
+    let newY = giraffeInst
+      ? giraffeInst.dragStartY + info.offset.y
+      : currentAnimal.y + info.offset.y;
 
     const constrained = constrainPosition(newX, newY);
     newX = constrained.x;
@@ -386,6 +397,7 @@ const MeadowScreen: React.FC = () => {
     // Resume giraffe auto-movement from constrained position
     if (giraffeInst) {
       giraffeInst.x.set(newX);
+      giraffeInst.y.set(newY);
       giraffeInst.isDragging = false;
     }
   };
@@ -763,12 +775,14 @@ const MeadowScreen: React.FC = () => {
                           onDragStart={() => {
                             if (giraffeInst) {
                               giraffeInst.isDragging = true;
+                              giraffeInst.dragStartX = giraffeInst.x.get();
+                              giraffeInst.dragStartY = giraffeInst.y.get();
                             }
                           }}
                           onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                           onTap={() => handleAnimalTap(animal.id)}
-                          animate={isGiraffe ? { y: animal.y } : { x: animal.x, y: animal.y }}
-                          transition={{ duration: 0.1, ease: 'easeOut' }}
+                          animate={isGiraffe ? undefined : { x: animal.x, y: animal.y }}
+                          transition={isGiraffe ? undefined : { duration: 0.1, ease: 'easeOut' }}
                           className="absolute cursor-grab active:cursor-grabbing"
                           style={{
                             position: 'absolute',
@@ -784,7 +798,7 @@ const MeadowScreen: React.FC = () => {
                             scaleX: flipped ? -1 : 1,
                             filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
                             x: giraffeInst ? giraffeInst.x : animal.x,
-                            y: animal.y
+                            y: giraffeInst ? giraffeInst.y : animal.y
                           }}
                           whileHover={{
                             scale: 1.05,
