@@ -233,7 +233,7 @@ const MeadowScreen: React.FC = () => {
 
   // Giraffe auto-movement animation loop
   useEffect(() => {
-    const giraffe = biomeAnimals.find(a => a.id === 'giraffe');
+    const giraffe = biomeAnimals.find(a => a.name === 'Giraffe');
     if (!giraffe) {
       giraffeStateRef.current.initialized = false;
       return;
@@ -361,7 +361,7 @@ const MeadowScreen: React.FC = () => {
     refreshData();
 
     // Resume giraffe auto-movement from constrained position
-    if (animalId === 'giraffe') {
+    if (currentAnimal.name === 'Giraffe') {
       giraffeX.set(newX);
       giraffeStateRef.current.isDragging = false;
     }
@@ -722,7 +722,7 @@ const MeadowScreen: React.FC = () => {
                       biomeAnimals.map((animal: MeadowAnimal) => {
                         const hasLottie = !!loadedAnimations[animal.id];
                         const size = hasLottie ? ANIMAL_SIZE : EMOJI_SIZE;
-                        const isGiraffe = animal.id === 'giraffe';
+                        const isGiraffe = animal.name === 'Giraffe';
                         const flipped = isGiraffe ? giraffeFlipped : !!animal.flipped;
                         return (
                         <motion.div
