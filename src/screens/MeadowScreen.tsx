@@ -757,7 +757,7 @@ const MeadowScreen: React.FC = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             zIndex: getZIndex(animal.y),
-                            transform: flipped ? 'scaleX(-1)' : 'scaleX(1)',
+                            scaleX: flipped ? -1 : 1,
                             filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
                             x: isGiraffe ? giraffeX : animal.x,
                             y: animal.y
