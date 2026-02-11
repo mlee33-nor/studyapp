@@ -137,6 +137,17 @@ const MeadowScreen: React.FC = () => {
     return giraffeInstancesRef.current[id];
   };
 
+  // Motion values for non-giraffe animals so we can read exact local-space
+  // position after drag (info.offset is screen-space and doesn't account for
+  // the 3D perspective / rotateX on the meadow container).
+  const animalMotionRef = useRef<Record<string, { x: MotionValue<number>; y: MotionValue<number> }>>({});
+  const getAnimalMotion = (id: string, initialX: number, initialY: number) => {
+    if (!animalMotionRef.current[id]) {
+      animalMotionRef.current[id] = { x: motionValue(initialX), y: motionValue(initialY) };
+    }
+    return animalMotionRef.current[id];
+  };
+
   // Timeline state
   const [viewMode, setViewMode] = useState<SanctuaryViewMode>('today');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -342,21 +353,20 @@ const MeadowScreen: React.FC = () => {
   };
 
   // Handle drag end
-  const handleDragEnd = (animalId: string, _event: any, info: any) => {
+  const handleDragEnd = (animalId: string, _event: any, _info: any) => {
     const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
     if (!currentAnimal) return;
 
-    // For giraffes, the saved position is stale (they walk), so use the position
-    // captured at drag start + the drag offset for an exact drop.
+    // Read the final position directly from MotionValues rather than computing
+    // from info.offset.  info.offset is in screen-space and doesn't account for
+    // the 3D perspective/rotateX transform on the meadow container, so it
+    // produces a slight positional drift.
     const giraffeInst = currentAnimal.name === 'Giraffe'
       ? giraffeInstancesRef.current[animalId]
       : null;
-    let newX = giraffeInst
-      ? giraffeInst.dragStartX + info.offset.x
-      : currentAnimal.x + info.offset.x;
-    let newY = giraffeInst
-      ? giraffeInst.dragStartY + info.offset.y
-      : currentAnimal.y + info.offset.y;
+    const mv = giraffeInst ?? animalMotionRef.current[animalId];
+    let newX = mv ? mv.x.get() : currentAnimal.x;
+    let newY = mv ? mv.y.get() : currentAnimal.y;
 
     const constrained = constrainPosition(newX, newY);
     newX = constrained.x;
@@ -396,7 +406,7 @@ const MeadowScreen: React.FC = () => {
     updateAnimalPosition(animalId, newX, newY);
     refreshData();
 
-    // Place giraffe at the drop position, then resume walking after a short delay
+    // Sync motion values to the final (possibly collision-nudged) position
     if (giraffeInst) {
       giraffeInst.x.set(newX);
       giraffeInst.y.set(newY);
@@ -406,6 +416,12 @@ const MeadowScreen: React.FC = () => {
         giraffeInst.paused = false;
         giraffeInst.resumeTimer = null;
       }, 500);
+    } else {
+      const mv = animalMotionRef.current[animalId];
+      if (mv) {
+        mv.x.set(newX);
+        mv.y.set(newY);
+      }
     }
   };
 
@@ -766,7 +782,9 @@ const MeadowScreen: React.FC = () => {
                         const size = hasLottie ? ANIMAL_SIZE : EMOJI_SIZE;
                         const isGiraffe = animal.name === 'Giraffe';
                         const giraffeInst = isGiraffe ? giraffeInstancesRef.current[animal.id] : null;
+                        const animalMv = !isGiraffe ? getAnimalMotion(animal.id, animal.x, animal.y) : null;
                         const flipped = isGiraffe ? !!giraffeFlips[animal.id] : !!animal.flipped;
+
                         return (
                         <motion.div
                           key={animal.id}
@@ -792,8 +810,6 @@ const MeadowScreen: React.FC = () => {
                           }}
                           onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                           onTap={() => handleAnimalTap(animal.id)}
-                          animate={isGiraffe ? undefined : { x: animal.x, y: animal.y }}
-                          transition={isGiraffe ? undefined : { duration: 0.1, ease: 'easeOut' }}
                           className="absolute cursor-grab active:cursor-grabbing"
                           style={{
                             position: 'absolute',
@@ -808,8 +824,8 @@ const MeadowScreen: React.FC = () => {
                             zIndex: getZIndex(animal.y),
                             scaleX: flipped ? -1 : 1,
                             filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                            x: giraffeInst ? giraffeInst.x : animal.x,
-                            y: giraffeInst ? giraffeInst.y : animal.y
+                            x: giraffeInst ? giraffeInst.x : animalMv ? animalMv.x : animal.x,
+                            y: giraffeInst ? giraffeInst.y : animalMv ? animalMv.y : animal.y
                           }}
                           whileHover={{
                             scale: 1.05,
