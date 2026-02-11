@@ -112,10 +112,11 @@ const MeadowScreen: React.FC = () => {
     x: MotionValue<number>;
     y: MotionValue<number>;
     direction: 1 | -1;
-    isDragging: boolean;
+    paused: boolean;       // true while dragging or in the post-drop delay
     initialized: boolean;
     dragStartX: number;
     dragStartY: number;
+    resumeTimer: ReturnType<typeof setTimeout> | null;
   }
   const giraffeInstancesRef = useRef<Record<string, GiraffeInstance>>({});
   const [giraffeFlips, setGiraffeFlips] = useState<Record<string, boolean>>({});
@@ -126,10 +127,11 @@ const MeadowScreen: React.FC = () => {
         x: motionValue(initialX),
         y: motionValue(initialY),
         direction: 1,
-        isDragging: false,
+        paused: false,
         initialized: false,
         dragStartX: 0,
         dragStartY: 0,
+        resumeTimer: null,
       };
     }
     return giraffeInstancesRef.current[id];
@@ -276,7 +278,7 @@ const MeadowScreen: React.FC = () => {
 
       for (const g of giraffes) {
         const inst = giraffeInstancesRef.current[g.id];
-        if (!inst || inst.isDragging) continue;
+        if (!inst || inst.paused) continue;
 
         const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
         const maxX = meadowWidth - ANIMAL_SIZE - 10;
@@ -394,11 +396,16 @@ const MeadowScreen: React.FC = () => {
     updateAnimalPosition(animalId, newX, newY);
     refreshData();
 
-    // Resume giraffe auto-movement from constrained position
+    // Place giraffe at the drop position, then resume walking after a short delay
     if (giraffeInst) {
       giraffeInst.x.set(newX);
       giraffeInst.y.set(newY);
-      giraffeInst.isDragging = false;
+      // Stay paused for 500ms so it feels like placing any other animal
+      if (giraffeInst.resumeTimer) clearTimeout(giraffeInst.resumeTimer);
+      giraffeInst.resumeTimer = setTimeout(() => {
+        giraffeInst.paused = false;
+        giraffeInst.resumeTimer = null;
+      }, 500);
     }
   };
 
@@ -774,7 +781,11 @@ const MeadowScreen: React.FC = () => {
                           }}
                           onDragStart={() => {
                             if (giraffeInst) {
-                              giraffeInst.isDragging = true;
+                              if (giraffeInst.resumeTimer) {
+                                clearTimeout(giraffeInst.resumeTimer);
+                                giraffeInst.resumeTimer = null;
+                              }
+                              giraffeInst.paused = true;
                               giraffeInst.dragStartX = giraffeInst.x.get();
                               giraffeInst.dragStartY = giraffeInst.y.get();
                             }
