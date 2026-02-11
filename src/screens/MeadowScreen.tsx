@@ -268,7 +268,7 @@ const MeadowScreen: React.FC = () => {
 
     let lastTime = performance.now();
     let animId: number;
-    const GIRAFFE_SPEED = 70; // pixels per second
+    const GIRAFFE_SPEED = 30; // pixels per second
 
     const step = (now: number) => {
       const delta = (now - lastTime) / 1000;
