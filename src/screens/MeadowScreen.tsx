@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
@@ -105,6 +105,15 @@ const MeadowScreen: React.FC = () => {
   const meadowRef = useRef<HTMLDivElement>(null);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
   const [allUnlocked, setAllUnlocked] = useState<boolean>(false);
+
+  // Giraffe auto-movement
+  const giraffeX = useMotionValue(0);
+  const [giraffeFlipped, setGiraffeFlipped] = useState(false);
+  const giraffeStateRef = useRef<{
+    direction: 1 | -1;
+    isDragging: boolean;
+    initialized: boolean;
+  }>({ direction: 1, isDragging: false, initialized: false });
 
   // Timeline state
   const [viewMode, setViewMode] = useState<SanctuaryViewMode>('today');
@@ -222,6 +231,56 @@ const MeadowScreen: React.FC = () => {
     loadAnimations();
   }, [userData.meadowAnimals]);
 
+  // Giraffe auto-movement animation loop
+  useEffect(() => {
+    const giraffe = biomeAnimals.find(a => a.id === 'giraffe');
+    if (!giraffe) {
+      giraffeStateRef.current.initialized = false;
+      return;
+    }
+
+    if (!giraffeStateRef.current.initialized) {
+      giraffeX.set(giraffe.x);
+      giraffeStateRef.current.initialized = true;
+    }
+
+    let lastTime = performance.now();
+    let animId: number;
+    const GIRAFFE_SPEED = 25; // pixels per second
+
+    const step = (now: number) => {
+      const delta = (now - lastTime) / 1000;
+      lastTime = now;
+
+      if (!giraffeStateRef.current.isDragging) {
+        const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
+        const maxX = meadowWidth - ANIMAL_SIZE - 10;
+        let newX = giraffeX.get() + giraffeStateRef.current.direction * GIRAFFE_SPEED * delta;
+
+        if (newX >= maxX) {
+          newX = maxX;
+          if (giraffeStateRef.current.direction !== -1) {
+            giraffeStateRef.current.direction = -1;
+            setGiraffeFlipped(true);
+          }
+        } else if (newX <= MIN_X) {
+          newX = MIN_X;
+          if (giraffeStateRef.current.direction !== 1) {
+            giraffeStateRef.current.direction = 1;
+            setGiraffeFlipped(false);
+          }
+        }
+
+        giraffeX.set(newX);
+      }
+
+      animId = requestAnimationFrame(step);
+    };
+
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, [biomeAnimals]);
+
   // Get dynamic bounds based on actual container size
   const getBounds = () => {
     const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
@@ -300,6 +359,12 @@ const MeadowScreen: React.FC = () => {
 
     updateAnimalPosition(animalId, newX, newY);
     refreshData();
+
+    // Resume giraffe auto-movement from constrained position
+    if (animalId === 'giraffe') {
+      giraffeX.set(newX);
+      giraffeStateRef.current.isDragging = false;
+    }
   };
 
   // Double-tap detection for flipping animals
@@ -657,6 +722,8 @@ const MeadowScreen: React.FC = () => {
                       biomeAnimals.map((animal: MeadowAnimal) => {
                         const hasLottie = !!loadedAnimations[animal.id];
                         const size = hasLottie ? ANIMAL_SIZE : EMOJI_SIZE;
+                        const isGiraffe = animal.id === 'giraffe';
+                        const flipped = isGiraffe ? giraffeFlipped : !!animal.flipped;
                         return (
                         <motion.div
                           key={animal.id}
@@ -669,10 +736,14 @@ const MeadowScreen: React.FC = () => {
                             top: MIN_Y,
                             bottom: MAX_Y,
                           }}
-                          onDragStart={() => {}}
+                          onDragStart={() => {
+                            if (isGiraffe) {
+                              giraffeStateRef.current.isDragging = true;
+                            }
+                          }}
                           onDragEnd={(event, info) => handleDragEnd(animal.id, event, info)}
                           onTap={() => handleAnimalTap(animal.id)}
-                          animate={{ x: animal.x, y: animal.y }}
+                          animate={isGiraffe ? { y: animal.y } : { x: animal.x, y: animal.y }}
                           transition={{ duration: 0.1, ease: 'easeOut' }}
                           className="absolute cursor-grab active:cursor-grabbing"
                           style={{
@@ -686,9 +757,9 @@ const MeadowScreen: React.FC = () => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             zIndex: getZIndex(animal.y),
-                            transform: animal.flipped ? 'scaleX(-1)' : 'scaleX(1)',
+                            transform: flipped ? 'scaleX(-1)' : 'scaleX(1)',
                             filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                            x: animal.x,
+                            x: isGiraffe ? giraffeX : animal.x,
                             y: animal.y
                           }}
                           whileHover={{
