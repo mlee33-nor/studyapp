@@ -339,67 +339,17 @@ const MeadowScreen: React.FC = () => {
     };
   };
 
-  // Check if position is in a valid zone (not in sky, not too close to another animal)
-  const isValidPosition = (animalId: string, newX: number, newY: number): boolean => {
-    const SKY_THRESHOLD = MIN_Y;
-    if (newY < SKY_THRESHOLD) return false;
-
-    const COLLISION_THRESHOLD = 45;
-    for (const animal of userData.meadowAnimals) {
-      if (animal.id === animalId) continue;
-      const dx = newX - animal.x;
-      const dy = newY - animal.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < COLLISION_THRESHOLD) return false;
-    }
-
-    return true;
-  };
-
-  // Handle drag end
+  // Handle drag end — drop exactly where released, only clamped to meadow bounds
   const handleDragEnd = (animalId: string, _event: any, info: any) => {
     const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
     if (!currentAnimal) return;
 
-    let newX = currentAnimal.x + info.offset.x;
-    let newY = currentAnimal.y + info.offset.y;
+    const constrained = constrainPosition(
+      currentAnimal.x + info.offset.x,
+      currentAnimal.y + info.offset.y
+    );
 
-    const constrained = constrainPosition(newX, newY);
-    newX = constrained.x;
-    newY = constrained.y;
-
-    if (!isValidPosition(animalId, newX, newY)) {
-      const attempts = [
-        { dx: 0, dy: 0 },
-        { dx: 30, dy: 0 },
-        { dx: -30, dy: 0 },
-        { dx: 0, dy: 30 },
-        { dx: 0, dy: -20 },
-        { dx: 30, dy: 30 },
-        { dx: -30, dy: 30 },
-      ];
-
-      let foundValid = false;
-      for (const attempt of attempts) {
-        const testX = constrained.x + attempt.dx;
-        const testY = constrained.y + attempt.dy;
-        const finalConstrained = constrainPosition(testX, testY);
-
-        if (isValidPosition(animalId, finalConstrained.x, finalConstrained.y)) {
-          newX = finalConstrained.x;
-          newY = finalConstrained.y;
-          foundValid = true;
-          break;
-        }
-      }
-
-      if (!foundValid) {
-        newX = currentAnimal.x;
-        newY = currentAnimal.y;
-      }
-    }
-
-    updateAnimalPosition(animalId, newX, newY);
+    updateAnimalPosition(animalId, constrained.x, constrained.y);
     refreshData();
   };
 
