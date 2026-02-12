@@ -58,7 +58,9 @@ interface WalkingAnimalInstance {
 }
 
 const WALKING_ANIMAL_NAMES = new Set(['Giraffe', 'Monkey', 'Elephant']);
-const isWalkingAnimal = (animal: MeadowAnimal) => WALKING_ANIMAL_NAMES.has(animal.name);
+const VERTICAL_WALKING_ANIMAL_NAMES = new Set(['Lion']);
+const isWalkingAnimal = (animal: MeadowAnimal) =>
+  WALKING_ANIMAL_NAMES.has(animal.name) || VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
 
 type SanctuaryViewMode = 'today' | 'weekly' | 'monthly' | 'yearly';
 
@@ -296,22 +298,45 @@ const MeadowScreen: React.FC = () => {
         const inst = walkingInstancesRef.current[id];
         if (inst.paused) continue;
 
-        const currentX = inst.x.get();
-        let newX = currentX + inst.direction * WALKING_SPEED * delta;
+        // Check if this is a vertical walker
+        const walker = walkers.find(w => w.id === id);
+        const isVertical = walker && VERTICAL_WALKING_ANIMAL_NAMES.has(walker.name);
 
-        if (newX >= maxX) {
-          newX = maxX;
-          inst.direction = -1;
-          newFlips[id] = true;
-          flipsChanged = true;
-        } else if (newX <= MIN_X) {
-          newX = MIN_X;
-          inst.direction = 1;
-          newFlips[id] = false;
-          flipsChanged = true;
+        if (isVertical) {
+          const currentY = inst.y.get();
+          let newY = currentY + inst.direction * WALKING_SPEED * delta;
+
+          if (newY >= MAX_Y) {
+            newY = MAX_Y;
+            inst.direction = -1;
+            newFlips[id] = true;
+            flipsChanged = true;
+          } else if (newY <= MIN_Y) {
+            newY = MIN_Y;
+            inst.direction = 1;
+            newFlips[id] = false;
+            flipsChanged = true;
+          }
+
+          inst.y.set(newY);
+        } else {
+          const currentX = inst.x.get();
+          let newX = currentX + inst.direction * WALKING_SPEED * delta;
+
+          if (newX >= maxX) {
+            newX = maxX;
+            inst.direction = -1;
+            newFlips[id] = true;
+            flipsChanged = true;
+          } else if (newX <= MIN_X) {
+            newX = MIN_X;
+            inst.direction = 1;
+            newFlips[id] = false;
+            flipsChanged = true;
+          }
+
+          inst.x.set(newX);
         }
-
-        inst.x.set(newX);
       }
 
       if (flipsChanged) {
