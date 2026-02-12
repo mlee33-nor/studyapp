@@ -52,6 +52,8 @@ interface GiraffeInstance {
   y: MotionValue<number>;
   direction: 1 | -1;
   paused: boolean;
+  dragStartX: number;
+  dragStartY: number;
   resumeTimer: ReturnType<typeof setTimeout> | null;
 }
 
@@ -252,6 +254,8 @@ const MeadowScreen: React.FC = () => {
           y: motionValue(giraffe.y),
           direction: Math.random() > 0.5 ? 1 : -1,
           paused: false,
+          dragStartX: giraffe.x,
+          dragStartY: giraffe.y,
           resumeTimer: null,
         };
         // Set initial flip to match direction
@@ -357,6 +361,9 @@ const MeadowScreen: React.FC = () => {
   const handleGiraffeDragStart = (animalId: string) => {
     const inst = giraffeInstancesRef.current[animalId];
     if (inst) {
+      // Capture the actual visual position before pausing
+      inst.dragStartX = inst.x.get();
+      inst.dragStartY = inst.y.get();
       inst.paused = true;
       if (inst.resumeTimer) {
         clearTimeout(inst.resumeTimer);
@@ -365,24 +372,29 @@ const MeadowScreen: React.FC = () => {
     }
   };
 
-  const handleGiraffeDragEnd = (animalId: string, event: any, info: any) => {
-    // Delegate to existing placement logic (untouched)
-    handleDragEnd(animalId, event, info);
-
-    // Sync giraffe instance position from storage and resume after delay
+  const handleGiraffeDragEnd = (animalId: string, _event: any, info: any) => {
     const inst = giraffeInstancesRef.current[animalId];
-    if (inst) {
-      const updatedData = getUserData();
-      const updatedAnimal = updatedData.meadowAnimals.find((a: MeadowAnimal) => a.id === animalId);
-      if (updatedAnimal) {
-        inst.x.set(updatedAnimal.x);
-        inst.y.set(updatedAnimal.y);
-      }
-      inst.resumeTimer = setTimeout(() => {
-        inst.paused = false;
-        inst.resumeTimer = null;
-      }, 500);
+    if (!inst) {
+      handleDragEnd(animalId, _event, info);
+      return;
     }
+
+    // Compute drop position from where the giraffe visually was, not stored position
+    const constrained = constrainPosition(
+      inst.dragStartX + info.offset.x,
+      inst.dragStartY + info.offset.y
+    );
+
+    updateAnimalPosition(animalId, constrained.x, constrained.y);
+    refreshData();
+
+    // Sync motionValue to the saved position and resume after delay
+    inst.x.set(constrained.x);
+    inst.y.set(constrained.y);
+    inst.resumeTimer = setTimeout(() => {
+      inst.paused = false;
+      inst.resumeTimer = null;
+    }, 500);
   };
 
   // Double-tap detection for flipping animals
