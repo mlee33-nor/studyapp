@@ -755,7 +755,10 @@ const MeadowScreen: React.FC = () => {
                         const size = hasLottie ? ANIMAL_SIZE : EMOJI_SIZE;
                         const isWalker = isWalkingAnimal(animal);
                         const walkingInst = isWalker ? walkingInstancesRef.current[animal.id] : null;
-                        const flipped = isWalker ? !!walkingFlips[animal.id] : !!animal.flipped;
+                        const walkFlip = !!walkingFlips[animal.id];
+                        const flipped = isWalker
+                          ? (animal.name === 'Elephant' ? !walkFlip : walkFlip)
+                          : !!animal.flipped;
                         return (
                         <motion.div
                           key={animal.id}
