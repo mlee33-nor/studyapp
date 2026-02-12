@@ -778,9 +778,11 @@ const MeadowScreen: React.FC = () => {
                         const isWalker = isWalkingAnimal(animal);
                         const walkingInst = isWalker ? walkingInstancesRef.current[animal.id] : null;
                         const walkFlip = !!walkingFlips[animal.id];
-                        const flipped = isWalker
+                        const isVertical = VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
+                        const flipped = isWalker && !isVertical
                           ? (animal.name === 'Elephant' ? !walkFlip : walkFlip)
-                          : !!animal.flipped;
+                          : !isVertical && !!animal.flipped;
+                        const verticalFlipped = isVertical && walkFlip;
                         return (
                         <motion.div
                           key={animal.id}
@@ -817,6 +819,7 @@ const MeadowScreen: React.FC = () => {
                             justifyContent: 'center',
                             zIndex: getZIndex(animal.y),
                             scaleX: flipped ? -1 : 1,
+                            scaleY: verticalFlipped ? -1 : 1,
                             filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
                             x: walkingInst ? walkingInst.x : animal.x,
                             y: walkingInst ? walkingInst.y : animal.y,
