@@ -389,13 +389,10 @@ const MeadowScreen: React.FC = () => {
     updateAnimalPosition(animalId, constrained.x, constrained.y);
     refreshData();
 
-    // Sync motionValue to the saved position and resume after delay
+    // Sync motionValue to the saved position and resume immediately
     inst.x.set(constrained.x);
     inst.y.set(constrained.y);
-    inst.resumeTimer = setTimeout(() => {
-      inst.paused = false;
-      inst.resumeTimer = null;
-    }, 500);
+    inst.paused = false;
   };
 
   // Double-tap detection for flipping animals
