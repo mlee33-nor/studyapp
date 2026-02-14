@@ -64,34 +64,43 @@ const isWalkingAnimal = (animal: MeadowAnimal) =>
 
 type SanctuaryViewMode = 'today' | 'weekly' | 'monthly' | 'yearly';
 
-// Timeline grid config — scales down as time range grows
+// Timeline grid config — fixed columns scaled by time range
+// Weekly: 3 columns (max ~21 animals visible per page)
+// Monthly: 5 columns (max ~50 animals visible per page)
+// Yearly: 8 columns (max ~100 animals visible per page)
 const TIMELINE_CONFIG = {
   weekly: {
-    gridColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-    lottieSize: 70,
-    gap: '12px',
-    padding: '12px',
-    borderRadius: '20px',
+    gridColumns: 'repeat(3, 1fr)',
+    lottieSize: 80,
+    gap: '16px',
+    padding: '16px',
+    borderRadius: '24px',
     showName: true,
-    fontSize: '12px',
+    fontSize: '13px',
+    tileBorder: '2px solid rgba(167, 139, 250, 0.3)',
+    tileBackground: 'rgba(255, 255, 255, 0.8)',
   },
   monthly: {
-    gridColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
-    lottieSize: 44,
-    gap: '8px',
-    padding: '8px',
-    borderRadius: '14px',
+    gridColumns: 'repeat(5, 1fr)',
+    lottieSize: 55,
+    gap: '10px',
+    padding: '10px',
+    borderRadius: '16px',
     showName: true,
     fontSize: '10px',
+    tileBorder: '1.5px solid rgba(167, 139, 250, 0.25)',
+    tileBackground: 'rgba(255, 255, 255, 0.7)',
   },
   yearly: {
-    gridColumns: 'repeat(auto-fill, minmax(38px, 1fr))',
-    lottieSize: 30,
-    gap: '5px',
-    padding: '5px',
-    borderRadius: '10px',
+    gridColumns: 'repeat(8, 1fr)',
+    lottieSize: 32,
+    gap: '6px',
+    padding: '6px',
+    borderRadius: '12px',
     showName: false,
     fontSize: '0px',
+    tileBorder: '1px solid rgba(167, 139, 250, 0.2)',
+    tileBackground: 'rgba(255, 255, 255, 0.6)',
   },
 };
 
@@ -153,8 +162,10 @@ const MeadowScreen: React.FC = () => {
     let end: Date;
 
     if (viewMode === 'weekly') {
-      start = startOfWeek(currentDate);
-      end = endOfWeek(currentDate);
+      // Weekly view always shows current week (not navigable)
+      const now = new Date();
+      start = startOfWeek(now);
+      end = endOfWeek(now);
     } else if (viewMode === 'monthly') {
       start = startOfMonth(currentDate);
       end = endOfMonth(currentDate);
@@ -466,9 +477,11 @@ const MeadowScreen: React.FC = () => {
   // Period display text
   const getDisplayText = () => {
     if (viewMode === 'weekly') {
-      const ws = startOfWeek(currentDate);
-      const we = endOfWeek(currentDate);
-      return `${format(ws, 'MMM d')} – ${format(we, 'MMM d, yyyy')}`;
+      // Weekly always shows current week
+      const now = new Date();
+      const ws = startOfWeek(now);
+      const we = endOfWeek(now);
+      return `This Week: ${format(ws, 'MMM d')} – ${format(we, 'MMM d, yyyy')}`;
     }
     if (viewMode === 'monthly') return format(currentDate, 'MMMM yyyy');
     return format(currentDate, 'yyyy');
@@ -602,8 +615,8 @@ const MeadowScreen: React.FC = () => {
           ))}
         </div>
 
-        {/* Time Navigator (only for non-today modes) */}
-        {viewMode !== 'today' && (
+        {/* Time Navigator (only for monthly and yearly modes) */}
+        {(viewMode === 'monthly' || viewMode === 'yearly') && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -690,7 +703,7 @@ const MeadowScreen: React.FC = () => {
         )}
 
         {/* Stats Card — context-aware */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 mb-6 shadow-soft">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 mb-4 shadow-soft">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-secondary">
@@ -709,6 +722,19 @@ const MeadowScreen: React.FC = () => {
             <div className="text-4xl">{BIOME_CONFIG[activeBiome].emoji}</div>
           </div>
         </div>
+
+        {/* Grid Info for Timeline Views */}
+        {viewMode !== 'today' && (
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-3 mb-6" style={{
+            border: '1px solid rgba(167, 139, 250, 0.2)',
+          }}>
+            <p className="text-xs text-text-secondary text-center">
+              {viewMode === 'weekly' && '📅 3-column grid • Current week only • Large tiles'}
+              {viewMode === 'monthly' && '📅 5-column grid • Navigate months • Medium tiles'}
+              {viewMode === 'yearly' && '📅 8-column grid • Navigate years • Compact tiles'}
+            </p>
+          </div>
+        )}
 
         <AnimatePresence mode="wait">
           {viewMode === 'today' ? (
@@ -939,19 +965,22 @@ const MeadowScreen: React.FC = () => {
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: Math.min(index * 0.02, 0.8) }}
-                          whileHover={{ scale: 1.1 }}
+                          whileHover={{ scale: 1.05 }}
                           title={animal.name}
                           style={{
-                            background: 'rgba(255, 255, 255, 0.6)',
+                            background: cfg.tileBackground,
                             borderRadius: cfg.borderRadius,
                             padding: cfg.padding,
-                            border: '1px solid rgba(255, 255, 255, 0.5)',
-                            boxShadow: '0 2px 8px rgba(147, 197, 253, 0.1)',
+                            border: cfg.tileBorder,
+                            boxShadow: '0 4px 12px rgba(147, 197, 253, 0.15)',
                             textAlign: 'center',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
-                            gap: cfg.showName ? '4px' : '0px',
+                            justifyContent: 'center',
+                            gap: cfg.showName ? '6px' : '0px',
+                            minHeight: `${cfg.lottieSize + parseInt(cfg.padding) * 2}px`,
+                            aspectRatio: '1',
                           }}
                         >
                           <div style={{
@@ -1014,13 +1043,15 @@ const MeadowScreen: React.FC = () => {
           <p className="text-sm text-text-secondary text-center">
             {viewMode === 'today'
               ? '🌍 Switch biomes • 🐾 Drag animals • 👆 Double-tap to flip'
-              : '🌍 Switch biomes • ‹ › Navigate time • See your full collection'
+              : viewMode === 'weekly'
+              ? '🌍 Switch biomes • 📊 Fixed grid view • Current week progress'
+              : '🌍 Switch biomes • ‹ › Navigate time • 📊 Fixed grid view'
             }
           </p>
           <p className="text-xs text-text-secondary text-center mt-2">
             {viewMode === 'today'
               ? 'Collect animals daily • Unlock biomes by leveling up • Your collection resets at midnight'
-              : `Viewing all ${BIOME_CONFIG[activeBiome].name} animals collected ${periodLabel}`
+              : `Viewing all ${BIOME_CONFIG[activeBiome].name} animals collected ${periodLabel} in a structured grid`
             }
           </p>
         </div>
