@@ -985,29 +985,21 @@ const MeadowScreen: React.FC = () => {
                               whileHover={{ scale: 1.08 }}
                               title={animal.name}
                               style={{
-                                background: 'rgba(255, 255, 255, 0.15)',
-                                backdropFilter: 'blur(8px)',
-                                borderRadius: cfg.borderRadius,
-                                padding: cfg.padding,
-                                border: cfg.tileBorder,
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
                                 textAlign: 'center',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: cfg.showName ? '6px' : '0px',
-                                aspectRatio: '1',
+                                gap: cfg.showName ? '4px' : '0px',
+                                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                               }}
                             >
                               <div style={{
                                 width: `${lottieSize}px`,
                                 height: `${lottieSize}px`,
-                                overflow: 'hidden',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
                               }}>
                                 {timelineLoadedAnimations[animal.lottieUrl] ? (
                                   <div style={{
@@ -1037,7 +1029,10 @@ const MeadowScreen: React.FC = () => {
                                   fontWeight: 700,
                                   color: 'rgba(255, 255, 255, 0.95)',
                                   fontFamily: "'Quicksand', sans-serif",
-                                  textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+                                  textShadow: '0 2px 4px rgba(0,0,0,0.6), 0 0 8px rgba(0,0,0,0.4)',
+                                  background: 'rgba(0, 0, 0, 0.3)',
+                                  padding: '2px 8px',
+                                  borderRadius: '12px',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   whiteSpace: 'nowrap',
