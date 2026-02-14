@@ -900,7 +900,7 @@ const MeadowScreen: React.FC = () => {
               </div>
             </motion.div>
           ) : (
-            /* ===== TIMELINE: Scaled Grid of All Animals ===== */
+            /* ===== TIMELINE: Fixed Grid on Biome Background ===== */
             <motion.div
               key={`timeline-${viewMode}`}
               initial={{ opacity: 0, y: 10 }}
@@ -909,131 +909,151 @@ const MeadowScreen: React.FC = () => {
               transition={{ duration: 0.25 }}
               style={{ marginBottom: '20px' }}
             >
-              {timelineAnimals.length === 0 ? (
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.7)',
-                  backdropFilter: 'blur(25px)',
-                  borderRadius: '28px',
-                  padding: '50px 24px',
-                  textAlign: 'center',
-                  border: '1px solid rgba(255, 255, 255, 0.5)',
-                  boxShadow: '0 8px 32px rgba(147, 197, 253, 0.15)',
-                }}>
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>
-                    {BIOME_CONFIG[activeBiome].emoji}
-                  </div>
-                  <div style={{
-                    fontSize: '16px',
-                    fontWeight: 600,
-                    color: 'rgba(15, 23, 42, 0.9)',
-                    marginBottom: '8px',
-                    fontFamily: "'Quicksand', sans-serif"
-                  }}>
-                    No animals collected {periodLabel}
-                  </div>
-                  <div style={{
-                    fontSize: '13px',
-                    color: 'rgba(100, 116, 139, 0.7)',
-                    fontFamily: "'Quicksand', sans-serif"
-                  }}>
-                    Start a study session to fill your sanctuary!
-                  </div>
-                </div>
-              ) : (
-                <div style={{
-                  background: 'rgba(255, 255, 255, 0.5)',
-                  backdropFilter: 'blur(20px)',
-                  borderRadius: '28px',
-                  padding: '16px',
-                  border: '1px solid rgba(255, 255, 255, 0.4)',
-                  boxShadow: '0 8px 32px rgba(147, 197, 253, 0.12)',
-                }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gridColumns,
-                    gap: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gap,
-                  }}>
-                    {timelineAnimals.map((animal: CollectedAnimal, index: number) => {
-                      const cfg = TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG];
-                      const animalScale = getAnimalScale(animal.lottieUrl);
-                      const lottieSize = cfg.lottieSize;
-                      const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
+              <div style={{ perspective: '1200px', marginBottom: '20px', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
+                <div
+                  style={{
+                    padding: '0',
+                    overflow: 'hidden',
+                    borderRadius: '28px',
+                    transform: 'rotateX(8deg)',
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'relative',
+                      minHeight: '450px',
+                      borderRadius: '28px',
+                      overflow: 'hidden',
+                      boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {/* Biome Background */}
+                    <BiomeBackground />
 
-                      return (
-                        <motion.div
-                          key={`${animal.id}-${index}`}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: Math.min(index * 0.02, 0.8) }}
-                          whileHover={{ scale: 1.05 }}
-                          title={animal.name}
-                          style={{
-                            background: cfg.tileBackground,
-                            borderRadius: cfg.borderRadius,
-                            padding: cfg.padding,
-                            border: cfg.tileBorder,
-                            boxShadow: '0 4px 12px rgba(147, 197, 253, 0.15)',
-                            textAlign: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: cfg.showName ? '6px' : '0px',
-                            minHeight: `${cfg.lottieSize + parseInt(cfg.padding) * 2}px`,
-                            aspectRatio: '1',
-                          }}
-                        >
-                          <div style={{
-                            width: `${lottieSize}px`,
-                            height: `${lottieSize}px`,
-                            overflow: 'hidden',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: viewMode === 'yearly' ? '6px' : '12px',
-                          }}>
-                            {timelineLoadedAnimations[animal.lottieUrl] ? (
+                    {timelineAnimals.length === 0 ? (
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        zIndex: 10
+                      }}>
+                        <div style={{ fontSize: '64px', marginBottom: '16px' }}>{BIOME_CONFIG[activeBiome].emoji}</div>
+                        <div style={{
+                          fontSize: '16px',
+                          color: 'rgba(255,255,255,0.95)',
+                          fontFamily: "'Quicksand', sans-serif",
+                          fontWeight: 600,
+                          textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}>
+                          No animals collected {periodLabel}
+                        </div>
+                        <div style={{
+                          fontSize: '13px',
+                          color: 'rgba(255,255,255,0.8)',
+                          marginTop: '8px',
+                          fontFamily: "'Quicksand', sans-serif",
+                          textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                        }}>
+                          Start a study session to fill your sanctuary!
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        padding: '20px',
+                        display: 'grid',
+                        gridTemplateColumns: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gridColumns,
+                        gap: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gap,
+                        alignContent: 'start',
+                      }}>
+                        {timelineAnimals.map((animal: CollectedAnimal, index: number) => {
+                          const cfg = TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG];
+                          const animalScale = getAnimalScale(animal.lottieUrl);
+                          const lottieSize = cfg.lottieSize;
+                          const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
+
+                          return (
+                            <motion.div
+                              key={`${animal.id}-${index}`}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: Math.min(index * 0.02, 0.8) }}
+                              whileHover={{ scale: 1.08 }}
+                              title={animal.name}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.15)',
+                                backdropFilter: 'blur(8px)',
+                                borderRadius: cfg.borderRadius,
+                                padding: cfg.padding,
+                                border: cfg.tileBorder,
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                                textAlign: 'center',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: cfg.showName ? '6px' : '0px',
+                                aspectRatio: '1',
+                              }}
+                            >
                               <div style={{
-                                width: `${innerSize}px`,
-                                height: `${innerSize}px`,
-                                flexShrink: 0,
+                                width: `${lottieSize}px`,
+                                height: `${lottieSize}px`,
+                                overflow: 'hidden',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
                               }}>
-                                <Lottie
-                                  animationData={timelineLoadedAnimations[animal.lottieUrl]}
-                                  loop={true}
-                                  style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-                                />
+                                {timelineLoadedAnimations[animal.lottieUrl] ? (
+                                  <div style={{
+                                    width: `${innerSize}px`,
+                                    height: `${innerSize}px`,
+                                    flexShrink: 0,
+                                  }}>
+                                    <Lottie
+                                      animationData={timelineLoadedAnimations[animal.lottieUrl]}
+                                      loop={true}
+                                      style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div style={{
+                                    width: `${lottieSize * 0.5}px`,
+                                    height: `${lottieSize * 0.5}px`,
+                                    borderRadius: '50%',
+                                    background: 'rgba(167, 139, 250, 0.3)',
+                                  }} />
+                                )}
                               </div>
-                            ) : (
-                              <div style={{
-                                width: `${lottieSize * 0.5}px`,
-                                height: `${lottieSize * 0.5}px`,
-                                borderRadius: '50%',
-                                background: 'rgba(167, 139, 250, 0.15)',
-                              }} />
-                            )}
-                          </div>
 
-                          {cfg.showName && (
-                            <div style={{
-                              fontSize: cfg.fontSize,
-                              fontWeight: 600,
-                              color: 'rgba(15, 23, 42, 0.85)',
-                              fontFamily: "'Quicksand', sans-serif",
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              maxWidth: '100%',
-                            }}>
-                              {animal.name}
-                            </div>
-                          )}
-                        </motion.div>
-                      );
-                    })}
+                              {cfg.showName && (
+                                <div style={{
+                                  fontSize: cfg.fontSize,
+                                  fontWeight: 700,
+                                  color: 'rgba(255, 255, 255, 0.95)',
+                                  fontFamily: "'Quicksand', sans-serif",
+                                  textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  maxWidth: '100%',
+                                }}>
+                                  {animal.name}
+                                </div>
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
