@@ -22,6 +22,7 @@ import {
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { BiomeType, CollectedAnimal } from '../types';
 import { getBiomeConfig, BIOME_CONFIG, getAnimalScale } from '../data/biomes';
+import BiomeBackgrounds from '../components/BiomeBackgrounds';
 
 type TimelineViewMode = 'weekly' | 'monthly' | 'yearly';
 
@@ -534,7 +535,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         })}
       </div>
 
-      {/* Gallery Grid */}
+      {/* Gallery Grid - Animals on Biome Backgrounds */}
       {groupedAnimals.length === 0 ? (
         <div style={{
           background: getCardBackground(theme, 'primary'),
@@ -567,120 +568,204 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
           </div>
         </div>
       ) : (
+        <BiomeGalleryGrid
+          groupedAnimals={groupedAnimals}
+          selectedBiome={selectedBiome}
+          viewMode={viewMode}
+          config={config}
+          loadedAnimations={loadedAnimations}
+          theme={theme}
+        />
+      )}
+    </motion.div>
+  );
+};
+
+// Biome Gallery Grid Component - Shows animals on biome backgrounds
+const BiomeGalleryGrid: React.FC<{
+  groupedAnimals: { name: string; biome: string; lottieUrl: string; count: number }[];
+  selectedBiome: BiomeType | 'all';
+  viewMode: TimelineViewMode;
+  config: typeof VIEW_CONFIG[TimelineViewMode];
+  loadedAnimations: Record<string, any>;
+  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+}> = ({ groupedAnimals, selectedBiome, viewMode, config, loadedAnimations, theme }) => {
+  // Group animals by biome when 'all' is selected
+  const biomeGroups = useMemo(() => {
+    if (selectedBiome !== 'all') {
+      return [{ biome: selectedBiome, animals: groupedAnimals }];
+    }
+
+    const groups: Record<string, typeof groupedAnimals> = {};
+    for (const animal of groupedAnimals) {
+      if (!groups[animal.biome]) {
+        groups[animal.biome] = [];
+      }
+      groups[animal.biome].push(animal);
+    }
+
+    return Object.entries(groups).map(([biome, animals]) => ({
+      biome: biome as BiomeType,
+      animals
+    }));
+  }, [groupedAnimals, selectedBiome]);
+
+  return (
+    <>
+      {biomeGroups.map(({ biome, animals }) => (
         <motion.div
-          key={viewMode}
+          key={biome}
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
           style={{
-            display: 'grid',
-            gridTemplateColumns: config.gridColumns,
-            gap: config.gap,
+            marginBottom: selectedBiome === 'all' ? '32px' : '0',
           }}
         >
-          {groupedAnimals.map((animal, index) => {
-            const animalScale = getAnimalScale(animal.lottieUrl);
-            const lottieSize = config.lottieSize;
-            const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
+          {/* Biome Label (only when showing all biomes) */}
+          {selectedBiome === 'all' && (
+            <div style={{
+              fontSize: '1.125rem',
+              fontWeight: 600,
+              color: getTextColor(theme, 'primary'),
+              marginBottom: '12px',
+              fontFamily: "'Quicksand', sans-serif",
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>{getBiomeConfig(biome)?.emoji}</span>
+              <span>{getBiomeConfig(biome)?.name}</span>
+            </div>
+          )}
 
-            return (
-              <motion.div
-                key={`${animal.name}-${animal.biome}`}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: Math.min(index * 0.03, 1) }}
-                whileHover={{ scale: 1.08 }}
-                title={`${animal.name}${animal.count > 1 ? ` x${animal.count}` : ''}`}
-                style={{
-                  background: getCardBackground(theme, 'primary'),
-                  backdropFilter: 'blur(25px)',
-                  WebkitBackdropFilter: 'blur(25px)',
-                  borderRadius: config.borderRadius,
-                  padding: config.padding,
-                  border: `1px solid ${getCardBorder(theme, 'primary')}`,
-                  boxShadow: getCardShadow(theme),
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: config.showName ? '6px' : '0px',
-                }}
-              >
-                {/* Lottie Animation */}
-                <div style={{
-                  width: `${lottieSize}px`,
-                  height: `${lottieSize}px`,
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: viewMode === 'yearly' ? '8px' : '16px',
-                  position: 'relative',
-                }}>
-                  {loadedAnimations[animal.lottieUrl] ? (
+          {/* Biome Container with Background */}
+          <div style={{
+            position: 'relative',
+            borderRadius: '32px',
+            overflow: 'hidden',
+            minHeight: viewMode === 'weekly' ? '400px' : viewMode === 'monthly' ? '300px' : '200px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+          }}>
+            {/* Biome Background */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 1,
+            }}>
+              <BiomeBackgrounds biomeId={biome} />
+            </div>
+
+            {/* Animals Grid Overlay */}
+            <div style={{
+              position: 'relative',
+              zIndex: 2,
+              padding: '24px',
+              display: 'grid',
+              gridTemplateColumns: config.gridColumns,
+              gap: config.gap,
+              alignContent: 'start',
+            }}>
+              {animals.map((animal, index) => {
+                const animalScale = getAnimalScale(animal.lottieUrl);
+                const lottieSize = config.lottieSize;
+                const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
+
+                return (
+                  <motion.div
+                    key={`${animal.name}-${animal.biome}`}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: Math.min(index * 0.03, 1) }}
+                    whileHover={{ scale: 1.1 }}
+                    title={`${animal.name}${animal.count > 1 ? ` x${animal.count}` : ''}`}
+                    style={{
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: config.showName ? '6px' : '0px',
+                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+                    }}
+                  >
+                    {/* Lottie Animation */}
                     <div style={{
-                      width: `${innerSize}px`,
-                      height: `${innerSize}px`,
-                      flexShrink: 0,
+                      width: `${lottieSize}px`,
+                      height: `${lottieSize}px`,
+                      overflow: 'visible',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
                     }}>
-                      <Lottie
-                        animationData={loadedAnimations[animal.lottieUrl]}
-                        loop={true}
-                        style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
-                      />
+                      {loadedAnimations[animal.lottieUrl] ? (
+                        <div style={{
+                          width: `${innerSize}px`,
+                          height: `${innerSize}px`,
+                          flexShrink: 0,
+                        }}>
+                          <Lottie
+                            animationData={loadedAnimations[animal.lottieUrl]}
+                            loop={true}
+                            style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                          />
+                        </div>
+                      ) : (
+                        <div style={{
+                          width: `${lottieSize * 0.5}px`,
+                          height: `${lottieSize * 0.5}px`,
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.3)',
+                        }} />
+                      )}
+
+                      {/* Count badge overlay */}
+                      {animal.count > 1 && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '-4px',
+                          right: '-4px',
+                          background: 'rgba(0, 0, 0, 0.7)',
+                          borderRadius: '12px',
+                          padding: '2px 6px',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          color: '#FFFFFF',
+                          fontFamily: "'Quicksand', sans-serif",
+                          border: '2px solid rgba(255, 255, 255, 0.3)',
+                        }}>
+                          x{animal.count}
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div style={{
-                      width: `${lottieSize * 0.5}px`,
-                      height: `${lottieSize * 0.5}px`,
-                      borderRadius: '50%',
-                      background: 'rgba(167, 139, 250, 0.15)',
-                    }} />
-                  )}
-                </div>
 
-                {/* Animal Name + Count */}
-                {config.showName && (
-                  <div style={{
-                    fontSize: config.fontSize,
-                    fontWeight: 600,
-                    color: getTextColor(theme, 'primary'),
-                    fontFamily: "'Quicksand', sans-serif",
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: '100%',
-                  }}>
-                    {animal.name}
-                    {animal.count > 1 && (
-                      <span style={{
-                        color: getTextColor(theme, 'secondary'),
-                        fontWeight: 500,
-                        marginLeft: '3px',
+                    {/* Animal Name (with text shadow for visibility) */}
+                    {config.showName && (
+                      <div style={{
+                        fontSize: config.fontSize,
+                        fontWeight: 700,
+                        color: '#FFFFFF',
+                        fontFamily: "'Quicksand', sans-serif",
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%',
+                        textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.6)',
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        padding: '2px 8px',
+                        borderRadius: '8px',
                       }}>
-                        x{animal.count}
-                      </span>
+                        {animal.name}
+                      </div>
                     )}
-                  </div>
-                )}
-
-                {/* Count badge for yearly view (no name shown) */}
-                {!config.showName && animal.count > 1 && (
-                  <div style={{
-                    fontSize: '9px',
-                    fontWeight: 700,
-                    color: getTextColor(theme, 'secondary'),
-                    fontFamily: "'Quicksand', sans-serif",
-                  }}>
-                    x{animal.count}
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
         </motion.div>
-      )}
-    </motion.div>
+      ))}
+    </>
   );
 };
 

@@ -458,6 +458,289 @@ const ArcticBackground: React.FC = () => {
 };
 
 /**
+ * Safari Background Component
+ * Golden savanna with acacia trees and grass
+ */
+const SafariBackground: React.FC = () => {
+  const acaciaTrees = useMemo(() =>
+    Array.from({ length: 4 }, (_, i) => ({
+      left: 15 + (i / 4) * 70,
+      height: 80 + Math.random() * 60,
+      delay: i * 0.2,
+    })), []);
+
+  const grassClumps = useMemo(() =>
+    Array.from({ length: 15 }, (_, i) => ({
+      left: (i / 15) * 100,
+      height: 20 + Math.random() * 25,
+    })), []);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      inset: 0,
+      background: 'linear-gradient(180deg, #87CEEB 0%, #F4D03F 40%, #D4A574 70%, #C19A6B 100%)',
+      overflow: 'hidden',
+    }}>
+      {/* Sun */}
+      <div style={{
+        position: 'absolute',
+        top: '15%',
+        right: '15%',
+        width: '60px',
+        height: '60px',
+        background: 'radial-gradient(circle, #FFD700 0%, #FFA500 100%)',
+        borderRadius: '50%',
+        boxShadow: '0 0 40px rgba(255, 215, 0, 0.6)',
+        zIndex: 2,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Distant hills */}
+      <div style={{
+        position: 'absolute',
+        bottom: '30%',
+        left: '-5%',
+        width: '110%',
+        height: '35%',
+        background: 'linear-gradient(to bottom, rgba(218, 165, 32, 0.4) 0%, rgba(184, 134, 11, 0.5) 100%)',
+        borderRadius: '50% 50% 0 0 / 30% 30% 0 0',
+        pointerEvents: 'none',
+        zIndex: 2,
+      }} />
+
+      {/* Acacia trees */}
+      {acaciaTrees.map((tree, i) => (
+        <div
+          key={`acacia-${i}`}
+          style={{
+            position: 'absolute',
+            bottom: '25%',
+            left: `${tree.left}%`,
+            width: '2px',
+            height: `${tree.height}px`,
+            background: 'linear-gradient(to top, #5D4E37 0%, #8B6914 100%)',
+            zIndex: 3,
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Canopy */}
+          <div style={{
+            position: 'absolute',
+            top: '10%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '50px',
+            height: '35px',
+            background: 'radial-gradient(ellipse at center, rgba(107, 142, 35, 0.7) 0%, rgba(85, 107, 47, 0.5) 100%)',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          }} />
+        </div>
+      ))}
+
+      {/* Savanna grass */}
+      {grassClumps.map((grass, i) => (
+        <div
+          key={`grass-${i}`}
+          style={{
+            position: 'absolute',
+            bottom: '15%',
+            left: `${grass.left}%`,
+            width: '3px',
+            height: `${grass.height}px`,
+            background: 'linear-gradient(to top, rgba(218, 165, 32, 0.8) 0%, rgba(189, 183, 107, 0.6) 100%)',
+            borderRadius: '3px',
+            transform: `rotate(${-10 + Math.random() * 20}deg)`,
+            zIndex: 4,
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+
+      {/* Ground layer */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '20%',
+        background: 'linear-gradient(to bottom, #D4A574 0%, #C19A6B 100%)',
+        pointerEvents: 'none',
+        zIndex: 5,
+      }} />
+
+      {/* Rocks scattered */}
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={`rock-${i}`}
+          style={{
+            position: 'absolute',
+            bottom: `${12 + i * 2}%`,
+            left: `${8 + i * 18}%`,
+            width: `${12 + Math.random() * 8}px`,
+            height: `${8 + Math.random() * 6}px`,
+            background: 'linear-gradient(135deg, #8B7355 0%, #6B5644 100%)',
+            borderRadius: '40%',
+            zIndex: 5,
+            pointerEvents: 'none',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+/**
+ * Meadow Background Component
+ * Green meadow with flowers and grass
+ */
+const MeadowBackground: React.FC = () => {
+  const flowers = useMemo(() =>
+    Array.from({ length: 20 }, () => ({
+      left: Math.random() * 100,
+      bottom: 15 + Math.random() * 35,
+      color: ['#FF69B4', '#FFD700', '#FF6347', '#9370DB', '#00CED1'][Math.floor(Math.random() * 5)],
+      size: 8 + Math.random() * 6,
+    })), []);
+
+  return (
+    <div style={{
+      position: 'absolute',
+      inset: 0,
+      background: 'linear-gradient(180deg, #87CEEB 0%, #B4E5F9 30%, #90EE90 60%, #7CCD7C 100%)',
+      overflow: 'hidden',
+    }}>
+      {/* Clouds */}
+      {[...Array(3)].map((_, i) => (
+        <motion.div
+          key={`cloud-${i}`}
+          style={{
+            position: 'absolute',
+            top: `${10 + i * 12}%`,
+            left: `${20 + i * 30}%`,
+            width: '80px',
+            height: '30px',
+            background: 'rgba(255,255,255,0.8)',
+            borderRadius: '50px',
+            filter: 'blur(6px)',
+            zIndex: 2,
+            pointerEvents: 'none',
+          }}
+          animate={{
+            x: [0, 50, 0],
+          }}
+          transition={{
+            duration: 20 + i * 5,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+      ))}
+
+      {/* Rolling hills background */}
+      <div style={{
+        position: 'absolute',
+        bottom: '25%',
+        left: '-5%',
+        width: '110%',
+        height: '45%',
+        background: 'linear-gradient(to bottom, rgba(124, 205, 124, 0.6) 0%, rgba(107, 142, 35, 0.7) 100%)',
+        borderRadius: '50% 50% 0 0 / 25% 25% 0 0',
+        pointerEvents: 'none',
+        zIndex: 3,
+      }} />
+
+      {/* Flowers scattered */}
+      {flowers.map((flower, i) => (
+        <div
+          key={`flower-${i}`}
+          style={{
+            position: 'absolute',
+            bottom: `${flower.bottom}%`,
+            left: `${flower.left}%`,
+            width: `${flower.size}px`,
+            height: `${flower.size}px`,
+            zIndex: 4,
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Petals */}
+          {[...Array(5)].map((_, p) => (
+            <div
+              key={p}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: `${flower.size * 0.6}px`,
+                height: `${flower.size * 0.6}px`,
+                background: flower.color,
+                borderRadius: '50%',
+                transform: `translate(-50%, -50%) rotate(${p * 72}deg) translateY(-${flower.size * 0.3}px)`,
+              }}
+            />
+          ))}
+          {/* Center */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: `${flower.size * 0.4}px`,
+            height: `${flower.size * 0.4}px`,
+            background: '#FFD700',
+            borderRadius: '50%',
+          }} />
+          {/* Stem */}
+          <div style={{
+            position: 'absolute',
+            bottom: '0',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '1px',
+            height: `${flower.size}px`,
+            background: '#228B22',
+          }} />
+        </div>
+      ))}
+
+      {/* Ground layer - lush grass */}
+      <div style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: '20%',
+        background: 'linear-gradient(to bottom, #7CCD7C 0%, #6B8E23 100%)',
+        pointerEvents: 'none',
+        zIndex: 5,
+      }} />
+
+      {/* Grass blades */}
+      {[...Array(25)].map((_, i) => (
+        <div
+          key={`grass-blade-${i}`}
+          style={{
+            position: 'absolute',
+            bottom: `${Math.random() * 25}%`,
+            left: `${(i / 25) * 100}%`,
+            width: '2px',
+            height: `${15 + Math.random() * 20}px`,
+            background: 'linear-gradient(to top, rgba(34, 139, 34, 0.7), rgba(124, 252, 0, 0.4))',
+            borderRadius: '2px',
+            transform: `rotate(${-15 + Math.random() * 30}deg)`,
+            zIndex: 6,
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+/**
  * Mountain Background Component
  * Gray/purple peaks with snow and animated clouds
  */
@@ -614,10 +897,12 @@ export const BiomeBackgrounds: React.FC<BiomeBackgroundProps> = ({ biomeId }) =>
       return <ArcticBackground />;
     case 'mountain':
       return <MountainBackground />;
-    case 'meadow':
     case 'safari':
+      return <SafariBackground />;
+    case 'meadow':
+      return <MeadowBackground />;
     default:
-      return null;
+      return <MeadowBackground />;
   }
 };
 
