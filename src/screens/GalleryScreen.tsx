@@ -645,6 +645,9 @@ const BiomeGalleryGrid: React.FC<{
             borderRadius: '32px',
             overflow: 'hidden',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: viewMode === 'weekly' ? '400px' : viewMode === 'monthly' ? '300px' : '200px',
           }}>
             {/* Biome Background - positioned absolutely behind content */}
             <div style={{
@@ -664,7 +667,7 @@ const BiomeGalleryGrid: React.FC<{
               gridTemplateColumns: config.gridColumns,
               gap: config.gap,
               alignContent: 'start',
-              minHeight: viewMode === 'weekly' ? '400px' : viewMode === 'monthly' ? '300px' : '200px',
+              flex: '1 1 auto',
             }}>
               {animals.map((animal, index) => {
                 const animalScale = getAnimalScale(animal.lottieUrl);
