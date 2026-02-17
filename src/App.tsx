@@ -1880,11 +1880,10 @@ export default function App() {
       transition={{ duration: 2, ease: "easeInOut" }}
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        minHeight: 'calc(100vh + env(safe-area-inset-bottom, 0px))',
+        top: '-50px',
+        left: '-50px',
+        right: '-50px',
+        bottom: '-50px',
         zIndex: 0,
       }}
     >
@@ -1898,7 +1897,6 @@ export default function App() {
         zIndex: 1,
         minHeight: '100vh',
         paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
       {/* Category Selection Modal */}
