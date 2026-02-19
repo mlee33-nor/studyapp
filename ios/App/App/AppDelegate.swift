@@ -8,6 +8,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        // Set dark background on window and root view to eliminate white bar in safe areas
+        let bgColor = UIColor(red: 30.0/255.0, green: 27.0/255.0, blue: 75.0/255.0, alpha: 1.0)
+        window?.backgroundColor = bgColor
+        DispatchQueue.main.async { [weak self] in
+            self?.window?.rootViewController?.view.backgroundColor = bgColor
+        }
         return true
     }
 
