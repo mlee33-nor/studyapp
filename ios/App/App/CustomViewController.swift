@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 class CustomViewController: CAPBridgeViewController {
 
@@ -8,23 +9,26 @@ class CustomViewController: CAPBridgeViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Extend layout to fill entire screen including behind bars and safe areas
         edgesForExtendedLayout = .all
         extendedLayoutIncludesOpaqueBars = true
+        viewRespectsSystemMinimumLayoutMargins = false
 
-        // Set the root view background — this is what shows in the safe area
         view.backgroundColor = bgColor
+        view.insetsLayoutMarginsFromSafeArea = false
 
-        // Set the WebView and its scroll view backgrounds
         webView?.isOpaque = false
         webView?.backgroundColor = bgColor
         webView?.scrollView.backgroundColor = bgColor
-
-        // Prevent scroll view from adjusting content insets for safe area
         webView?.scrollView.contentInsetAdjustmentBehavior = .never
 
-        // Ensure the WebView fills the entire view including safe areas
+        // Remove any existing constraints Capacitor placed on the WebView
         if let webView = webView {
+            for constraint in view.constraints {
+                if constraint.firstItem === webView || constraint.secondItem === webView {
+                    view.removeConstraint(constraint)
+                }
+            }
+            // Pin WebView to the physical screen edges, ignoring safe area
             webView.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
                 webView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -33,5 +37,12 @@ class CustomViewController: CAPBridgeViewController {
                 webView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
             ])
         }
+    }
+
+    // Force the WebView frame to match the full view bounds after every layout pass
+    // This overrides any safe area insets Capacitor may apply
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        webView?.frame = view.bounds
     }
 }
