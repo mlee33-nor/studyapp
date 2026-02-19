@@ -31,7 +31,7 @@ type Theme = 'morning' | 'twilight' | 'golden' | 'midnight';
 const getThemeColors = (theme: Theme) => {
   const themeMap = {
     morning: {
-      background: '#FFFFFF',
+      background: 'transparent',
       cardBg: 'rgba(255, 255, 255, 0.8)',
       border: 'rgba(100, 116, 139, 0.15)',
       headerTextColor: '#000000',  // Solid black for morning theme
@@ -221,9 +221,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       background: colors.background,
       color: colors.text.primary,
       padding: '24px 16px 120px',
-      fontFamily: "'Quicksand', sans-serif",
-      maxHeight: '100vh',
-      overflowY: 'auto'
+      fontFamily: "'Quicksand', sans-serif"
     }}>
       {/* Header */}
       <motion.div
