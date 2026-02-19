@@ -1016,7 +1016,8 @@ export default function App() {
 
     const root = document.getElementById('root');
     if (root) {
-      root.style.backgroundColor = 'transparent';
+      root.style.background = gradient;
+      root.style.backgroundAttachment = 'fixed';
     }
   }, [selectedTheme]);
 
@@ -1890,13 +1891,12 @@ export default function App() {
       <LivingAuroraBackground theme={theme} />
     </motion.div>
 
-    {/* Content container with safe area padding */}
+    {/* Content container */}
     <div
       style={{
         position: 'relative',
         zIndex: 1,
         minHeight: '100vh',
-        paddingTop: 'env(safe-area-inset-top)',
       }}
     >
       {/* Category Selection Modal */}
@@ -1910,7 +1910,8 @@ export default function App() {
         maxWidth: '480px',
         margin: '0 auto',
         position: 'relative',
-        height: activeTab === 'Timer' ? '100dvh' : 'auto',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        height: activeTab === 'Timer' ? 'calc(100dvh - env(safe-area-inset-top, 0px))' : 'auto',
         overflow: activeTab === 'Timer' ? 'hidden' : undefined,
       }}>
         {renderContent()}

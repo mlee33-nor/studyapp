@@ -496,7 +496,7 @@ const MeadowScreen: React.FC = () => {
   const periodLabel = viewMode === 'weekly' ? 'this week' : viewMode === 'monthly' ? 'this month' : 'this year';
 
   return (
-    <div className="min-h-screen pb-24 pt-8 px-6" style={{ background: 'linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%)' }}>
+    <div className="min-h-screen pb-24 pt-8 px-6">
       <div className="max-w-lg mx-auto">
         <h1 className="text-3xl font-bold text-text-primary mb-2">Your Sanctuary</h1>
         <p className="text-text-secondary mb-4">
