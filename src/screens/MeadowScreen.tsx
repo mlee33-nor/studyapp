@@ -520,7 +520,7 @@ const MeadowScreen: React.FC = () => {
       display: 'flex',
       flexDirection: 'column',
       paddingTop: '2rem',
-      paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))',
+      paddingBottom: 0,
       paddingLeft: '1.5rem',
       paddingRight: '1.5rem',
     }}>
@@ -939,7 +939,7 @@ const MeadowScreen: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25 }}
-              style={{ marginBottom: '20px' }}
+              style={{ paddingBottom: 'calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))' }}
             >
               <div style={{ perspective: '1200px', marginBottom: '20px', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
                 <div
