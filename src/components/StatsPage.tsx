@@ -220,7 +220,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       minHeight: '100dvh',
       background: colors.background,
       color: colors.text.primary,
-      padding: '24px 16px 120px',
+      padding: '24px 16px calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))',
       fontFamily: "'Quicksand', sans-serif"
     }}>
       {/* Header */}
