@@ -990,6 +990,14 @@ export default function App() {
       midnight: '#000000'
     };
 
+    // Solid fallback colors (bottom of each gradient) — shown if gradient fails to paint
+    const themeSolidFallback = {
+      morning: '#F0FFF5',
+      twilight: '#312E81',
+      golden: '#FBBF24',
+      midnight: '#1E1B4B'
+    };
+
     // Gradients that match BACKGROUND_THEMES - used for body fallback
     const gradientMap = {
       morning: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
@@ -1000,6 +1008,7 @@ export default function App() {
 
     const color = themeColorMap[selectedTheme];
     const gradient = gradientMap[selectedTheme];
+    const solidFallback = themeSolidFallback[selectedTheme];
 
     // Update meta theme-color for browser UI
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
@@ -1007,14 +1016,21 @@ export default function App() {
       metaThemeColor.setAttribute('content', color);
     }
 
-    // Set the gradient on html and body as fallback for iOS safe area
-    // This ensures the safe area shows the correct gradient instead of a solid color
-    document.documentElement.style.background = gradient;
-    document.body.style.background = gradient;
+    // Set gradient on html/body/root as fallback for areas not covered by React content.
+    // Use backgroundImage + backgroundColor separately so the dark solid color is never
+    // wiped out by the gradient shorthand (which would reset background-color to transparent,
+    // exposing the white browser canvas on iOS WebKit when html has overflow:clip).
+    const applyBackground = (el: HTMLElement) => {
+      el.style.backgroundImage = gradient;
+      el.style.backgroundColor = solidFallback;
+    };
+
+    applyBackground(document.documentElement);
+    applyBackground(document.body);
 
     const root = document.getElementById('root');
     if (root) {
-      root.style.background = gradient;
+      applyBackground(root);
     }
   }, [selectedTheme]);
 
