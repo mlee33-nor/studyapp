@@ -217,7 +217,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   // Main view
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '100dvh',
       background: colors.background,
       color: colors.text.primary,
       padding: '24px 16px 120px',
