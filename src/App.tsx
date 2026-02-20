@@ -1609,7 +1609,7 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
+          style={{ padding: '40px 24px 0', position: 'relative', zIndex: 1 }}
         >
           {/* Collection View Toggle */}
           <div style={{
@@ -1694,7 +1694,7 @@ export default function App() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={SOFT_SPRING}
-        style={{ padding: '40px 24px 160px', position: 'relative', zIndex: 1 }}
+        style={{ padding: '40px 24px calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))', position: 'relative', zIndex: 1 }}
       >
         <h1 style={{
           fontSize: '1.5rem',
