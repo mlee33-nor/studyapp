@@ -39,7 +39,6 @@ const EMOJI_SIZE = 90; // Larger size for emoji fallback animals
 
 // Depth zones - animals can't go into the sky (top 180px is sky area)
 const MIN_Y = 185; // Start on first color of green
-const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20; // Bottom boundary with padding
 
 // Safe horizontal bounds
 const MIN_X = 10;
@@ -131,6 +130,7 @@ const MeadowScreen: React.FC = () => {
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [failedAnimations, setFailedAnimations] = useState<Set<string>>(new Set());
   const meadowRef = useRef<HTMLDivElement>(null);
+  const [sceneHeight, setSceneHeight] = useState(MEADOW_HEIGHT);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
   const [allUnlocked, setAllUnlocked] = useState<boolean>(false);
 
@@ -147,12 +147,29 @@ const MeadowScreen: React.FC = () => {
     refreshData();
   }, [refreshData]);
 
+  // Track actual rendered scene height so animal bounds stay correct when the
+  // scene grows to fill available space on different device sizes.
+  useEffect(() => {
+    const el = meadowRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const h = entry.contentRect.height;
+        if (h > 0) setSceneHeight(h);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Determine unlocked biomes: if user pressed unlock button, show all; otherwise derive from level
   const unlockedBiomes: BiomeType[] = allUnlocked
     ? ALL_BIOME_IDS
     : getUnlockedBiomes(userData.level);
   const biomeAnimals = userData.meadowAnimals.filter(a => a.biome === activeBiome);
   const BiomeBackground = BiomeBackgrounds[activeBiome];
+  // Dynamic bottom boundary that adjusts when the scene grows on larger screens
+  const effectiveMaxY = sceneHeight - ANIMAL_SIZE - 20;
 
   // Timeline: filter permanentCollection by date range and active biome
   const timelineAnimals = useMemo(() => {
@@ -301,6 +318,8 @@ const MeadowScreen: React.FC = () => {
 
       const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
       const maxX = meadowWidth - ANIMAL_SIZE - 10;
+      const meadowHeight = meadowRef.current?.offsetHeight ?? MEADOW_HEIGHT;
+      const dynamicMaxY = meadowHeight - ANIMAL_SIZE - 20;
 
       let flipsChanged = false;
       const newFlips: Record<string, boolean> = {};
@@ -317,8 +336,8 @@ const MeadowScreen: React.FC = () => {
           const currentY = inst.y.get();
           let newY = currentY + inst.direction * WALKING_SPEED * delta;
 
-          if (newY >= MAX_Y) {
-            newY = MAX_Y;
+          if (newY >= dynamicMaxY) {
+            newY = dynamicMaxY;
             inst.direction = -1;
             newFlips[id] = true;
             flipsChanged = true;
@@ -368,7 +387,7 @@ const MeadowScreen: React.FC = () => {
   const getBounds = () => {
     const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
     const maxX = meadowWidth - ANIMAL_SIZE - 10;
-    return { minX: MIN_X, maxX, minY: MIN_Y, maxY: MAX_Y };
+    return { minX: MIN_X, maxX, minY: MIN_Y, maxY: effectiveMaxY };
   };
 
   // Constrain position to valid bounds
@@ -496,8 +515,16 @@ const MeadowScreen: React.FC = () => {
   const periodLabel = viewMode === 'weekly' ? 'this week' : viewMode === 'monthly' ? 'this month' : 'this year';
 
   return (
-    <div className="min-h-screen pb-24 pt-8 px-6">
-      <div className="max-w-lg mx-auto">
+    <div style={{
+      minHeight: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      paddingTop: '2rem',
+      paddingBottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))',
+      paddingLeft: '1.5rem',
+      paddingRight: '1.5rem',
+    }}>
+      <div style={{ maxWidth: '32rem', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', flex: 1 }}>
         <h1 className="text-3xl font-bold text-text-primary mb-2">Your Sanctuary</h1>
         <p className="text-text-secondary mb-4">
           Explore different biomes and collect unique animals
@@ -745,8 +772,9 @@ const MeadowScreen: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
+              style={{ display: 'flex', flexDirection: 'column', flex: 1 }}
             >
-              <div style={{ perspective: '1200px', marginBottom: '20px', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
+              <div style={{ perspective: '1200px', flex: 1, display: 'flex', flexDirection: 'column', filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15)) drop-shadow(0 10px 15px rgba(0,0,0,0.08))' }}>
                 <div
                   style={{
                     padding: '0',
@@ -754,13 +782,17 @@ const MeadowScreen: React.FC = () => {
                     borderRadius: '28px',
                     transform: 'rotateX(8deg)',
                     transformStyle: 'preserve-3d',
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}
                 >
                   <div
                     ref={meadowRef}
                     style={{
                       position: 'relative',
-                      height: `${MEADOW_HEIGHT}px`,
+                      flex: 1,
+                      minHeight: `${MEADOW_HEIGHT}px`,
                       borderRadius: '28px',
                       overflow: 'hidden',
                       boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)'
@@ -819,7 +851,7 @@ const MeadowScreen: React.FC = () => {
                             left: MIN_X,
                             right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - size - 10,
                             top: MIN_Y,
-                            bottom: MAX_Y,
+                            bottom: effectiveMaxY,
                           }}
                           onDragStart={() => { if (isWalker) handleWalkingDragStart(animal.id); }}
                           onDragEnd={(event, info) => {
