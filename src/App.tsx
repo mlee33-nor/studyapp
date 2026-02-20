@@ -1010,14 +1010,11 @@ export default function App() {
     // Set the gradient on html and body as fallback for iOS safe area
     // This ensures the safe area shows the correct gradient instead of a solid color
     document.documentElement.style.background = gradient;
-    document.documentElement.style.backgroundAttachment = 'fixed';
     document.body.style.background = gradient;
-    document.body.style.backgroundAttachment = 'fixed';
 
     const root = document.getElementById('root');
     if (root) {
       root.style.background = gradient;
-      root.style.backgroundAttachment = 'fixed';
     }
   }, [selectedTheme]);
 
@@ -1286,7 +1283,7 @@ export default function App() {
   const renderContent = () => {
     if (activeTab === 'Timer') return (
       <div style={{
-        height: '100vh',
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -1896,7 +1893,7 @@ export default function App() {
       style={{
         position: 'relative',
         zIndex: 1,
-        minHeight: '100vh',
+        minHeight: '100dvh',
       }}
     >
       {/* Category Selection Modal */}
@@ -1912,6 +1909,7 @@ export default function App() {
         position: 'relative',
         paddingTop: 'env(safe-area-inset-top, 0px)',
         height: activeTab === 'Timer' ? 'calc(100dvh - env(safe-area-inset-top, 0px))' : 'auto',
+        minHeight: activeTab !== 'Timer' ? '100dvh' : undefined,
         overflow: activeTab === 'Timer' ? 'hidden' : undefined,
       }}>
         {renderContent()}
