@@ -1,0 +1,9 @@
+{
+  "name": "StudyBuddy",
+  "short_name": "StudyBuddy",
+  "start_url": "/studyapp/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1E1B4B",
+  "orientation": "portrait"
+}

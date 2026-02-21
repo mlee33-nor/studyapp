@@ -1,44 +1,14 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import Lottie from 'lottie-react';
 import type { BiomeType } from '../types';
 import { BIOME_CONFIG } from '../data/biomes';
 
 interface BiomeUnlockCelebrationProps {
   biomeId: BiomeType;
-  stage: number; // 0=appear, 1=first crack, 2=intense glow, 3=bloom
+  stage: number; // 0=appear, 1=first shake, 2=intense shake, 3=burst+reveal
   onTap: () => void;
 }
-
-// Crack line positions for each stage
-const CRACKS_STAGE_1 = [
-  { x: -8, y: -20, rotate: -25, height: 40 },
-  { x: 12, y: -15, rotate: 35, height: 30 },
-  { x: -3, y: 10, rotate: -60, height: 25 },
-];
-
-const CRACKS_STAGE_2 = [
-  ...CRACKS_STAGE_1,
-  { x: 15, y: 5, rotate: 50, height: 35 },
-  { x: -15, y: -5, rotate: -40, height: 32 },
-  { x: 5, y: -25, rotate: 15, height: 28 },
-  { x: -10, y: 18, rotate: -70, height: 22 },
-];
-
-// Sparkle orbiting positions
-const makeSparkles = (count: number) =>
-  Array.from({ length: count }, (_, i) => ({
-    angle: (i / count) * Math.PI * 2,
-    radius: 70 + (i % 3) * 15,
-    size: 4 + (i % 3) * 2,
-    delay: i * 0.12,
-  }));
-
-const SPARKLES_6 = makeSparkles(6);
-const SPARKLES_10 = makeSparkles(10);
-const SPARKLES_8 = makeSparkles(8);
-
-// Gem clip-path (pentagon/crystal shape)
-const GEM_CLIP = 'polygon(50% 0%, 85% 25%, 75% 85%, 25% 85%, 15% 25%)';
 
 export const BiomeUnlockCelebration: React.FC<BiomeUnlockCelebrationProps> = ({
   biomeId,
@@ -47,7 +17,32 @@ export const BiomeUnlockCelebration: React.FC<BiomeUnlockCelebrationProps> = ({
 }) => {
   const config = BIOME_CONFIG[biomeId];
   const color = config.primaryColor;
+  const color2 = config.secondaryColor;
   const emoji = config.emoji;
+
+  // Load chest Lottie
+  const [chestAnimData, setChestAnimData] = useState<any>(null);
+  const chestLottieRef = useRef<any>(null);
+
+  useEffect(() => {
+    fetch('/studyapp/treasure-3d.json')
+      .then(r => r.json())
+      .then(data => setChestAnimData(data))
+      .catch(() => {});
+  }, []);
+
+  // Control chest Lottie playback per stage
+  useEffect(() => {
+    if (!chestLottieRef.current) return;
+    const lottie = chestLottieRef.current;
+    if (stage === 0) {
+      lottie.goToAndStop(0, true);
+    } else if (stage === 1) {
+      lottie.playSegments([0, 45], true);
+    } else if (stage === 2) {
+      lottie.playSegments([45, 90], true);
+    }
+  }, [stage]);
 
   return (
     <motion.div
@@ -58,289 +53,269 @@ export const BiomeUnlockCelebration: React.FC<BiomeUnlockCelebrationProps> = ({
       transition={{ duration: 0.3 }}
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100dvh',
-        background: 'rgba(0, 0, 0, 0.85)',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: stage >= 3
+          ? `radial-gradient(circle, ${color}66 0%, rgba(0,0,0,0.85) 70%)`
+          : 'rgba(0, 0, 0, 0.85)',
         zIndex: 99999,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         overflow: 'hidden',
+        transition: 'background 0.5s ease',
       }}
     >
-      <AnimatePresence mode="wait">
-        {stage < 3 ? (
-          /* ── Crystal Gem (stages 0–2) ── */
-          <motion.div
-            key="crystal"
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {/* Outer glow */}
-            <motion.div
-              animate={{
-                boxShadow: [
-                  `0 0 40px 15px ${color}44, 0 0 80px 30px ${color}22`,
-                  `0 0 60px 25px ${color}66, 0 0 100px 40px ${color}33`,
-                  `0 0 40px 15px ${color}44, 0 0 80px 30px ${color}22`,
-                ],
-                scale: stage === 2 ? [1, 1.08, 1] : [1, 1.03, 1],
-              }}
-              transition={{ duration: stage === 2 ? 0.6 : 1.2, repeat: Infinity }}
-              style={{
-                position: 'absolute',
-                width: 160,
-                height: 180,
-                borderRadius: '50%',
-              }}
-            />
+      {/* Biome-colored light rays behind chest (stage 2+) */}
+      {stage >= 2 && stage < 3 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.3 }}
+          animate={{ opacity: [0, 0.8, 0.5], scale: [0.3, 1.5, 1.2] }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          style={{
+            position: 'absolute',
+            width: '400px', height: '400px',
+            background: `radial-gradient(circle, ${color}80 0%, ${color}33 40%, transparent 70%)`,
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
 
-            {/* Crystal gem body */}
-            <motion.div
-              initial={{ scale: 0, rotate: -15 }}
-              animate={{
-                scale: 1,
-                rotate: stage === 0
-                  ? 0
-                  : stage === 1
-                    ? [-4, 4, -4, 4, 0]
-                    : [-7, 7, -9, 9, -5, 5, 0],
-              }}
-              transition={
-                stage === 0
-                  ? { type: 'spring', damping: 10, stiffness: 200 }
-                  : { duration: stage === 1 ? 0.5 : 0.6, ease: 'easeInOut' }
-              }
-              style={{
-                width: 140,
-                height: 160,
-                clipPath: GEM_CLIP,
-                background: `linear-gradient(160deg, ${color}CC 0%, ${color} 40%, ${color}88 100%)`,
-                border: `2px solid ${color}`,
-                boxShadow: `inset 0 0 30px ${color}66, 0 0 20px ${color}44`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              {/* Biome emoji inside crystal */}
+      {/* The 3D Chest (stages 0-2) */}
+      {stage < 3 && (
+        <motion.div
+          animate={
+            stage === 0 ? { scale: [0, 1.15, 1], rotate: 0 } :
+            stage === 1 ? {
+              rotate: [-4, 4, -4, 4, -3, 3, 0],
+              scale: [1, 1.06, 1],
+            } :
+            {
+              rotate: [-7, 7, -9, 9, -7, 7, -5, 5, 0],
+              scale: [1, 1.1, 1.03, 1.1, 1],
+              y: [0, -8, 0, -5, 0],
+            }
+          }
+          transition={
+            stage === 0
+              ? { type: 'spring', stiffness: 300, damping: 15, duration: 0.5 }
+              : { duration: stage === 1 ? 0.5 : 0.7, ease: 'easeInOut' }
+          }
+          style={{
+            position: 'relative',
+            width: '200px',
+            height: '200px',
+            filter: stage >= 2
+              ? `drop-shadow(0 0 30px ${color}99)`
+              : 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))',
+          }}
+        >
+          {/* 3D Lottie Chest */}
+          {chestAnimData && (
+            <Lottie
+              lottieRef={chestLottieRef}
+              animationData={chestAnimData}
+              loop={false}
+              autoplay={false}
+              style={{ width: '100%', height: '100%' }}
+            />
+          )}
+
+          {/* Biome emoji peeking out of chest (stage 1+) */}
+          {stage >= 1 && (
+            <div style={{
+              position: 'absolute',
+              top: '8%', left: '15%',
+              width: '70%', height: '50%',
+              overflow: 'hidden',
+              zIndex: 1,
+              pointerEvents: 'none',
+            }}>
               <motion.div
-                animate={{
-                  opacity: stage === 0 ? 0.3 : stage === 1 ? 0.5 : 0.7,
+                initial={{ y: 60, opacity: 0 }}
+                animate={
+                  stage === 1
+                    ? { y: [30, 15, 30], opacity: 1, rotate: [-4, 4, -4] }
+                    : { y: [10, -8, 10], opacity: 1, rotate: [-6, 6, -6], scale: [1, 1.1, 1] }
+                }
+                transition={{
+                  duration: stage === 1 ? 1 : 0.6,
+                  repeat: Infinity,
+                  repeatType: 'reverse',
+                  ease: 'easeInOut',
                 }}
                 style={{
-                  fontSize: 56,
-                  filter: `blur(${stage === 0 ? 2 : stage === 1 ? 1 : 0}px)`,
-                  zIndex: 2,
+                  width: '90px', height: '90px',
+                  margin: '0 auto',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '60px',
+                  filter: `drop-shadow(0 2px 8px ${color}80)`,
                 }}
               >
                 {emoji}
               </motion.div>
+            </div>
+          )}
 
-              {/* Crack lines */}
-              {stage >= 1 && (stage === 1 ? CRACKS_STAGE_1 : CRACKS_STAGE_2).map((crack, i) => (
-                <motion.div
-                  key={`crack-${i}`}
-                  initial={{ opacity: 0, scaleY: 0 }}
-                  animate={{ opacity: 0.9, scaleY: 1 }}
-                  transition={{ delay: i * 0.05, duration: 0.2 }}
-                  style={{
-                    position: 'absolute',
-                    left: `calc(50% + ${crack.x}px)`,
-                    top: `calc(50% + ${crack.y}px)`,
-                    width: 2,
-                    height: crack.height,
-                    background: 'rgba(255, 255, 255, 0.85)',
-                    transform: `rotate(${crack.rotate}deg)`,
-                    transformOrigin: 'top center',
-                    borderRadius: 1,
-                    boxShadow: `0 0 6px 1px rgba(255, 255, 255, 0.5)`,
-                    zIndex: 3,
-                  }}
-                />
-              ))}
+          {/* Sparkles around chest (stage 1+) */}
+          {stage >= 1 && (
+            <>
+              {[...Array(stage >= 2 ? 10 : 6)].map((_, i) => {
+                const count = stage >= 2 ? 10 : 6;
+                const angle = (i / count) * Math.PI * 2;
+                const radius = stage >= 2 ? 120 : 90;
+                return (
+                  <motion.div
+                    key={`sparkle-${i}`}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      scale: [0, 1.5, 0],
+                      x: Math.cos(angle) * radius,
+                      y: Math.sin(angle) * radius,
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      delay: i * 0.06,
+                      repeat: Infinity,
+                      repeatDelay: 0.2,
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '50%', left: '50%',
+                      width: stage >= 2 ? '8px' : '5px',
+                      height: stage >= 2 ? '8px' : '5px',
+                      background: i % 3 === 0 ? color : i % 3 === 1 ? color2 : '#FFFFFF',
+                      borderRadius: '50%',
+                      boxShadow: `0 0 10px ${color}CC`,
+                      pointerEvents: 'none',
+                    }}
+                  />
+                );
+              })}
+            </>
+          )}
 
-              {/* Light leak glow (stage 2) */}
-              {stage === 2 && (
-                <motion.div
-                  animate={{
-                    opacity: [0.3, 0.7, 0.3],
-                  }}
-                  transition={{ duration: 0.8, repeat: Infinity }}
-                  style={{
-                    position: 'absolute',
-                    inset: -10,
-                    background: `radial-gradient(circle, ${color}88 0%, transparent 60%)`,
-                    zIndex: 1,
-                  }}
-                />
-              )}
-            </motion.div>
-
-            {/* Orbiting sparkles */}
-            {stage >= 1 && (stage === 1 ? SPARKLES_6 : SPARKLES_10).map((sp, i) => (
-              <motion.div
-                key={`sparkle-${i}`}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0.5, 1, 0.5],
-                  x: [
-                    Math.cos(sp.angle) * (sp.radius - 20),
-                    Math.cos(sp.angle + 0.5) * sp.radius,
-                    Math.cos(sp.angle + 1) * (sp.radius - 20),
-                  ],
-                  y: [
-                    Math.sin(sp.angle) * (sp.radius - 20),
-                    Math.sin(sp.angle + 0.5) * sp.radius,
-                    Math.sin(sp.angle + 1) * (sp.radius - 20),
-                  ],
-                }}
-                transition={{
-                  duration: 2,
-                  delay: sp.delay,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
-                style={{
-                  position: 'absolute',
-                  width: sp.size,
-                  height: sp.size,
-                  borderRadius: '50%',
-                  background: 'white',
-                  boxShadow: `0 0 8px 2px ${color}AA`,
-                }}
-              />
-            ))}
-          </motion.div>
-        ) : (
-          /* ── Stage 3: Bloom / Reveal ── */
-          <motion.div
-            key="reveal"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-            }}
-          >
-            {/* Expanding glow ring */}
+          {/* Biome-colored glow pulse on stage 2 */}
+          {stage >= 2 && (
             <motion.div
-              initial={{ scale: 0, opacity: 0.8 }}
-              animate={{ scale: 4, opacity: 0 }}
-              transition={{ duration: 1.2, ease: 'easeOut' }}
+              animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.1, 1] }}
+              transition={{ duration: 0.5, repeat: Infinity }}
               style={{
                 position: 'absolute',
-                width: 120,
-                height: 120,
+                top: '-20%', left: '-20%',
+                width: '140%', height: '140%',
+                background: `radial-gradient(circle, ${color}4D 0%, transparent 60%)`,
                 borderRadius: '50%',
-                border: `3px solid ${color}`,
-                boxShadow: `0 0 30px ${color}66`,
+                pointerEvents: 'none',
               }}
             />
+          )}
+        </motion.div>
+      )}
 
-            {/* Big biome emoji reveal */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.35, 1.05] }}
-              transition={{
-                type: 'spring',
-                damping: 8,
-                stiffness: 180,
-                mass: 1.2,
-              }}
-              style={{
-                fontSize: 96,
-                marginBottom: 24,
-                filter: `drop-shadow(0 0 20px ${color}88)`,
-              }}
-            >
-              {emoji}
-            </motion.div>
+      {/* Stage 3: Biome Reveal */}
+      {stage >= 3 && (
+        <>
+          {/* Glow ring */}
+          <motion.div
+            initial={{ scale: 0, opacity: 1 }}
+            animate={{ scale: [0, 2], opacity: [1, 0] }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            style={{
+              position: 'absolute',
+              width: '200px', height: '200px',
+              border: `4px solid ${color}99`,
+              borderRadius: '50%',
+              boxShadow: `0 0 40px ${color}66, inset 0 0 40px ${color}33`,
+              pointerEvents: 'none',
+            }}
+          />
 
-            {/* "BIOME UNLOCKED!" text */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, type: 'spring', damping: 12 }}
-              style={{
-                fontSize: 22,
-                fontWeight: 900,
-                color: '#FFFFFF',
-                fontFamily: "'Quicksand', 'Arial Black', sans-serif",
-                letterSpacing: '0.25em',
-                textTransform: 'uppercase',
-                textShadow: `0 0 30px ${color}, 0 0 60px ${color}88, 0 3px 12px rgba(0,0,0,0.8)`,
-                padding: '12px 28px',
-                border: '2px solid rgba(255,255,255,0.5)',
-                borderRadius: 14,
-                background: `linear-gradient(135deg, ${color}44 0%, ${color}22 100%)`,
-                backdropFilter: 'blur(6px)',
-                marginBottom: 14,
-              }}
-            >
-              BIOME UNLOCKED!
-            </motion.div>
-
-            {/* Biome name */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              style={{
-                fontSize: 32,
-                fontWeight: 700,
-                color: '#FFFFFF',
-                fontFamily: "'Quicksand', sans-serif",
-                textShadow: `0 0 20px ${color}, 0 2px 8px rgba(0,0,0,0.6)`,
-              }}
-            >
-              {config.name}
-            </motion.div>
-
-            {/* Orbiting sparkles in biome colors */}
-            {SPARKLES_8.map((sp, i) => (
-              <motion.div
-                key={`bloom-sparkle-${i}`}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{
-                  opacity: [0, 1, 0.6, 1, 0],
-                  scale: [0, 1.2, 0.8, 1, 0],
-                  x: [0, Math.cos(sp.angle) * sp.radius, Math.cos(sp.angle + 1) * (sp.radius + 20)],
-                  y: [0, Math.sin(sp.angle) * sp.radius, Math.sin(sp.angle + 1) * (sp.radius + 20)],
-                }}
-                transition={{
-                  duration: 2.5,
-                  delay: sp.delay * 0.5,
-                  ease: 'easeOut',
-                }}
-                style={{
-                  position: 'absolute',
-                  width: sp.size + 2,
-                  height: sp.size + 2,
-                  borderRadius: '50%',
-                  background: i % 2 === 0 ? color : config.secondaryColor,
-                  boxShadow: `0 0 10px 3px ${color}AA`,
-                }}
-              />
-            ))}
+          {/* Big biome emoji reveal */}
+          <motion.div
+            initial={{ scale: 0, rotate: -10 }}
+            animate={{ scale: [0, 1.35, 1.05], rotate: [-10, 5, 0] }}
+            transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.1 }}
+            style={{
+              fontSize: 96,
+              filter: `drop-shadow(0 0 30px ${color}B3)`,
+              zIndex: 2,
+            }}
+          >
+            {emoji}
           </motion.div>
-        )}
-      </AnimatePresence>
+
+          {/* "BIOME UNLOCKED!" text */}
+          <motion.div
+            initial={{ y: -40, opacity: 0, scale: 0.5 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.25 }}
+            style={{
+              marginTop: '12px',
+              fontSize: '28px',
+              fontWeight: 900,
+              fontFamily: "'Quicksand', sans-serif",
+              color: color2,
+              textShadow: `0 0 20px ${color}, 0 0 40px ${color}80, 0 2px 4px rgba(0,0,0,0.8)`,
+              letterSpacing: '4px',
+              zIndex: 2,
+            }}
+          >
+            UNLOCKED!
+          </motion.div>
+
+          {/* Biome name */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            style={{
+              marginTop: '6px',
+              fontSize: '20px',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              fontFamily: "'Quicksand', sans-serif",
+              textShadow: `0 0 12px ${color}99, 0 2px 4px rgba(0,0,0,0.7)`,
+              zIndex: 2,
+            }}
+          >
+            {config.name}
+          </motion.div>
+
+          {/* Orbiting sparkles */}
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={`orbit-${i}`}
+              initial={{ opacity: 0 }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0.5, 1.5, 0.5],
+                x: [0, Math.cos((i / 8) * Math.PI * 2) * 140, Math.cos((i / 8) * Math.PI * 2) * 180],
+                y: [0, Math.sin((i / 8) * Math.PI * 2) * 140, Math.sin((i / 8) * Math.PI * 2) * 180],
+              }}
+              transition={{
+                duration: 2,
+                delay: i * 0.1,
+                repeat: Infinity,
+                ease: 'easeOut',
+              }}
+              style={{
+                position: 'absolute',
+                width: '6px', height: '6px',
+                borderRadius: '50%',
+                background: i % 2 === 0 ? color : color2,
+                boxShadow: `0 0 12px ${color}CC`,
+                pointerEvents: 'none',
+              }}
+            />
+          ))}
+        </>
+      )}
 
       {/* Tap prompt text */}
       {stage < 3 && (
@@ -348,16 +323,17 @@ export const BiomeUnlockCelebration: React.FC<BiomeUnlockCelebrationProps> = ({
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity }}
           style={{
-            position: 'absolute',
-            bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
-            fontSize: 16,
-            fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.8)',
+            marginTop: '32px',
+            fontSize: 18,
+            fontWeight: 700,
+            color: 'rgba(255, 255, 255, 0.85)',
             fontFamily: "'Quicksand', sans-serif",
-            letterSpacing: '0.05em',
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            textShadow: `0 0 12px ${color}66`,
           }}
         >
-          {stage === 2 ? 'One more tap!' : 'Tap to reveal!'}
+          {stage === 2 ? 'ONE MORE TAP!' : 'TAP TO OPEN!'}
         </motion.div>
       )}
     </motion.div>
