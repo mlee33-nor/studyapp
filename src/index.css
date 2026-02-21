@@ -83,7 +83,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  background: #1E1B4B;
+  background: transparent;
   overscroll-behavior: none;
 }
 

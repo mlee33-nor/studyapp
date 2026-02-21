@@ -1563,10 +1563,10 @@ export default function App() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'flex-start',
+          justifyContent: 'center',
           width: '100%',
           padding: '0 1.25rem',
-          paddingBottom: '80px',
+          paddingBottom: 'calc(40px + max(12px, env(safe-area-inset-bottom, 12px)))',
         }}>
           {/* Start/Stop Buttons */}
           <div style={{
