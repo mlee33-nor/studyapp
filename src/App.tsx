@@ -2337,7 +2337,7 @@ export default function App() {
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 const storageData = getStorageUserData();
-                const newCoins = (storageData.coins || 0) + 500;
+                const newCoins = (storageData.coins || 0) + 5000;
                 updateStorageUserData({ coins: newCoins });
                 const newData = { ...userData, coins: newCoins };
                 setUserData(newData);
@@ -2356,7 +2356,7 @@ export default function App() {
                 cursor: 'pointer',
               }}
             >
-              +500 Coins
+              +5,000 Coins
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.95 }}
