@@ -1354,7 +1354,7 @@ export default function App() {
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px' }}>&#x1FA99;</span> {userData.coins ?? 0}
+                <span style={{ fontSize: '14px' }}>&#x1F4B0;</span> {userData.coins ?? 0}
               </div>
             </div>
             {currentCategory && (
@@ -1531,7 +1531,7 @@ export default function App() {
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px' }}>&#x1FA99;</span> {userData.coins ?? 0} coins
+                <span style={{ fontSize: '14px' }}>&#x1F4B0;</span> {userData.coins ?? 0} coins
               </div>
               <div style={{
                 display: 'flex',
@@ -1625,7 +1625,7 @@ export default function App() {
                             : getTextColor(selectedTheme, 'tertiary'),
                           fontFamily: "'Quicksand', sans-serif",
                         }}>
-                          <span style={{ fontSize: '11px' }}>&#x1FA99;</span>{animal.price}
+                          <span style={{ fontSize: '11px' }}>&#x1F4B0;</span>{animal.price}
                         </div>
                       )}
                     </motion.button>
@@ -1718,7 +1718,7 @@ export default function App() {
                 fontFamily: "'Quicksand', sans-serif",
                 marginBottom: '20px',
               }}>
-                <span style={{ fontSize: '16px' }}>&#x1FA99;</span> {purchaseTarget.price}
+                <span style={{ fontSize: '16px' }}>&#x1F4B0;</span> {purchaseTarget.price}
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <motion.button

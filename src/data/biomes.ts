@@ -97,14 +97,14 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     name: 'Elephant',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ad2abee-8ab1-11ee-8fae-d7b22e00dcc5/Q3wSZsw2nW.json',
     scale: 1.4,
-    price: 75,
+    price: 800,
   },
   {
     id: 'monkey',
     name: 'Monkey',
     lottieUrl: 'https://lottie.host/bb7f5f88-4b2f-44be-a11e-bde846e63553/xu4hfxE8ir.json',
     scale: 2.0,
-    price: 100,
+    price: 800,
   },
 ];
 
@@ -129,19 +129,19 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
     name: 'Fox',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/9c4b280c-116f-11ee-8e54-17fdd56ae6ce/nZEIpQEdUZ.json',
     scale: 1.5,
-    price: 100,
+    price: 800,
   },
   {
     id: 'owl',
     name: 'Owl',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
-    price: 125,
+    price: 800,
   },
   {
     id: 'hedgehog',
     name: 'Hedgehog',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/217eea54-1152-11ee-80aa-bb89673ffc3b/GtbajlQ7yk.json',
-    price: 150,
+    price: 800,
   },
 ];
 
@@ -164,13 +164,13 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
     id: 'octopus',
     name: 'Octopus',
     lottieUrl: 'https://lottie.host/47b9c759-50cb-4bc5-9461-b649b5e9d4a8/Wm0OQMHHjm.json',
-    price: 125,
+    price: 800,
   },
   {
     id: 'whale',
     name: 'Whale',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/432126fa-1151-11ee-81d6-fbec6e0e68cb/yvKkYB9pgL.json',
-    price: 150,
+    price: 800,
   },
 ];
 
@@ -192,13 +192,13 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
     id: 'arctic_fox',
     name: 'Arctic Fox',
     lottieUrl: 'https://lottie.host/d3c1b1e1-a463-4a0f-b1df-f272da956d77/lfzKlyXeao.json',
-    price: 150,
+    price: 800,
   },
   {
     id: 'polar_bear',
     name: 'Polar Bear',
     lottieUrl: 'https://lottie.host/22db9151-bf0a-411d-b178-8a906267b28c/wP2cRjqZ4n.json',
-    price: 175,
+    price: 800,
   },
 ];
 
@@ -220,13 +220,13 @@ export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
     id: 'yak',
     name: 'Yak',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/71feb22a-0620-11ef-a850-9ba4d00d4ca9/jtmaGxZkus.json',
-    price: 175,
+    price: 800,
   },
   {
     id: 'phoenix',
     name: 'Phoenix',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/c9471362-117d-11ee-9f06-d76a368bf2f8/C3dWG6j7NP.json',
-    price: 200,
+    price: 800,
   },
 ];
 
@@ -249,14 +249,14 @@ export const MEADOW_ANIMALS: BiomeAnimal[] = [
     id: 'kitten',
     name: 'Kitten',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json',
-    price: 50,
+    price: 800,
   },
   {
     id: 'dog',
     name: 'Dog',
     lottieUrl: 'https://lottie.host/8dfb9eb5-a82b-46e7-9f99-f219f965289f/aNZrfBaezt.json',
     scale: 2,
-    price: 75,
+    price: 800,
   },
 ];
 

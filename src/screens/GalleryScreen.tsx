@@ -22,7 +22,6 @@ import {
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { BiomeType, CollectedAnimal } from '../types';
 import { getBiomeConfig, BIOME_CONFIG, getAnimalScale } from '../data/biomes';
-import BiomeBackgrounds from '../components/BiomeBackgrounds';
 
 type TimelineViewMode = 'weekly' | 'monthly' | 'yearly';
 
@@ -417,20 +416,8 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      style={{ padding: '40px 24px calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))', position: 'relative', zIndex: 1 }}
+      style={{ padding: '0 24px calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))', position: 'relative', zIndex: 1 }}
     >
-      {/* Header */}
-      <h1 style={{
-        fontSize: '1.5rem',
-        fontWeight: 500,
-        color: getTextColor(theme, 'primary'),
-        marginBottom: '24px',
-        letterSpacing: '0.05em',
-        fontFamily: "'Quicksand', sans-serif"
-      }}>
-        Animal Sanctuary
-      </h1>
-
       {/* View Mode Toggle */}
       <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} theme={theme} />
 
@@ -452,9 +439,9 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
           background: getCardBackground(theme, 'primary'),
           backdropFilter: 'blur(25px)',
           WebkitBackdropFilter: 'blur(25px)',
-          borderRadius: '32px',
-          padding: '20px 24px',
-          marginBottom: '20px',
+          borderRadius: '20px',
+          padding: '12px 16px',
+          marginBottom: '12px',
           border: `1px solid ${getCardBorder(theme, 'primary')}`,
           boxShadow: getCardShadow(theme),
           display: 'flex',
@@ -493,7 +480,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
       <div style={{
         display: 'flex',
         gap: '8px',
-        marginBottom: '24px',
+        marginBottom: '12px',
         overflowX: 'auto',
         paddingBottom: '8px'
       }}>
@@ -589,7 +576,7 @@ const BiomeGalleryGrid: React.FC<{
   config: typeof VIEW_CONFIG[TimelineViewMode];
   loadedAnimations: Record<string, any>;
   theme: 'morning' | 'twilight' | 'golden' | 'midnight';
-}> = ({ groupedAnimals, selectedBiome, viewMode, config, loadedAnimations, theme }) => {
+}> = ({ groupedAnimals, selectedBiome, viewMode: _viewMode, config, loadedAnimations, theme }) => {
   // Group animals by biome when 'all' is selected
   const biomeGroups = useMemo(() => {
     if (selectedBiome !== 'all') {
@@ -639,35 +626,27 @@ const BiomeGalleryGrid: React.FC<{
             </div>
           )}
 
-          {/* Biome Container with Background */}
+          {/* Biome Container */}
           <div style={{
             position: 'relative',
             borderRadius: '32px',
             overflow: 'hidden',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+            boxShadow: getCardShadow(theme),
             display: 'flex',
             flexDirection: 'column',
-            minHeight: viewMode === 'weekly' ? '400px' : viewMode === 'monthly' ? '300px' : '200px',
+            background: getCardBackground(theme, 'primary'),
+            backdropFilter: 'blur(25px)',
+            WebkitBackdropFilter: 'blur(25px)',
+            border: `1px solid ${getCardBorder(theme, 'primary')}`,
           }}>
-            {/* Biome Background - positioned absolutely behind content */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              zIndex: 1,
-            }}>
-              <BiomeBackgrounds biomeId={biome} />
-            </div>
-
-            {/* Animals Grid - establishes container height */}
+            {/* Animals Grid */}
             <div style={{
               position: 'relative',
-              zIndex: 2,
               padding: '24px',
               display: 'grid',
               gridTemplateColumns: config.gridColumns,
               gap: config.gap,
               alignContent: 'start',
-              flex: '1 1 auto',
             }}>
               {animals.map((animal, index) => {
                 const animalScale = getAnimalScale(animal.lottieUrl);
@@ -688,7 +667,7 @@ const BiomeGalleryGrid: React.FC<{
                       flexDirection: 'column',
                       alignItems: 'center',
                       gap: config.showName ? '6px' : '0px',
-                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+                      filter: 'none',
                     }}
                   >
                     {/* Lottie Animation */}
@@ -742,21 +721,17 @@ const BiomeGalleryGrid: React.FC<{
                       )}
                     </div>
 
-                    {/* Animal Name (with text shadow for visibility) */}
+                    {/* Animal Name */}
                     {config.showName && (
                       <div style={{
                         fontSize: config.fontSize,
                         fontWeight: 700,
-                        color: '#FFFFFF',
+                        color: getTextColor(theme, 'primary'),
                         fontFamily: "'Quicksand', sans-serif",
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         maxWidth: '100%',
-                        textShadow: '0 2px 8px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.6)',
-                        background: 'rgba(0, 0, 0, 0.4)',
-                        padding: '2px 8px',
-                        borderRadius: '8px',
                       }}>
                         {animal.name}
                       </div>
