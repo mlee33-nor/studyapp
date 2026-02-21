@@ -34,15 +34,6 @@ import oceanBg from '../assets/biomes/ocean.jpg';
 import arcticBg from '../assets/biomes/arctic.jpg';
 import mountainBg from '../assets/biomes/mountains.jpg';
 
-const BIOME_IMAGES: Record<string, string> = {
-  meadow: meadowBg,
-  safari: safariBg,
-  forest: forestBg,
-  ocean:  oceanBg,
-  arctic: arcticBg,
-  mountain: mountainBg,
-};
-
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
 const MEADOW_HEIGHT = 450;

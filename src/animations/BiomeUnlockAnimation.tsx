@@ -49,8 +49,6 @@ export const BiomeUnlockCelebration: React.FC<BiomeUnlockCelebrationProps> = ({
   const color = config.primaryColor;
   const emoji = config.emoji;
 
-  const sparkles = stage === 1 ? SPARKLES_6 : stage === 2 ? SPARKLES_10 : SPARKLES_8;
-
   return (
     <motion.div
       onClick={onTap}
