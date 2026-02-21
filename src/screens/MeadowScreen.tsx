@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, motionValue } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 import Lottie from 'lottie-react';
-import { Player, type PlayerRef } from '@remotion/player';
+import confetti from 'canvas-confetti';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType, CollectedAnimal } from '../types';
-import { BIOME_CONFIG, getAnimalScale, getBiomeCost, getAnimalsForBiome } from '../data/biomes';
+import { BIOME_CONFIG, getAnimalScale, getBiomeCost } from '../data/biomes';
 import { Lock } from 'lucide-react';
-import { BiomeUnlockAnimation } from '../animations/BiomeUnlockAnimation';
+import { BiomeUnlockCelebration } from '../animations/BiomeUnlockAnimation';
 import {
   format,
   startOfWeek,
@@ -150,64 +150,38 @@ const MeadowScreen: React.FC = () => {
 
   // Biome purchase confirmation modal state
   const [biomePurchaseTarget, setBiomePurchaseTarget] = useState<{ biomeId: BiomeType; cost: number } | null>(null);
-  // Remotion unlock celebration animation state
-  const [unlockAnimation, setUnlockAnimation] = useState<{
-    biomeId: BiomeType;
-    animalLotties?: Array<{ data: any; scale?: number }>;
-  } | null>(null);
-  const [animOverlayFading, setAnimOverlayFading] = useState(false);
-  const animPlayerRef = useRef<PlayerRef>(null);
+  // Crystal seed tap-to-reveal state
+  const [biomeReveal, setBiomeReveal] = useState<{ biomeId: BiomeType; stage: number } | null>(null);
 
-  // Biome unlock music ref
-  const unlockAudioRef = useRef<HTMLAudioElement | null>(null);
+  const triggerHapticFeedback = (duration = 20) => {
+    if (navigator.vibrate) navigator.vibrate(duration);
+  };
 
-  // Force-play the Remotion Player and handle cleanup
-  useEffect(() => {
-    if (!unlockAnimation) { setAnimOverlayFading(false); return; }
-
-    const dismiss = () => {
-      // Stop and clean up audio
-      if (unlockAudioRef.current) {
-        unlockAudioRef.current.pause();
-        unlockAudioRef.current.currentTime = 0;
-        unlockAudioRef.current = null;
+  const handleBiomeRevealTap = useCallback(() => {
+    if (!biomeReveal) return;
+    const next = biomeReveal.stage + 1;
+    if (next <= 3) {
+      triggerHapticFeedback(20);
+      setBiomeReveal(prev => prev ? { ...prev, stage: next } : null);
+      if (next === 3) {
+        // Fire biome-colored confetti (3 bursts like animal chest)
+        const biomeColor = BIOME_CONFIG[biomeReveal.biomeId].primaryColor;
+        const biomeColor2 = BIOME_CONFIG[biomeReveal.biomeId].secondaryColor;
+        const colors = [biomeColor, biomeColor2, '#FFFFFF'];
+        confetti({ particleCount: 60, spread: 160, origin: { y: 0.45, x: 0.5 }, colors, shapes: ['circle'], gravity: 1.2, scalar: 0.9 });
+        setTimeout(() => {
+          confetti({ particleCount: 50, spread: 140, origin: { y: 0.5, x: 0.3 }, colors, shapes: ['circle'], gravity: 1.3, scalar: 0.7 });
+        }, 150);
+        setTimeout(() => {
+          confetti({ particleCount: 40, spread: 180, origin: { y: 0.4, x: 0.7 }, colors, shapes: ['circle'], gravity: 1.5, scalar: 0.8 });
+        }, 300);
+        // Auto-dismiss after 2.8s
+        setTimeout(() => {
+          setBiomeReveal(null);
+        }, 2800);
       }
-      setUnlockAnimation(null);
-    };
-
-    const playTimer = setTimeout(() => {
-      const player = animPlayerRef.current;
-      if (!player) return;
-      player.addEventListener('ended', dismiss);
-      player.play();
-
-      // Play biome-specific music
-      if (unlockAnimation.biomeId === 'safari') {
-        const audio = new Audio('/studyapp/safaribiome.mp3');
-        audio.volume = 0.7;
-        audio.play().catch(() => {});
-        unlockAudioRef.current = audio;
-      }
-    }, 50);
-
-    // Start fading the overlay during exit phase (frame 290/330 = 9.67s)
-    const fadeTimer = setTimeout(() => setAnimOverlayFading(true), 9600);
-
-    // Hard timeout fallback — 330f @ 30fps = 11s, +1s buffer
-    const cleanupTimer = setTimeout(dismiss, 12000);
-
-    return () => {
-      clearTimeout(playTimer);
-      clearTimeout(fadeTimer);
-      clearTimeout(cleanupTimer);
-      animPlayerRef.current?.removeEventListener('ended', dismiss);
-      if (unlockAudioRef.current) {
-        unlockAudioRef.current.pause();
-        unlockAudioRef.current.currentTime = 0;
-        unlockAudioRef.current = null;
-      }
-    };
-  }, [unlockAnimation]);
+    }
+  }, [biomeReveal]);
 
   // Timeline state
   const [viewMode, setViewMode] = useState<SanctuaryViewMode>('today');
@@ -292,7 +266,7 @@ const MeadowScreen: React.FC = () => {
     }
   }, [timelineUrls]);
 
-  const handleBiomePurchase = async (biomeId: BiomeType, cost: number) => {
+  const handleBiomePurchase = (biomeId: BiomeType, cost: number) => {
     const currentData = getUserData();
     if ((currentData.coins ?? 0) < cost) return;
     const newUnlocked = [...new Set([...(currentData.unlockedBiomes || ['meadow']), biomeId])];
@@ -304,29 +278,7 @@ const MeadowScreen: React.FC = () => {
     saveUserData(newData);
     refreshData();
     setActiveBiome(biomeId);
-
-    // Start animation immediately, fetch animal Lotties in parallel
-    setUnlockAnimation({ biomeId });
-
-    // Fetch all animal Lottie data for this biome (they burst out during celebration)
-    const animals = getAnimalsForBiome(biomeId);
-    const results = await Promise.all(
-      animals.map(async (animal) => {
-        try {
-          const res = await fetch(animal.lottieUrl);
-          if (!res.ok) return null;
-          const data = await res.json();
-          return { data, scale: animal.scale };
-        } catch {
-          return null;
-        }
-      })
-    );
-    const loaded = results.filter((r): r is { data: any; scale?: number } => r !== null);
-
-    // Update animation state with loaded Lotties (animation is already playing,
-    // animals don't burst until ~frame 155 = 5.2s so we have plenty of time)
-    setUnlockAnimation(prev => prev ? { ...prev, animalLotties: loaded } : null);
+    setBiomeReveal({ biomeId, stage: 0 });
   };
 
   // Load Lottie animations for today's diorama
@@ -1319,41 +1271,16 @@ const MeadowScreen: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Remotion Biome Unlock Celebration */}
-      {unlockAnimation && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 99999,
-          pointerEvents: 'all', isolation: 'isolate',
-          background: '#000',
-          overflow: 'hidden',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          opacity: animOverlayFading ? 0 : 1,
-          transition: 'opacity 0.7s ease-out',
-        }}>
-          <Player
-            ref={animPlayerRef}
-            component={BiomeUnlockAnimation}
-            inputProps={{
-              biomeId: unlockAnimation.biomeId,
-              biomeName: BIOME_CONFIG[unlockAnimation.biomeId].name,
-              biomeEmoji: BIOME_CONFIG[unlockAnimation.biomeId].emoji,
-              primaryColor: BIOME_CONFIG[unlockAnimation.biomeId].primaryColor,
-              biomeImageUrl: BIOME_IMAGES[unlockAnimation.biomeId] ?? '',
-              animalLotties: unlockAnimation.animalLotties ?? [],
-            }}
-            durationInFrames={330}
-            compositionWidth={390}
-            compositionHeight={844}
-            fps={30}
-            controls={false}
-            loop={false}
-            style={{
-              width: '100vw', height: '100dvh',
-              minWidth: '100vw', minHeight: '100dvh',
-            }}
+      {/* Crystal Seed Biome Unlock Celebration */}
+      <AnimatePresence>
+        {biomeReveal && (
+          <BiomeUnlockCelebration
+            biomeId={biomeReveal.biomeId}
+            stage={biomeReveal.stage}
+            onTap={handleBiomeRevealTap}
           />
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };
