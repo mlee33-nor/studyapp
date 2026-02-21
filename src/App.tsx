@@ -1299,7 +1299,7 @@ export default function App() {
   const renderContent = () => {
     if (activeTab === 'Timer') return (
       <div style={{
-        height: '100dvh',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -1924,7 +1924,7 @@ export default function App() {
         margin: '0 auto',
         position: 'relative',
         paddingTop: 'env(safe-area-inset-top, 0px)',
-        height: activeTab === 'Timer' ? 'calc(100dvh - env(safe-area-inset-top, 0px))' : 'auto',
+        height: activeTab === 'Timer' ? '100dvh' : 'auto',
         minHeight: activeTab !== 'Timer' ? '100dvh' : undefined,
         overflow: activeTab === 'Timer' ? 'hidden' : undefined,
       }}>
