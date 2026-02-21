@@ -15,6 +15,7 @@ export interface BiomeAnimal {
   name: string;
   lottieUrl: string;
   scale?: number; // Optional scale factor for animations that render too small
+  price: number; // 0 = free starter animal, >0 = must purchase with coins
 }
 
 // Biome Definitions
@@ -82,24 +83,28 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     name: 'Giraffe',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/8942ad9c-1189-11ee-8b52-3f0a09f0ff93/IiSumWkAzb.json',
     scale: 1.4,
+    price: 0,
   },
   {
     id: 'lion',
     name: 'Lion',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/e0d520ae-1165-11ee-8596-1bcd321f9665/6gtyvPUYur.json',
     scale: 1.3,
+    price: 0,
   },
   {
     id: 'elephant',
     name: 'Elephant',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ad2abee-8ab1-11ee-8fae-d7b22e00dcc5/Q3wSZsw2nW.json',
     scale: 1.4,
+    price: 75,
   },
   {
     id: 'monkey',
     name: 'Monkey',
     lottieUrl: 'https://lottie.host/bb7f5f88-4b2f-44be-a11e-bde846e63553/xu4hfxE8ir.json',
     scale: 2.0,
+    price: 100,
   },
 ];
 
@@ -110,28 +115,33 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
     name: 'Squirrel',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ba0c728-117a-11ee-9eb8-cba5cf43b9a9/SeYh6q2ap3.json',
     scale: 1.5,
+    price: 0,
   },
   {
     id: 'deer',
     name: 'Deer',
     lottieUrl: '/studyapp/animations/deer.json',
     scale: 2,
+    price: 0,
   },
   {
     id: 'fox',
     name: 'Fox',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/9c4b280c-116f-11ee-8e54-17fdd56ae6ce/nZEIpQEdUZ.json',
     scale: 1.5,
+    price: 100,
   },
   {
     id: 'owl',
     name: 'Owl',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
+    price: 125,
   },
   {
     id: 'hedgehog',
     name: 'Hedgehog',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/217eea54-1152-11ee-80aa-bb89673ffc3b/GtbajlQ7yk.json',
+    price: 150,
   },
 ];
 
@@ -142,21 +152,25 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
     name: 'Turtle',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/ff3e331e-1151-11ee-be8d-8bfdaec50b6c/8dbUivXsqR.json',
     scale: 2,
+    price: 0,
   },
   {
     id: 'tropical_fish',
     name: 'Tropical Fish',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/86f8990e-1169-11ee-a6f1-bb14d7c44c2d/lf3mtlvPIx.json',
+    price: 0,
   },
   {
     id: 'octopus',
     name: 'Octopus',
     lottieUrl: 'https://lottie.host/47b9c759-50cb-4bc5-9461-b649b5e9d4a8/Wm0OQMHHjm.json',
+    price: 125,
   },
   {
     id: 'whale',
     name: 'Whale',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/432126fa-1151-11ee-81d6-fbec6e0e68cb/yvKkYB9pgL.json',
+    price: 150,
   },
 ];
 
@@ -166,21 +180,25 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
     id: 'penguin',
     name: 'Penguin',
     lottieUrl: 'https://lottie.host/d914f30d-98b8-49b6-9b30-45d41c744b26/1gVkyH9G4b.json',
+    price: 0,
   },
   {
     id: 'seal',
     name: 'Seal',
     lottieUrl: 'https://lottie.host/7002f4f6-50e9-4117-92e7-fdd0b848d031/JBfJzJJicn.json',
+    price: 0,
   },
   {
     id: 'arctic_fox',
     name: 'Arctic Fox',
     lottieUrl: 'https://lottie.host/d3c1b1e1-a463-4a0f-b1df-f272da956d77/lfzKlyXeao.json',
+    price: 150,
   },
   {
     id: 'polar_bear',
     name: 'Polar Bear',
     lottieUrl: 'https://lottie.host/22db9151-bf0a-411d-b178-8a906267b28c/wP2cRjqZ4n.json',
+    price: 175,
   },
 ];
 
@@ -190,21 +208,25 @@ export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
     id: 'mountain_goat',
     name: 'Mountain Goat',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/21454c8c-116f-11ee-b8b8-f3543a0944a1/psaUM4k0xd.json',
+    price: 0,
   },
   {
     id: 'snow_leopard',
     name: 'Snow Leopard',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/bbbf7156-1170-11ee-a909-976822febe92/oGgjhV63HT.json',
+    price: 0,
   },
   {
     id: 'yak',
     name: 'Yak',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/71feb22a-0620-11ef-a850-9ba4d00d4ca9/jtmaGxZkus.json',
+    price: 175,
   },
   {
     id: 'phoenix',
     name: 'Phoenix',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/c9471362-117d-11ee-9f06-d76a368bf2f8/C3dWG6j7NP.json',
+    price: 200,
   },
 ];
 
@@ -214,23 +236,27 @@ export const MEADOW_ANIMALS: BiomeAnimal[] = [
     id: 'bunny',
     name: 'Bunny',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json',
+    price: 0,
   },
   {
     id: 'butterfly',
     name: 'Butterfly',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/eb7d7328-1177-11ee-84cc-cb9110efefbf/C6YQhXqNZO.json',
     scale: 3.5,
+    price: 0,
   },
   {
     id: 'kitten',
     name: 'Kitten',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/d126e028-1171-11ee-bcab-873488686e7a/Mn5Jina31g.json',
+    price: 50,
   },
   {
     id: 'dog',
     name: 'Dog',
     lottieUrl: 'https://lottie.host/8dfb9eb5-a82b-46e7-9f99-f219f965289f/aNZrfBaezt.json',
     scale: 2,
+    price: 75,
   },
 ];
 
@@ -282,4 +308,16 @@ export const getNextBiomeToUnlock = (level: number): BiomeConfig | null => {
     .filter(biome => biome.unlockLevel > level)
     .sort((a, b) => a.unlockLevel - b.unlockLevel)[0];
   return nextBiome || null;
+};
+
+// Get all starter (free) animal IDs across all biomes
+export const getStarterAnimalIds = (): string[] => {
+  return ALL_BIOME_ANIMALS()
+    .filter(a => a.price === 0)
+    .map(a => a.id);
+};
+
+// Get all animal IDs across all biomes (for dev unlock)
+export const getAllAnimalIds = (): string[] => {
+  return ALL_BIOME_ANIMALS().map(a => a.id);
 };

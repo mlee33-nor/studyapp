@@ -42,6 +42,9 @@ export interface UserData {
   lastDailyReset: string | null;
   // Selected animal for pomodoro session
   selectedAnimal: SelectedAnimal | null;
+  // Coin economy
+  coins: number;
+  purchasedAnimals: string[];
   // Legacy fields (for compatibility with unused screen files)
   currentStage: number;
   xp: number;

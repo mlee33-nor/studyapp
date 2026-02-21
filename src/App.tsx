@@ -10,8 +10,8 @@ import MeadowScreen from './screens/MeadowScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
-import { addCompletedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData } from './utils/storage';
-import { getAnimalsForBiome } from './data/biomes';
+import { addCompletedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
+import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
 import type { StudyCategory } from './types/stats';
 
@@ -52,6 +52,8 @@ const getUserData = () => {
       activeBiome: 'meadow' as const,
       unlockedBiomes: ['meadow'],
       lastDailyReset: null,
+      coins: 0,
+      purchasedAnimals: [],
       ...parsed
     };
   }
@@ -64,7 +66,9 @@ const getUserData = () => {
     permanentCollection: [],
     activeBiome: 'meadow' as const,
     unlockedBiomes: ['meadow'],
-    lastDailyReset: null
+    lastDailyReset: null,
+    coins: 0,
+    purchasedAnimals: getStarterAnimalIds(),
   };
 };
 
@@ -978,6 +982,7 @@ export default function App() {
     return (storageData.activeBiome as BiomeType) || 'meadow';
   });
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
+  const [purchaseTarget, setPurchaseTarget] = useState<{ index: number; id: string; name: string; price: number } | null>(null);
 
   const theme = selectedTheme;
 
@@ -1037,10 +1042,12 @@ export default function App() {
   // Build companion list from the active biome's animals
   const biomeAnimals = getAnimalsForBiome(activeBiome);
   const ANIMALS = biomeAnimals.map(a => ({
+    id: a.id,
     name: a.name,
     url: a.lottieUrl,
     biome: activeBiome,
     scale: a.scale,
+    price: a.price,
   }));
 
   // Re-read active biome from storage when returning to the timer tab (user may have switched biomes in Sanctuary)
@@ -1050,7 +1057,11 @@ export default function App() {
       const storedBiome = (storageData.activeBiome as BiomeType) || 'meadow';
       if (storedBiome !== activeBiome) {
         setActiveBiome(storedBiome);
-        setSelectedAnimal(0); // Reset selection when biome changes
+        // Find first owned animal in new biome
+        const newBiomeAnimals = getAnimalsForBiome(storedBiome);
+        const owned = storageData.purchasedAnimals || [];
+        const firstOwnedIdx = newBiomeAnimals.findIndex(a => a.price === 0 || owned.includes(a.id));
+        setSelectedAnimal(firstOwnedIdx >= 0 ? firstOwnedIdx : 0);
       }
     }
   }, [activeTab]);
@@ -1244,6 +1255,9 @@ export default function App() {
       newLevel += 1;
     }
 
+    // Coins earned = 1 per minute studied
+    const coinsEarned = timerMinutes;
+
     // Update local userData - sync permanentCollection and meadowAnimals from canonical storage
     const newData = {
       level: newLevel,
@@ -1251,7 +1265,8 @@ export default function App() {
       sessionsCompleted: userData.sessionsCompleted + 1,
       meadowAnimals: updatedStorage.meadowAnimals || [],
       permanentCollection: updatedStorage.permanentCollection || [],
-      lastMeadowReset: userData.lastMeadowReset
+      lastMeadowReset: userData.lastMeadowReset,
+      coins: (userData.coins ?? 0) + coinsEarned,
     };
 
     setUserData({ ...userData, ...newData });
@@ -1316,16 +1331,32 @@ export default function App() {
           width: '100%'
         }}>
           <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-            <h1 style={{
-              fontSize: '1.25rem',
-              fontWeight: 500,
-              color: getTextColor(selectedTheme, 'primary'),
-              margin: 0,
-              letterSpacing: '0.05em',
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              Focus Session
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+              <h1 style={{
+                fontSize: '1.25rem',
+                fontWeight: 500,
+                color: getTextColor(selectedTheme, 'primary'),
+                margin: 0,
+                letterSpacing: '0.05em',
+                fontFamily: "'Quicksand', sans-serif"
+              }}>
+                Focus Session
+              </h1>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '4px 10px',
+                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(251, 191, 36, 0.25)',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
+                fontFamily: "'Quicksand', sans-serif",
+              }}>
+                <span style={{ fontSize: '14px' }}>&#x1FA99;</span> {userData.coins ?? 0}
+              </div>
+            </div>
             {currentCategory && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
@@ -1485,9 +1516,22 @@ export default function App() {
                 color: getTextColor(selectedTheme, 'primary'),
                 fontFamily: "'Quicksand', sans-serif",
                 textAlign: 'center',
-                marginBottom: '20px',
+                marginBottom: '4px',
               }}>
                 Choose Your Companion
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                marginBottom: '16px',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
+                fontFamily: "'Quicksand', sans-serif",
+              }}>
+                <span style={{ fontSize: '14px' }}>&#x1FA99;</span> {userData.coins ?? 0} coins
               </div>
               <div style={{
                 display: 'flex',
@@ -1497,13 +1541,19 @@ export default function App() {
               }}>
                 {ANIMALS.map((animal, index) => {
                   const isSelected = selectedAnimal === index;
+                  const isOwned = animal.price === 0 || (userData.purchasedAnimals || []).includes(animal.id);
+                  const canAfford = (userData.coins ?? 0) >= animal.price;
                   return (
                     <motion.button
                       key={animal.name}
-                      whileTap={{ scale: 0.9 }}
+                      whileTap={isOwned ? { scale: 0.9 } : (canAfford ? { scale: 0.95 } : {})}
                       onClick={() => {
-                        setSelectedAnimal(index);
-                        setShowAnimalSelector(false);
+                        if (isOwned) {
+                          setSelectedAnimal(index);
+                          setShowAnimalSelector(false);
+                        } else if (canAfford && animal.price > 0) {
+                          setPurchaseTarget({ index, id: animal.id, name: animal.name, price: animal.price });
+                        }
                       }}
                       style={{
                         display: 'flex',
@@ -1514,19 +1564,30 @@ export default function App() {
                         borderRadius: '18px',
                         border: isSelected
                           ? '2px solid rgba(167, 139, 250, 0.8)'
-                          : `2px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255,255,255,0.12)' : 'rgba(200, 200, 220, 0.4)'}`,
+                          : !isOwned
+                            ? `2px solid ${canAfford ? 'rgba(251, 191, 36, 0.5)' : 'rgba(150, 150, 150, 0.3)'}`
+                            : `2px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255,255,255,0.12)' : 'rgba(200, 200, 220, 0.4)'}`,
                         background: isSelected
                           ? 'rgba(167, 139, 250, 0.2)'
-                          : 'transparent',
-                        cursor: 'pointer',
+                          : !isOwned
+                            ? (BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(0,0,0,0.2)' : 'rgba(200, 200, 200, 0.15)')
+                            : 'transparent',
+                        cursor: isOwned ? 'pointer' : (canAfford ? 'pointer' : 'default'),
                         width: '28%',
                         minWidth: '80px',
                         transition: 'all 0.15s ease',
+                        opacity: !isOwned && !canAfford ? 0.5 : 1,
+                        position: 'relative',
                       }}
                     >
-                      <div style={{ width: '56px', height: '56px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{ width: '56px', height: '56px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                         {loadedAnimations[`selected-${activeBiome}-${index}`] ? (
-                          <div style={{ width: animal.scale ? `${56 * animal.scale}px` : '56px', height: animal.scale ? `${56 * animal.scale}px` : '56px', flexShrink: 0 }}>
+                          <div style={{
+                            width: animal.scale ? `${56 * animal.scale}px` : '56px',
+                            height: animal.scale ? `${56 * animal.scale}px` : '56px',
+                            flexShrink: 0,
+                            filter: !isOwned ? 'grayscale(0.6) brightness(0.8)' : 'none',
+                          }}>
                             <Lottie
                               animationData={loadedAnimations[`selected-${activeBiome}-${index}`]}
                               loop={true}
@@ -1549,9 +1610,175 @@ export default function App() {
                       }}>
                         {animal.name}
                       </span>
+                      {!isOwned && (
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          padding: '2px 8px',
+                          borderRadius: '10px',
+                          background: canAfford ? 'rgba(251, 191, 36, 0.25)' : 'rgba(150, 150, 150, 0.2)',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: canAfford
+                            ? (BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309')
+                            : getTextColor(selectedTheme, 'tertiary'),
+                          fontFamily: "'Quicksand', sans-serif",
+                        }}>
+                          <span style={{ fontSize: '11px' }}>&#x1FA99;</span>{animal.price}
+                        </div>
+                      )}
                     </motion.button>
                   );
                 })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Purchase Confirmation Modal */}
+        {purchaseTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPurchaseTarget(null)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              zIndex: 10000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? 'rgba(30, 30, 60, 0.95)'
+                  : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                padding: '28px 24px',
+                border: `1px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(167, 139, 250, 0.3)' : 'rgba(200, 200, 220, 0.5)'}`,
+                boxShadow: '0 16px 48px rgba(0,0,0,0.3)',
+                width: '100%',
+                maxWidth: '280px',
+                textAlign: 'center',
+              }}
+            >
+              {/* Animal preview */}
+              <div style={{ width: '80px', height: '80px', margin: '0 auto 12px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {loadedAnimations[`selected-${activeBiome}-${purchaseTarget.index}`] && (
+                  <div style={{
+                    width: ANIMALS[purchaseTarget.index]?.scale ? `${80 * (ANIMALS[purchaseTarget.index]?.scale || 1)}px` : '80px',
+                    height: ANIMALS[purchaseTarget.index]?.scale ? `${80 * (ANIMALS[purchaseTarget.index]?.scale || 1)}px` : '80px',
+                    flexShrink: 0,
+                  }}>
+                    <Lottie
+                      animationData={loadedAnimations[`selected-${activeBiome}-${purchaseTarget.index}`]}
+                      loop={true}
+                      style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
+                    />
+                  </div>
+                )}
+              </div>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                color: getTextColor(selectedTheme, 'primary'),
+                fontFamily: "'Quicksand', sans-serif",
+                marginBottom: '8px',
+              }}>
+                Unlock {purchaseTarget.name}?
+              </div>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '6px 14px',
+                background: 'rgba(251, 191, 36, 0.2)',
+                borderRadius: '14px',
+                fontSize: '15px',
+                fontWeight: 700,
+                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
+                fontFamily: "'Quicksand', sans-serif",
+                marginBottom: '20px',
+              }}>
+                <span style={{ fontSize: '16px' }}>&#x1FA99;</span> {purchaseTarget.price}
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setPurchaseTarget(null)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    borderRadius: '16px',
+                    border: `1px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255,255,255,0.15)' : 'rgba(200, 200, 220, 0.4)'}`,
+                    background: 'transparent',
+                    color: getTextColor(selectedTheme, 'secondary'),
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: "'Quicksand', sans-serif",
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    const result = purchaseAnimal(purchaseTarget.id, purchaseTarget.price);
+                    if (result) {
+                      // Sync both storage keys
+                      const updatedCoins = result.coins;
+                      const updatedPurchased = result.purchasedAnimals;
+                      setUserData((prev: any) => ({
+                        ...prev,
+                        coins: updatedCoins,
+                        purchasedAnimals: updatedPurchased,
+                      }));
+                      saveUserData({
+                        ...userData,
+                        coins: updatedCoins,
+                        purchasedAnimals: updatedPurchased,
+                      });
+                      // Auto-select the newly purchased animal
+                      setSelectedAnimal(purchaseTarget.index);
+                    }
+                    setPurchaseTarget(null);
+                    setShowAnimalSelector(false);
+                  }}
+                  style={{
+                    flex: 1.5,
+                    padding: '12px 16px',
+                    borderRadius: '16px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.8) 0%, rgba(245, 158, 11, 0.8) 100%)',
+                    color: '#78350F',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: "'Quicksand', sans-serif",
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(251, 191, 36, 0.3)',
+                  }}
+                >
+                  Buy
+                </motion.button>
               </div>
             </motion.div>
           </motion.div>
@@ -1609,7 +1836,7 @@ export default function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          style={{ padding: '40px 24px 0', position: 'relative', zIndex: 1 }}
+          style={{ padding: '24px 24px 0', position: 'relative', zIndex: 1 }}
         >
           {/* Collection View Toggle */}
           <div style={{
@@ -1694,7 +1921,7 @@ export default function App() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={SOFT_SPRING}
-        style={{ padding: '40px 24px calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))', position: 'relative', zIndex: 1 }}
+        style={{ padding: '24px 24px calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))', position: 'relative', zIndex: 1 }}
       >
         <h1 style={{
           fontSize: '1.5rem',
@@ -1870,6 +2097,59 @@ export default function App() {
               }}
             />
 
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                const storageData = getStorageUserData();
+                const newCoins = (storageData.coins || 0) + 500;
+                updateStorageUserData({ coins: newCoins });
+                const newData = { ...userData, coins: newCoins };
+                setUserData(newData);
+                saveUserData(newData);
+              }}
+              style={{
+                flex: 1,
+                padding: '10px 14px',
+                borderRadius: '14px',
+                border: 'none',
+                background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.6) 0%, rgba(245, 158, 11, 0.6) 100%)',
+                color: '#78350F',
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+              }}
+            >
+              +500 Coins
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                const allIds = getAllAnimalIds();
+                const storageData = getStorageUserData();
+                updateStorageUserData({ purchasedAnimals: allIds, coins: (storageData.coins || 0) });
+                const newData = { ...userData, purchasedAnimals: allIds };
+                setUserData(newData);
+                saveUserData(newData);
+              }}
+              style={{
+                flex: 1,
+                padding: '10px 14px',
+                borderRadius: '14px',
+                border: 'none',
+                background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.6) 0%, rgba(139, 92, 246, 0.6) 100%)',
+                color: 'white',
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+              }}
+            >
+              Unlock All Animals
+            </motion.button>
           </div>
 
           <div style={{

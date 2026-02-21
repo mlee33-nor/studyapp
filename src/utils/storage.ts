@@ -1,4 +1,5 @@
 import type { UserData, UserSettings, CollectedAnimal, BiomeType } from '../types';
+import { getStarterAnimalIds, getAllAnimalIds } from '../data/biomes';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
@@ -34,6 +35,9 @@ const DEFAULT_USER_DATA: UserData = {
     biome: 'meadow',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json',
   },
+  // Coin economy
+  coins: 0,
+  purchasedAnimals: [],
   // Legacy fields for compatibility
   currentStage: 1,
   xp: 0,
@@ -46,7 +50,7 @@ export const getUserData = (): UserData => {
     if (data) {
       const parsed = JSON.parse(data);
       // Merge with defaults to ensure all fields exist
-      return {
+      const merged = {
         ...DEFAULT_USER_DATA,
         ...parsed,
         settings: {
@@ -54,11 +58,17 @@ export const getUserData = (): UserData => {
           ...parsed.settings,
         },
       };
+      // Migration: grant starter animals to existing users
+      if (!parsed.purchasedAnimals) {
+        merged.purchasedAnimals = getStarterAnimalIds();
+        saveUserData(merged);
+      }
+      return merged;
     }
   } catch (error) {
     console.error('Error loading user data:', error);
   }
-  return DEFAULT_USER_DATA;
+  return { ...DEFAULT_USER_DATA, purchasedAnimals: getStarterAnimalIds() };
 };
 
 export const saveUserData = (data: UserData): void => {
@@ -249,6 +259,7 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     studyStreak,
     lastStudyDate: today,
     meadowAnimals,
+    coins: (currentData.coins || 0) + minutes,
   });
 
   // Add collected animal to returned data for UI feedback
@@ -305,6 +316,16 @@ export const resetAllStats = (): UserData => {
   return newData;
 };
 
+// Purchase an animal with coins
+export const purchaseAnimal = (animalId: string, price: number): UserData | null => {
+  const data = getUserData();
+  if (data.coins < price || data.purchasedAnimals.includes(animalId)) return null;
+  return updateUserData({
+    coins: data.coins - price,
+    purchasedAnimals: [...data.purchasedAnimals, animalId],
+  });
+};
+
 // Dev Mode: Unlock all biomes by setting level to 50
 export const unlockAllBiomes = (): UserData => {
   const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
@@ -313,6 +334,8 @@ export const unlockAllBiomes = (): UserData => {
     xp: 25000, // Max XP
     unlockedBiomes: biomeIds,
     activeBiome: 'meadow',
+    coins: 9999,
+    purchasedAnimals: getAllAnimalIds(),
   });
   return newData;
 };
