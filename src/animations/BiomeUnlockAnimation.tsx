@@ -1,5 +1,11 @@
 import React from 'react';
 import { useCurrentFrame, useVideoConfig, spring, interpolate, AbsoluteFill } from 'remotion';
+import Lottie from 'lottie-react';
+
+interface AnimalLottieData {
+  data: any;
+  scale?: number;
+}
 
 interface BiomeUnlockAnimationProps {
   biomeId: string;
@@ -7,6 +13,7 @@ interface BiomeUnlockAnimationProps {
   biomeEmoji: string;
   primaryColor: string;
   biomeImageUrl: string;
+  animalLotties: AnimalLottieData[];
 }
 
 const BIOME_PALETTES: Record<string, { glow: string; ring: string; accent: string }> = {
@@ -16,16 +23,6 @@ const BIOME_PALETTES: Record<string, { glow: string; ring: string; accent: strin
   arctic:   { glow: '#60A5FA', ring: '#93C5FD', accent: '#DBEAFE' },
   mountain: { glow: '#8B5CF6', ring: '#A78BFA', accent: '#EDE9FE' },
   meadow:   { glow: '#10B981', ring: '#34D399', accent: '#D1FAE5' },
-};
-
-// ─── Animal emojis per biome ─────────────────────────────────────────────────
-const BIOME_ANIMAL_EMOJIS: Record<string, string[]> = {
-  safari:   ['🦒', '🦁', '🐘', '🐒'],
-  forest:   ['🐿️', '🦌', '🦊', '🦉', '🦔'],
-  ocean:    ['🐢', '🐠', '🐙', '🐋'],
-  arctic:   ['🐧', '🦭', '🦊', '🐻‍❄️'],
-  mountain: ['🐐', '🐆', '🐂', '🕊️'],
-  meadow:   ['🐰', '🦋', '🐱', '🐶'],
 };
 
 // Precomputed animal burst positions — each animal flies out to a unique spot
@@ -90,13 +87,12 @@ const makeGodRayGradient = (rotation: number, color: string, opacity: number) =>
 //   Phase 5: 290–330   Exit — graceful fade out
 //
 export const BiomeUnlockAnimation: React.FC<BiomeUnlockAnimationProps> = ({
-  biomeId, biomeName, biomeImageUrl, primaryColor,
+  biomeId, biomeName, biomeImageUrl, primaryColor, animalLotties,
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
   const pal = BIOME_PALETTES[biomeId] ?? { glow: primaryColor, ring: primaryColor, accent: '#FDE68A' };
-  const animalEmojis = BIOME_ANIMAL_EMOJIS[biomeId] ?? ['🐾'];
   const refDiag = Math.sqrt((width * width + height * height) / 2);
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -357,14 +353,14 @@ export const BiomeUnlockAnimation: React.FC<BiomeUnlockAnimationProps> = ({
           ) : null;
         })}
 
-        {/* ── ANIMAL EMOJI BURST — biome animals pop out from center ── */}
-        {frame >= 155 && animalEmojis.map((emoji, i) => {
+        {/* ── ANIMAL LOTTIE BURST — real animated animals pop out from center ── */}
+        {frame >= 155 && animalLotties.length > 0 && animalLotties.map((animal, i) => {
           const burst = ANIMAL_BURST[i % ANIMAL_BURST.length];
           const lf = Math.max(0, frame - 155 - burst.delay);
 
           // Spring for the outward burst
           const burstSp = spring({ frame: lf, fps,
-            config: { damping: 10, stiffness: 160, mass: 1.2 }, // bouncy overshoot
+            config: { damping: 10, stiffness: 160, mass: 1.2 },
           });
 
           const x = interpolate(burstSp, [0, 1], [0, burst.targetX]);
@@ -379,17 +375,23 @@ export const BiomeUnlockAnimation: React.FC<BiomeUnlockAnimationProps> = ({
           // Fade in then hold, fade out near exit
           const op = interpolate(lf, [0, 4, 100, 130], [0, 1, 1, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' });
 
+          const animalSize = 80 * (animal.scale ?? 1);
+
           return op > 0 ? (
             <div key={`animal-${i}`} style={{
               position: 'absolute', left: '50%', top: '45%',
-              fontSize: 48,
+              width: animalSize, height: animalSize,
               transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y + floatY}px)) scale(${sc}) rotate(${rot + floatRot}deg)`,
               opacity: op,
               pointerEvents: 'none',
-              filter: `drop-shadow(0 4px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 20px ${pal.glow}66)`,
+              filter: `drop-shadow(0 4px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 16px ${pal.glow}66)`,
               zIndex: 10,
             }}>
-              {emoji}
+              <Lottie
+                animationData={animal.data}
+                loop
+                style={{ width: '100%', height: '100%' }}
+              />
             </div>
           ) : null;
         })}

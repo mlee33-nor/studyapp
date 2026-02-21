@@ -6,7 +6,7 @@ import { Player, type PlayerRef } from '@remotion/player';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType, CollectedAnimal } from '../types';
-import { BIOME_CONFIG, getAnimalScale, getBiomeCost } from '../data/biomes';
+import { BIOME_CONFIG, getAnimalScale, getBiomeCost, getAnimalsForBiome } from '../data/biomes';
 import { Lock } from 'lucide-react';
 import { BiomeUnlockAnimation } from '../animations/BiomeUnlockAnimation';
 import {
@@ -151,7 +151,10 @@ const MeadowScreen: React.FC = () => {
   // Biome purchase confirmation modal state
   const [biomePurchaseTarget, setBiomePurchaseTarget] = useState<{ biomeId: BiomeType; cost: number } | null>(null);
   // Remotion unlock celebration animation state
-  const [unlockAnimation, setUnlockAnimation] = useState<{ biomeId: BiomeType } | null>(null);
+  const [unlockAnimation, setUnlockAnimation] = useState<{
+    biomeId: BiomeType;
+    animalLotties?: Array<{ data: any; scale?: number }>;
+  } | null>(null);
   const [animOverlayFading, setAnimOverlayFading] = useState(false);
   const animPlayerRef = useRef<PlayerRef>(null);
 
@@ -289,7 +292,7 @@ const MeadowScreen: React.FC = () => {
     }
   }, [timelineUrls]);
 
-  const handleBiomePurchase = (biomeId: BiomeType, cost: number) => {
+  const handleBiomePurchase = async (biomeId: BiomeType, cost: number) => {
     const currentData = getUserData();
     if ((currentData.coins ?? 0) < cost) return;
     const newUnlocked = [...new Set([...(currentData.unlockedBiomes || ['meadow']), biomeId])];
@@ -301,7 +304,29 @@ const MeadowScreen: React.FC = () => {
     saveUserData(newData);
     refreshData();
     setActiveBiome(biomeId);
+
+    // Start animation immediately, fetch animal Lotties in parallel
     setUnlockAnimation({ biomeId });
+
+    // Fetch all animal Lottie data for this biome (they burst out during celebration)
+    const animals = getAnimalsForBiome(biomeId);
+    const results = await Promise.all(
+      animals.map(async (animal) => {
+        try {
+          const res = await fetch(animal.lottieUrl);
+          if (!res.ok) return null;
+          const data = await res.json();
+          return { data, scale: animal.scale };
+        } catch {
+          return null;
+        }
+      })
+    );
+    const loaded = results.filter((r): r is { data: any; scale?: number } => r !== null);
+
+    // Update animation state with loaded Lotties (animation is already playing,
+    // animals don't burst until ~frame 155 = 5.2s so we have plenty of time)
+    setUnlockAnimation(prev => prev ? { ...prev, animalLotties: loaded } : null);
   };
 
   // Load Lottie animations for today's diorama
@@ -1314,6 +1339,7 @@ const MeadowScreen: React.FC = () => {
               biomeEmoji: BIOME_CONFIG[unlockAnimation.biomeId].emoji,
               primaryColor: BIOME_CONFIG[unlockAnimation.biomeId].primaryColor,
               biomeImageUrl: BIOME_IMAGES[unlockAnimation.biomeId] ?? '',
+              animalLotties: unlockAnimation.animalLotties ?? [],
             }}
             durationInFrames={330}
             compositionWidth={390}

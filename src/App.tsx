@@ -651,7 +651,7 @@ const InteractiveTimerRing: React.FC<{
               fontWeight: 500
             }}
           >
-            {minutes * 10} XP
+            🪙 {minutes} coins
           </motion.div>
         )}
       </div>
