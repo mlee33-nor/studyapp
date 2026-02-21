@@ -34,25 +34,23 @@
   --shadow-soft-lg: 0 4px 25px rgba(0, 0, 0, 0.1);
 }
 
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #000000;
-  overscroll-behavior: none;
-}
-
 html {
-  overflow: hidden;
+  /* NO overflow rule — letting html paint naturally into iOS safe areas.
+     Per CSS spec the root element's background covers the entire viewport
+     canvas including safe areas, but only when overflow isn't constrained. */
+  background: #000000;
 }
 
 body {
+  margin: 0;
+  padding: 0;
+  background: #000000;
   font-family: var(--font-family-sans);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
   touch-action: manipulation;
+  overscroll-behavior: none;
   box-sizing: border-box;
 }
 
@@ -61,9 +59,12 @@ body {
 }
 
 #root {
+  height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+  background: #000000;
 }
 
 .gradient-bg-blue {
