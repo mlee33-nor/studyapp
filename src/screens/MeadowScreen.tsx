@@ -558,7 +558,7 @@ const MeadowScreen: React.FC = () => {
       display: 'flex',
       flexDirection: 'column',
       paddingTop: '1rem',
-      paddingBottom: 0,
+      paddingBottom: 'calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))',
       paddingLeft: '1.5rem',
       paddingRight: '1.5rem',
     }}>
