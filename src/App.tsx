@@ -1023,6 +1023,12 @@ export default function App() {
     if (root) {
       root.style.overflowY = activeTab === 'Timer' ? 'hidden' : 'auto';
     }
+    // Also lock html/body to prevent browser-level scrolling
+    if (activeTab === 'Timer') {
+      document.documentElement.classList.add('no-scroll');
+    } else {
+      document.documentElement.classList.remove('no-scroll');
+    }
   }, [activeTab]);
 
   // Persistence Engine: Load saved data on mount
