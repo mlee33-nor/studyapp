@@ -35,10 +35,11 @@
 }
 
 html {
-  /* NO overflow rule — letting html paint naturally into iOS safe areas.
-     Per CSS spec the root element's background covers the entire viewport
-     canvas including safe areas, but only when overflow isn't constrained. */
   background: #000000;
+  /* black-translucent pushes content UP into status bar but doesn't extend
+     the viewport canvas DOWN to compensate. This makes the document tall
+     enough to fill the resulting gap at the bottom. */
+  min-height: calc(100% + env(safe-area-inset-top));
 }
 
 body {
