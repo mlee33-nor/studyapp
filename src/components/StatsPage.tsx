@@ -25,7 +25,7 @@ import { CategoryDetail } from './CategoryDetail';
 
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 
-type Theme = 'morning' | 'twilight' | 'golden' | 'midnight';
+type Theme = 'morning' | 'midnight';
 
 // Theme-Adaptive Color System
 const getThemeColors = (theme: Theme) => {
@@ -55,58 +55,6 @@ const getThemeColors = (theme: Theme) => {
       },
       gradient: 'linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(244, 114, 182, 0.15) 100%)',
       isDark: false
-    },
-    twilight: {
-      background: '#0A0A0A',
-      cardBg: 'rgba(26, 26, 26, 0.95)',
-      border: 'rgba(255, 255, 255, 0.1)',
-      headerTextColor: '#FFFFFF',  // White for twilight theme
-      text: {
-        primary: 'rgba(255, 255, 255, 0.95)',
-        secondary: 'rgba(255, 255, 255, 0.7)',
-        tertiary: 'rgba(255, 255, 255, 0.5)'
-      },
-      heatmap: {
-        empty: 'rgba(255, 255, 255, 0.05)',
-        emptyBorder: 'rgba(255, 255, 255, 0.08)',
-        levels: [
-          'rgba(244, 114, 182, 0.2)',
-          'rgba(244, 114, 182, 0.4)',
-          'rgba(244, 114, 182, 0.6)',
-          'rgba(244, 114, 182, 0.8)',
-          'rgba(244, 114, 182, 1)'
-        ],
-        currentDayBorder: '#F472B6',
-        selectedBorder: '#A855F7'
-      },
-      gradient: 'linear-gradient(135deg, rgba(244, 114, 182, 0.3) 0%, rgba(168, 85, 247, 0.3) 100%)',
-      isDark: true
-    },
-    golden: {
-      background: '#0A0A0A',
-      cardBg: 'rgba(26, 26, 26, 0.95)',
-      border: 'rgba(255, 255, 255, 0.1)',
-      headerTextColor: '#FFFFFF',  // White for golden theme
-      text: {
-        primary: 'rgba(255, 255, 255, 0.95)',
-        secondary: 'rgba(255, 255, 255, 0.7)',
-        tertiary: 'rgba(255, 255, 255, 0.5)'
-      },
-      heatmap: {
-        empty: 'rgba(255, 255, 255, 0.05)',
-        emptyBorder: 'rgba(255, 255, 255, 0.08)',
-        levels: [
-          'rgba(251, 191, 36, 0.2)',
-          'rgba(251, 191, 36, 0.4)',
-          'rgba(251, 191, 36, 0.6)',
-          'rgba(251, 191, 36, 0.8)',
-          'rgba(251, 191, 36, 1)'
-        ],
-        currentDayBorder: '#FBBF24',
-        selectedBorder: '#F59E0B'
-      },
-      gradient: 'linear-gradient(135deg, rgba(251, 191, 36, 0.3) 0%, rgba(249, 115, 22, 0.3) 100%)',
-      isDark: true
     },
     midnight: {
       background: '#0A0A0A',
@@ -227,7 +175,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={SOFT_SPRING}
-        style={{ marginBottom: '24px' }}
+        style={{ marginBottom: '16px' }}
       >
         <h1 style={{
           fontSize: '2rem',

@@ -27,13 +27,13 @@ type TimelineViewMode = 'weekly' | 'monthly' | 'yearly';
 
 interface GalleryScreenProps {
   collection: CollectedAnimal[];
-  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+  theme: 'morning' | 'midnight';
 }
 
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 
-const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'tertiary') => {
-  const isDarkText = theme === 'morning' || theme === 'golden' ? true : false;
+const getTextColor = (theme: 'morning' | 'midnight', type: 'primary' | 'secondary' | 'tertiary') => {
+  const isDarkText = theme === 'morning';
 
   const colorMap = {
     dark: {
@@ -51,8 +51,8 @@ const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', typ
   return isDarkText ? colorMap.dark[type] : colorMap.light[type];
 };
 
-const getCardBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'active' | 'inactive') => {
-  const isLightTheme = theme === 'morning' || theme === 'golden';
+const getCardBackground = (theme: 'morning' | 'midnight', type: 'primary' | 'secondary' | 'active' | 'inactive') => {
+  const isLightTheme = theme === 'morning';
 
   const colorMap = {
     light: {
@@ -72,8 +72,8 @@ const getCardBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight'
   return isLightTheme ? colorMap.light[type] : colorMap.dark[type];
 };
 
-const getCardBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'active' | 'inactive') => {
-  const isLightTheme = theme === 'morning' || theme === 'golden';
+const getCardBorder = (theme: 'morning' | 'midnight', type: 'primary' | 'secondary' | 'active' | 'inactive') => {
+  const isLightTheme = theme === 'morning';
 
   const colorMap = {
     light: {
@@ -93,13 +93,13 @@ const getCardBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', ty
   return isLightTheme ? colorMap.light[type] : colorMap.dark[type];
 };
 
-const getCardShadow = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
-  const isLightTheme = theme === 'morning' || theme === 'golden';
+const getCardShadow = (theme: 'morning' | 'midnight') => {
+  const isLightTheme = theme === 'morning';
   return isLightTheme ? '0 8px 32px rgba(147, 197, 253, 0.15)' : '0 8px 32px rgba(167, 139, 250, 0.2)';
 };
 
-const getGradient = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
-  const isLightTheme = theme === 'morning' || theme === 'golden';
+const getGradient = (theme: 'morning' | 'midnight') => {
+  const isLightTheme = theme === 'morning';
   return isLightTheme
     ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(244, 114, 182, 0.15) 100%)'
     : 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.3) 100%)';
@@ -140,7 +140,7 @@ const VIEW_CONFIG = {
 const ViewModeToggle: React.FC<{
   viewMode: TimelineViewMode;
   setViewMode: (mode: TimelineViewMode) => void;
-  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+  theme: 'morning' | 'midnight';
 }> = ({ viewMode, setViewMode, theme }) => {
   const modes: TimelineViewMode[] = ['weekly', 'monthly', 'yearly'];
 
@@ -195,7 +195,7 @@ const TimeNavigator: React.FC<{
   onPrevious: () => void;
   onNext: () => void;
   onToday: () => void;
-  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+  theme: 'morning' | 'midnight';
 }> = ({ viewMode, currentDate, onPrevious, onNext, onToday, theme }) => {
   let displayText: string;
   let isCurrentPeriod: boolean;
@@ -575,7 +575,7 @@ const BiomeGalleryGrid: React.FC<{
   viewMode: TimelineViewMode;
   config: typeof VIEW_CONFIG[TimelineViewMode];
   loadedAnimations: Record<string, any>;
-  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+  theme: 'morning' | 'midnight';
 }> = ({ groupedAnimals, selectedBiome, viewMode: _viewMode, config, loadedAnimations, theme }) => {
   // Group animals by biome when 'all' is selected
   const biomeGroups = useMemo(() => {

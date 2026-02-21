@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, motionValue } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 import Lottie from 'lottie-react';
+import { Player, type PlayerRef } from '@remotion/player';
 import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType, CollectedAnimal } from '../types';
-import { BIOME_CONFIG, getUnlockedBiomes, getAnimalScale } from '../data/biomes';
+import { BIOME_CONFIG, getAnimalScale, getBiomeCost } from '../data/biomes';
+import { Lock } from 'lucide-react';
+import { BiomeUnlockAnimation } from '../animations/BiomeUnlockAnimation';
 import {
   format,
   startOfWeek,
@@ -30,6 +33,15 @@ import forestBg from '../assets/biomes/forest.jpg';
 import oceanBg from '../assets/biomes/ocean.jpg';
 import arcticBg from '../assets/biomes/arctic.jpg';
 import mountainBg from '../assets/biomes/mountains.jpg';
+
+const BIOME_IMAGES: Record<string, string> = {
+  meadow: meadowBg,
+  safari: safariBg,
+  forest: forestBg,
+  ocean:  oceanBg,
+  arctic: arcticBg,
+  mountain: mountainBg,
+};
 
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
@@ -131,11 +143,68 @@ const MeadowScreen: React.FC = () => {
   const meadowRef = useRef<HTMLDivElement>(null);
   const [sceneHeight, setSceneHeight] = useState(MEADOW_HEIGHT);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
-  const [allUnlocked, setAllUnlocked] = useState<boolean>(false);
 
   // Walking animal horizontal movement state
   const walkingInstancesRef = useRef<Record<string, WalkingAnimalInstance>>({});
   const [walkingFlips, setWalkingFlips] = useState<Record<string, boolean>>({});
+
+  // Biome purchase confirmation modal state
+  const [biomePurchaseTarget, setBiomePurchaseTarget] = useState<{ biomeId: BiomeType; cost: number } | null>(null);
+  // Remotion unlock celebration animation state
+  const [unlockAnimation, setUnlockAnimation] = useState<{ biomeId: BiomeType } | null>(null);
+  const [animOverlayFading, setAnimOverlayFading] = useState(false);
+  const animPlayerRef = useRef<PlayerRef>(null);
+
+  // Biome unlock music ref
+  const unlockAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Force-play the Remotion Player and handle cleanup
+  useEffect(() => {
+    if (!unlockAnimation) { setAnimOverlayFading(false); return; }
+
+    const dismiss = () => {
+      // Stop and clean up audio
+      if (unlockAudioRef.current) {
+        unlockAudioRef.current.pause();
+        unlockAudioRef.current.currentTime = 0;
+        unlockAudioRef.current = null;
+      }
+      setUnlockAnimation(null);
+    };
+
+    const playTimer = setTimeout(() => {
+      const player = animPlayerRef.current;
+      if (!player) return;
+      player.addEventListener('ended', dismiss);
+      player.play();
+
+      // Play biome-specific music
+      if (unlockAnimation.biomeId === 'safari') {
+        const audio = new Audio('/studyapp/safaribiome.mp3');
+        audio.volume = 0.7;
+        audio.play().catch(() => {});
+        unlockAudioRef.current = audio;
+      }
+    }, 50);
+
+    // Start fading the overlay during exit phase (frame 290/330 = 9.67s)
+    const fadeTimer = setTimeout(() => setAnimOverlayFading(true), 9600);
+
+    // Hard timeout fallback — 330f @ 30fps = 11s, +1s buffer
+    const cleanupTimer = setTimeout(dismiss, 12000);
+
+    return () => {
+      clearTimeout(playTimer);
+      clearTimeout(fadeTimer);
+      clearTimeout(cleanupTimer);
+      animPlayerRef.current?.removeEventListener('ended', dismiss);
+      if (unlockAudioRef.current) {
+        unlockAudioRef.current.pause();
+        unlockAudioRef.current.currentTime = 0;
+        unlockAudioRef.current = null;
+      }
+    };
+  }, [unlockAnimation]);
 
   // Timeline state
   const [viewMode, setViewMode] = useState<SanctuaryViewMode>('today');
@@ -161,10 +230,8 @@ const MeadowScreen: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Determine unlocked biomes: if user pressed unlock button, show all; otherwise derive from level
-  const unlockedBiomes: BiomeType[] = allUnlocked
-    ? ALL_BIOME_IDS
-    : getUnlockedBiomes(userData.level);
+  // Unlocked biomes come from storage (coin-purchased)
+  const unlockedBiomes: BiomeType[] = (userData.unlockedBiomes as BiomeType[]) || ['meadow'];
   const biomeAnimals = userData.meadowAnimals.filter(a => a.biome === activeBiome);
   const BiomeBackground = BiomeBackgrounds[activeBiome];
   // Dynamic bottom boundary that adjusts when the scene grows on larger screens
@@ -222,15 +289,19 @@ const MeadowScreen: React.FC = () => {
     }
   }, [timelineUrls]);
 
-  const handleUnlockAllBiomes = () => {
-    setAllUnlocked(true);
+  const handleBiomePurchase = (biomeId: BiomeType, cost: number) => {
     const currentData = getUserData();
-    saveUserData({
+    if ((currentData.coins ?? 0) < cost) return;
+    const newUnlocked = [...new Set([...(currentData.unlockedBiomes || ['meadow']), biomeId])];
+    const newData = {
       ...currentData,
-      level: 50,
-      unlockedBiomes: ALL_BIOME_IDS,
-    });
+      coins: (currentData.coins ?? 0) - cost,
+      unlockedBiomes: newUnlocked,
+    };
+    saveUserData(newData);
     refreshData();
+    setActiveBiome(biomeId);
+    setUnlockAnimation({ biomeId });
   };
 
   // Load Lottie animations for today's diorama
@@ -518,46 +589,15 @@ const MeadowScreen: React.FC = () => {
       minHeight: '100dvh',
       display: 'flex',
       flexDirection: 'column',
-      paddingTop: '2rem',
+      paddingTop: '1rem',
       paddingBottom: 0,
       paddingLeft: '1.5rem',
       paddingRight: '1.5rem',
     }}>
       <div style={{ maxWidth: '32rem', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', flex: 1 }}>
         <h1 className="text-3xl font-bold text-text-primary mb-2">Your Sanctuary</h1>
-        <p className="text-text-secondary mb-4">
-          Explore different biomes and collect unique animals
-        </p>
 
-        {/* Unlock All Biomes Button */}
-        {unlockedBiomes.length < ALL_BIOME_IDS.length && (
-          <motion.button
-            onClick={handleUnlockAllBiomes}
-            whileTap={{ scale: 0.97 }}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              marginBottom: '16px',
-              background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
-              border: 'none',
-              borderRadius: '16px',
-              color: '#FFFFFF',
-              fontSize: '14px',
-              fontWeight: 700,
-              fontFamily: "'Quicksand', sans-serif",
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
-            }}
-          >
-            Unlock All Biomes
-          </motion.button>
-        )}
-
-        {/* Biome Carousel */}
+        {/* Biome Carousel — shows all 6 biomes, locked ones show cost */}
         <div style={{
           display: 'flex',
           gap: '12px',
@@ -566,38 +606,84 @@ const MeadowScreen: React.FC = () => {
           paddingBottom: '8px',
           scrollBehavior: 'smooth'
         }}>
-          {(unlockedBiomes as BiomeType[]).map((biomeId) => {
+          {ALL_BIOME_IDS.map((biomeId) => {
             const biomeConfig = BIOME_CONFIG[biomeId];
             const isActive = activeBiome === biomeId;
+            const isUnlocked = unlockedBiomes.includes(biomeId);
+            const cost = getBiomeCost(biomeId);
+            const canAffordBiome = (userData.coins ?? 0) >= cost;
             return (
               <motion.button
                 key={biomeId}
-                onClick={() => handleBiomeSwitch(biomeId)}
+                onClick={() => {
+                  if (isUnlocked) {
+                    handleBiomeSwitch(biomeId);
+                  } else if (canAffordBiome) {
+                    setBiomePurchaseTarget({ biomeId, cost });
+                  }
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '12px 16px',
+                  gap: '4px',
+                  padding: '8px 12px',
                   borderRadius: '20px',
-                  border: isActive ? '2px solid rgba(167, 139, 250, 0.6)' : '2px solid rgba(200, 200, 200, 0.3)',
-                  background: isActive ? 'rgba(167, 139, 250, 0.2)' : 'rgba(255, 255, 255, 0.5)',
+                  border: isActive
+                    ? '2px solid rgba(167, 139, 250, 0.6)'
+                    : isUnlocked
+                      ? '2px solid rgba(200, 200, 200, 0.3)'
+                      : '2px solid rgba(150, 150, 150, 0.2)',
+                  background: isActive
+                    ? 'rgba(167, 139, 250, 0.2)'
+                    : isUnlocked
+                      ? 'rgba(255, 255, 255, 0.5)'
+                      : 'rgba(0, 0, 0, 0.08)',
                   backdropFilter: 'blur(10px)',
-                  cursor: 'pointer',
-                  minWidth: '80px',
-                  transition: 'all 0.2s ease'
+                  cursor: isUnlocked || canAffordBiome ? 'pointer' : 'default',
+                  minWidth: '64px',
+                  opacity: !isUnlocked && !canAffordBiome ? 0.55 : 1,
+                  transition: 'all 0.2s ease',
+                  position: 'relative',
                 }}
               >
-                <div style={{ fontSize: '32px' }}>{biomeConfig.emoji}</div>
+                <div style={{ fontSize: '24px', position: 'relative' }}>
+                  {biomeConfig.emoji}
+                  {!isUnlocked && (
+                    <div style={{
+                      position: 'absolute',
+                      top: -4, right: -6,
+                      background: 'rgba(0,0,0,0.55)',
+                      borderRadius: '50%',
+                      width: '16px', height: '16px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Lock size={9} color="white" strokeWidth={2.5} />
+                    </div>
+                  )}
+                </div>
                 <div style={{
-                  fontSize: '11px',
+                  fontSize: '10px',
                   fontWeight: 600,
                   color: isActive ? 'rgba(15, 23, 42, 0.95)' : 'rgba(100, 116, 139, 0.7)'
                 }}>
                   {biomeConfig.name}
                 </div>
+                {!isUnlocked && (
+                  <div style={{
+                    fontSize: '9px',
+                    fontWeight: 700,
+                    color: canAffordBiome ? '#B45309' : 'rgba(100, 116, 139, 0.6)',
+                    background: canAffordBiome ? 'rgba(251, 191, 36, 0.25)' : 'rgba(150, 150, 150, 0.15)',
+                    padding: '1px 6px',
+                    borderRadius: '8px',
+                    fontFamily: "'Quicksand', sans-serif",
+                  }}>
+                    🪙 {cost.toLocaleString()}
+                  </div>
+                )}
               </motion.button>
             );
           })}
@@ -729,7 +815,7 @@ const MeadowScreen: React.FC = () => {
         )}
 
         {/* Stats Card — context-aware */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 mb-4 shadow-soft">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-4 mb-4 shadow-soft">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-secondary">
@@ -748,19 +834,6 @@ const MeadowScreen: React.FC = () => {
             <div className="text-4xl">{BIOME_CONFIG[activeBiome].emoji}</div>
           </div>
         </div>
-
-        {/* Grid Info for Timeline Views */}
-        {viewMode !== 'today' && (
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-3 mb-6" style={{
-            border: '1px solid rgba(167, 139, 250, 0.2)',
-          }}>
-            <p className="text-xs text-text-secondary text-center">
-              {viewMode === 'weekly' && '📅 3-column grid • Current week only • Large tiles'}
-              {viewMode === 'monthly' && '📅 5-column grid • Navigate months • Medium tiles'}
-              {viewMode === 'yearly' && '📅 8-column grid • Navigate years • Compact tiles'}
-            </p>
-          </div>
-        )}
 
         <AnimatePresence mode="wait">
           {viewMode === 'today' ? (
@@ -1084,24 +1157,177 @@ const MeadowScreen: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Instructions */}
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
-          <p className="text-sm text-text-secondary text-center">
-            {viewMode === 'today'
-              ? '🌍 Switch biomes • 🐾 Drag animals • 👆 Double-tap to flip'
-              : viewMode === 'weekly'
-              ? '🌍 Switch biomes • 📊 Fixed grid view • Current week progress'
-              : '🌍 Switch biomes • ‹ › Navigate time • 📊 Fixed grid view'
-            }
-          </p>
-          <p className="text-xs text-text-secondary text-center mt-2">
-            {viewMode === 'today'
-              ? 'Collect animals daily • Unlock biomes by leveling up • Your collection resets at midnight'
-              : `Viewing all ${BIOME_CONFIG[activeBiome].name} animals collected ${periodLabel} in a structured grid`
-            }
-          </p>
-        </div>
       </div>
+
+      {/* Biome Purchase Confirmation Modal */}
+      <AnimatePresence>
+        {biomePurchaseTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setBiomePurchaseTarget(null)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              zIndex: 10000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'rgba(255, 255, 255, 0.97)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                padding: '28px 24px',
+                border: '1px solid rgba(200, 200, 220, 0.5)',
+                boxShadow: '0 16px 48px rgba(0,0,0,0.3)',
+                width: '100%',
+                maxWidth: '300px',
+                textAlign: 'center',
+              }}
+            >
+              {/* Biome emoji */}
+              <div style={{ fontSize: '64px', marginBottom: '12px', lineHeight: 1 }}>
+                {BIOME_CONFIG[biomePurchaseTarget.biomeId].emoji}
+              </div>
+
+              {/* Biome name */}
+              <div style={{
+                fontSize: '20px',
+                fontWeight: 700,
+                color: 'rgba(15, 23, 42, 0.95)',
+                fontFamily: "'Quicksand', sans-serif",
+                marginBottom: '6px',
+              }}>
+                Unlock {BIOME_CONFIG[biomePurchaseTarget.biomeId].name}?
+              </div>
+
+              {/* Description */}
+              <div style={{
+                fontSize: '13px',
+                color: 'rgba(100, 116, 139, 0.85)',
+                fontFamily: "'Quicksand', sans-serif",
+                marginBottom: '14px',
+                lineHeight: 1.4,
+              }}>
+                {BIOME_CONFIG[biomePurchaseTarget.biomeId].description}
+              </div>
+
+              {/* Cost badge */}
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '6px 14px',
+                background: 'rgba(251, 191, 36, 0.2)',
+                borderRadius: '14px',
+                fontSize: '16px',
+                fontWeight: 700,
+                color: '#B45309',
+                fontFamily: "'Quicksand', sans-serif",
+                marginBottom: '20px',
+              }}>
+                🪙 {biomePurchaseTarget.cost.toLocaleString()}
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setBiomePurchaseTarget(null)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(200, 200, 220, 0.4)',
+                    background: 'transparent',
+                    color: 'rgba(100, 116, 139, 0.8)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: "'Quicksand', sans-serif",
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    handleBiomePurchase(biomePurchaseTarget.biomeId, biomePurchaseTarget.cost);
+                    setBiomePurchaseTarget(null);
+                  }}
+                  style={{
+                    flex: 1.5,
+                    padding: '12px 16px',
+                    borderRadius: '16px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.9) 0%, rgba(245, 158, 11, 0.9) 100%)',
+                    color: '#78350F',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: "'Quicksand', sans-serif",
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(251, 191, 36, 0.4)',
+                  }}
+                >
+                  Unlock Biome
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Remotion Biome Unlock Celebration */}
+      {unlockAnimation && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          pointerEvents: 'all', isolation: 'isolate',
+          background: '#000',
+          overflow: 'hidden',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: animOverlayFading ? 0 : 1,
+          transition: 'opacity 0.7s ease-out',
+        }}>
+          <Player
+            ref={animPlayerRef}
+            component={BiomeUnlockAnimation}
+            inputProps={{
+              biomeId: unlockAnimation.biomeId,
+              biomeName: BIOME_CONFIG[unlockAnimation.biomeId].name,
+              biomeEmoji: BIOME_CONFIG[unlockAnimation.biomeId].emoji,
+              primaryColor: BIOME_CONFIG[unlockAnimation.biomeId].primaryColor,
+              biomeImageUrl: BIOME_IMAGES[unlockAnimation.biomeId] ?? '',
+            }}
+            durationInFrames={330}
+            compositionWidth={390}
+            compositionHeight={844}
+            fps={30}
+            controls={false}
+            loop={false}
+            style={{
+              width: '100vw', height: '100dvh',
+              minWidth: '100vw', minHeight: '100dvh',
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -5,7 +5,7 @@ import { X, Flame, Clock, TrendingUp, Star } from 'lucide-react';
 import { useAnalytics } from '../hooks/useAnalytics';
 import type { CategoryStats as CategoryStatsType } from '../types/stats';
 
-type Theme = 'morning' | 'twilight' | 'golden' | 'midnight';
+type Theme = 'morning' | 'midnight';
 
 // Calculate XP earned from session duration
 const calculateXP = (minutes: number): number => {
@@ -40,36 +40,6 @@ const getThemeColors = (theme: Theme) => {
         emptyBorder: '#CBD5E1'
       },
       isDark: false
-    },
-    twilight: {
-      background: '#0A0A0A',
-      cardBg: 'rgba(26, 26, 26, 0.95)',
-      border: 'rgba(255, 255, 255, 0.1)',
-      text: {
-        primary: 'rgba(255, 255, 255, 0.95)',
-        secondary: 'rgba(255, 255, 255, 0.7)',
-        tertiary: 'rgba(255, 255, 255, 0.5)'
-      },
-      heatmap: {
-        empty: 'rgba(255, 255, 255, 0.05)',
-        emptyBorder: 'rgba(255, 255, 255, 0.08)'
-      },
-      isDark: true
-    },
-    golden: {
-      background: '#0A0A0A',
-      cardBg: 'rgba(26, 26, 26, 0.95)',
-      border: 'rgba(255, 255, 255, 0.1)',
-      text: {
-        primary: 'rgba(255, 255, 255, 0.95)',
-        secondary: 'rgba(255, 255, 255, 0.7)',
-        tertiary: 'rgba(255, 255, 255, 0.5)'
-      },
-      heatmap: {
-        empty: 'rgba(255, 255, 255, 0.05)',
-        emptyBorder: 'rgba(255, 255, 255, 0.08)'
-      },
-      isDark: true
     },
     midnight: {
       background: '#0A0A0A',

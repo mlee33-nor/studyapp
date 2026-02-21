@@ -4,7 +4,8 @@ export interface BiomeConfig {
   id: BiomeType;
   name: string;
   emoji: string;
-  unlockLevel: number;
+  unlockLevel: number; // kept for backwards compat, unused
+  unlockCost: number;  // coins required to unlock
   primaryColor: string;
   secondaryColor: string;
   description: string;
@@ -25,6 +26,7 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     name: 'Meadow',
     emoji: '🌿',
     unlockLevel: 0,
+    unlockCost: 0,
     primaryColor: '#10B981',
     secondaryColor: '#34D399',
     description: 'Your peaceful starting meadow with friendly animals.',
@@ -34,6 +36,7 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     name: 'Safari',
     emoji: '🦁',
     unlockLevel: 10,
+    unlockCost: 2000,
     primaryColor: '#F59E0B',
     secondaryColor: '#FBBF24',
     description: 'A wild savanna biome with majestic African animals.',
@@ -43,6 +46,7 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     name: 'Forest',
     emoji: '🌲',
     unlockLevel: 20,
+    unlockCost: 4000,
     primaryColor: '#059669',
     secondaryColor: '#10B981',
     description: 'An enchanted forest filled with mysterious creatures.',
@@ -52,6 +56,7 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     name: 'Ocean',
     emoji: '🌊',
     unlockLevel: 30,
+    unlockCost: 6000,
     primaryColor: '#0369A1',
     secondaryColor: '#06B6D4',
     description: 'A tropical ocean biome with aquatic life.',
@@ -61,6 +66,7 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     name: 'Arctic',
     emoji: '❄️',
     unlockLevel: 40,
+    unlockCost: 8000,
     primaryColor: '#60A5FA',
     secondaryColor: '#93C5FD',
     description: 'A frozen arctic tundra with polar creatures.',
@@ -70,6 +76,7 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     name: 'Mountain',
     emoji: '⛰️',
     unlockLevel: 50,
+    unlockCost: 12000,
     primaryColor: '#8B5CF6',
     secondaryColor: '#A78BFA',
     description: 'A majestic mountain peak with highland animals.',
@@ -320,4 +327,9 @@ export const getStarterAnimalIds = (): string[] => {
 // Get all animal IDs across all biomes (for dev unlock)
 export const getAllAnimalIds = (): string[] => {
   return ALL_BIOME_ANIMALS().map(a => a.id);
+};
+
+// Get coin cost to unlock a biome
+export const getBiomeCost = (biomeId: BiomeType): number => {
+  return BIOME_CONFIG[biomeId]?.unlockCost ?? 0;
 };

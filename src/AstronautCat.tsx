@@ -4,7 +4,7 @@ interface AstronautCatProps {
   size?: number;
   level: number;
   isTimerActive?: boolean;
-  theme: 'morning' | 'twilight' | 'golden' | 'midnight';
+  theme: 'morning' | 'midnight';
 }
 
 export const AstronautCat: React.FC<AstronautCatProps> = ({

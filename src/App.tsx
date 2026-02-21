@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Home, Settings as SettingsIcon, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Lottie from 'lottie-react';
+import RiveComponent from '@rive-app/react-canvas';
 import { triggerHapticFeedback } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
@@ -25,15 +26,15 @@ const setDarkMode = (enabled: boolean) => {
   localStorage.setItem('darkMode', String(enabled));
 };
 
-const getSelectedTheme = (): 'morning' | 'twilight' | 'golden' | 'midnight' => {
+const getSelectedTheme = (): 'morning' | 'midnight' => {
   const stored = localStorage.getItem('selectedTheme');
-  if (stored && ['morning', 'twilight', 'golden', 'midnight'].includes(stored)) {
-    return stored as 'morning' | 'twilight' | 'golden' | 'midnight';
+  if (stored && ['morning', 'midnight'].includes(stored)) {
+    return stored as 'morning' | 'midnight';
   }
   return 'morning';
 };
 
-const setSelectedTheme = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const setSelectedTheme = (theme: 'morning' | 'midnight') => {
   localStorage.setItem('selectedTheme', theme);
 };
 
@@ -162,40 +163,16 @@ const saveSession = (category: string, duration: number) => {
 // --- CHART DATA HELPERS (removed - replaced by new stats system) ---
 
 // --- GAME LOGIC ---
-const calculateXpForLevel = (level: number) => {
-  return 100 * level;
-};
 
 
-// Theme unlock levels
-const THEME_UNLOCK_LEVELS = {
-  morning: 0,
-  twilight: 10,
-  golden: 20,
-  midnight: 30
-};
-
-const isThemeUnlocked = (theme: string, level: number) => {
-  return level >= THEME_UNLOCK_LEVELS[theme as keyof typeof THEME_UNLOCK_LEVELS];
-};
-
-// Theme-aware colors for charts - 4 Distinct Palettes
-const getThemeColors = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+// All themes are always unlocked
+// Theme-aware colors for charts - 2 Distinct Palettes
+const getThemeColors = (theme: 'morning' | 'midnight') => {
   const themeColorMap = {
     morning: {
       primary: 'rgba(167, 139, 250, 0.8)',
       secondary: 'rgba(139, 92, 246, 0.8)',
       pastels: ['#E6D2FF', '#C8E6FF', '#C8FFE6', '#FFE6D2', '#FFD2E6', '#D2FFE6']
-    },
-    twilight: {
-      primary: '#F472B6', // Neon Pink
-      secondary: '#A855F7', // Electric Purple
-      pastels: ['#F472B6', '#A855F7', '#2DD4BF', '#EC4899', '#9333EA', '#14B8A6']
-    },
-    golden: {
-      primary: 'rgba(251, 191, 36, 0.8)',
-      secondary: 'rgba(249, 115, 22, 0.8)',
-      pastels: ['#FFE6C8', '#FFDCC8', '#FFD2C8', '#FFC8D2', '#FFE6FF', '#E6FFD2']
     },
     midnight: {
       primary: 'rgba(59, 130, 246, 0.8)',
@@ -224,7 +201,7 @@ const NAV_TABS = [
   { id: 'Settings', icon: SettingsIcon },
 ] as const;
 
-// --- BACKGROUND THEMES - 4 Distinct Palettes ---
+// --- BACKGROUND THEMES - 2 Palettes ---
 const BACKGROUND_THEMES = {
   morning: {
     name: 'Daylight',
@@ -235,32 +212,6 @@ const BACKGROUND_THEMES = {
       { color: 'rgba(200, 255, 230, 0.4)', size: 450, x: '70%', y: '30%' },
       { color: 'rgba(200, 230, 255, 0.4)', size: 480, x: '40%', y: '70%' },
       { color: 'rgba(255, 220, 240, 0.4)', size: 420, x: '80%', y: '60%' }
-    ],
-    isDark: false,
-    textMode: 'dark'
-  },
-  twilight: {
-    name: 'Twilight',
-    emoji: '🌆',
-    gradient: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
-    orbs: [
-      { color: 'rgba(244, 114, 182, 0.3)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(168, 85, 247, 0.3)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(45, 212, 191, 0.3)', size: 480, x: '40%', y: '70%' },
-      { color: 'rgba(236, 72, 153, 0.3)', size: 420, x: '80%', y: '60%' }
-    ],
-    isDark: true,
-    textMode: 'light'
-  },
-  golden: {
-    name: 'Golden',
-    emoji: '🌇',
-    gradient: 'linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%)',
-    orbs: [
-      { color: 'rgba(251, 191, 36, 0.4)', size: 500, x: '10%', y: '10%' },
-      { color: 'rgba(249, 115, 22, 0.4)', size: 450, x: '70%', y: '30%' },
-      { color: 'rgba(245, 158, 11, 0.4)', size: 480, x: '40%', y: '70%' },
-      { color: 'rgba(251, 146, 60, 0.4)', size: 420, x: '80%', y: '60%' }
     ],
     isDark: false,
     textMode: 'dark'
@@ -281,7 +232,7 @@ const BACKGROUND_THEMES = {
 };
 
 // Helper functions for theme-aware colors
-const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', type: 'primary' | 'secondary' | 'tertiary') => {
+const getTextColor = (theme: 'morning' | 'midnight', type: 'primary' | 'secondary' | 'tertiary') => {
   const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
 
   const colorMap = {
@@ -300,31 +251,31 @@ const getTextColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', typ
   return isDarkText ? colorMap.dark[type] : colorMap.light[type];
 };
 
-const getBorderColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const getBorderColor = (theme: 'morning' | 'midnight') => {
   const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
   return isDarkText ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.2)';
 };
 
-const getNavBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const getNavBackground = (theme: 'morning' | 'midnight') => {
   const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
   return isDarkText ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)';
 };
 
-const getNavBorder = (_theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const getNavBorder = (_theme: 'morning' | 'midnight') => {
   return 'transparent';
 };
 
-const getNavShadow = (_theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const getNavShadow = (_theme: 'morning' | 'midnight') => {
   return 'none';
 };
 
-const getInactiveIconColor = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
+const getInactiveIconColor = (theme: 'morning' | 'midnight') => {
   const isDarkText = BACKGROUND_THEMES[theme].textMode === 'dark';
   return isDarkText ? 'rgba(100, 116, 139, 0.6)' : 'rgba(255, 255, 255, 0.6)';
 };
 
-const getTabBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', isActive: boolean) => {
-  const isLightTheme = theme === 'morning' || theme === 'golden';
+const getTabBackground = (theme: 'morning' | 'midnight', isActive: boolean) => {
+  const isLightTheme = theme === 'morning';
 
   if (isActive) {
     return 'rgba(167, 139, 250, 0.2)';
@@ -333,8 +284,8 @@ const getTabBackground = (theme: 'morning' | 'twilight' | 'golden' | 'midnight',
   return isLightTheme ? 'rgba(255, 255, 255, 0.5)' : 'rgba(167, 139, 250, 0.1)';
 };
 
-const getTabBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', isActive: boolean) => {
-  const isLightTheme = theme === 'morning' || theme === 'golden';
+const getTabBorder = (theme: 'morning' | 'midnight', isActive: boolean) => {
+  const isLightTheme = theme === 'morning';
 
   if (isActive) {
     return '2px solid rgba(167, 139, 250, 0.6)';
@@ -344,7 +295,7 @@ const getTabBorder = (theme: 'morning' | 'twilight' | 'golden' | 'midnight', isA
 };
 
 // --- LIVING AURORA MESH BACKGROUND ---
-const LivingAuroraBackground: React.FC<{ theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ theme }) => {
+const LivingAuroraBackground: React.FC<{ theme: 'morning' | 'midnight' }> = ({ theme }) => {
   const orbs = BACKGROUND_THEMES[theme].orbs;
 
   return (
@@ -385,7 +336,7 @@ const LivingAuroraBackground: React.FC<{ theme: 'morning' | 'twilight' | 'golden
 
 
 // --- THEME-AWARE GLASSMORPHISM CARD ---
-const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties; theme: 'morning' | 'twilight' | 'golden' | 'midnight' }> = ({ children, style, theme }) => {
+const GlassCard: React.FC<{ children: React.ReactNode; style?: React.CSSProperties; theme: 'morning' | 'midnight' }> = ({ children, style, theme }) => {
   const isDark = BACKGROUND_THEMES[theme].isDark;
 
   return (
@@ -966,10 +917,9 @@ export default function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(getDarkMode());
   const [userData, setUserData] = useState(getUserData());
-  const [devLevel, setDevLevel] = useState(userData.level);
   const [timerMinutes, setTimerMinutes] = useState(25);
   const [timeLeft, setTimeLeft] = useState(timerMinutes * 60);
-  const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'twilight' | 'golden' | 'midnight'>(getSelectedTheme());
+  const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'midnight'>(getSelectedTheme());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
   const [, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
@@ -983,6 +933,13 @@ export default function App() {
   });
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
   const [purchaseTarget, setPurchaseTarget] = useState<{ index: number; id: string; name: string; price: number } | null>(null);
+  const [chestOpening, setChestOpening] = useState<{
+    stage: number; // 0=appear, 1=wobble, 2=shake+crack, 3=burst+reveal
+    animalIndex: number;
+    animalName: string;
+  } | null>(null);
+  const [chestAnimData, setChestAnimData] = useState<any>(null);
+  const chestLottieRef = useRef<any>(null);
 
   const theme = selectedTheme;
 
@@ -990,24 +947,18 @@ export default function App() {
   useEffect(() => {
     const themeColorMap = {
       morning: '#F0F4FF',
-      twilight: '#0F172A',
-      golden: '#FEF3C7',
       midnight: '#000000'
     };
 
     // Solid fallback colors (bottom of each gradient) — shown if gradient fails to paint
     const themeSolidFallback = {
       morning: '#F0FFF5',
-      twilight: '#312E81',
-      golden: '#FBBF24',
       midnight: '#1E1B4B'
     };
 
     // Gradients that match BACKGROUND_THEMES - used for body fallback
     const gradientMap = {
       morning: 'linear-gradient(180deg, #F0F4FF 0%, #F5F0FF 50%, #F0FFF5 100%)',
-      twilight: 'linear-gradient(180deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)',
-      golden: 'linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%, #FBBF24 100%)',
       midnight: 'linear-gradient(180deg, #000000 0%, #0F0F23 50%, #1E1B4B 100%)'
     };
 
@@ -1179,11 +1130,9 @@ export default function App() {
     setDarkMode(newMode);
   };
 
-  const handleThemeChange = (theme: 'morning' | 'twilight' | 'golden' | 'midnight') => {
-    if (isThemeUnlocked(theme, userData.level)) {
-      setSelectedThemeState(theme);
-      setSelectedTheme(theme);
-    }
+  const handleThemeChange = (theme: 'morning' | 'midnight') => {
+    setSelectedThemeState(theme);
+    setSelectedTheme(theme);
   };
 
   const triggerCelebration = () => {
@@ -1242,26 +1191,13 @@ export default function App() {
     // This includes the new permanentCollection and meadowAnimals
     const updatedStorage = getStorageUserData();
 
-    // XP Scaling Logic: XP = timerMinutes * 10 (10 XP per minute)
-    // Bonus: +0.5% XP per minute (longer sessions get better odds for animals)
-    const xpGained = timerMinutes * 10;
-    let newLevel = userData.level;
-    let remainingXp = userData.xp + xpGained;
-
-    // Handle level up (can level up multiple times)
-    while (remainingXp >= calculateXpForLevel(newLevel)) {
-      const xpNeeded = calculateXpForLevel(newLevel);
-      remainingXp -= xpNeeded;
-      newLevel += 1;
-    }
-
     // Coins earned = 1 per minute studied
     const coinsEarned = timerMinutes;
 
     // Update local userData - sync permanentCollection and meadowAnimals from canonical storage
     const newData = {
-      level: newLevel,
-      xp: remainingXp,
+      level: userData.level,
+      xp: userData.xp,
       sessionsCompleted: userData.sessionsCompleted + 1,
       meadowAnimals: updatedStorage.meadowAnimals || [],
       permanentCollection: updatedStorage.permanentCollection || [],
@@ -1274,32 +1210,6 @@ export default function App() {
     triggerCelebration();
   };
 
-  const handleDevLevelChange = (level: number) => {
-    setDevLevel(level);
-    const unlockedBiomes: any[] = [];
-    // Unlock biomes based on level
-    const levelThresholds: any = { meadow: 0, safari: 10, forest: 20, ocean: 30, arctic: 40, mountain: 50 };
-    Object.entries(levelThresholds).forEach(([biome, threshold]: any) => {
-      if (level >= threshold) unlockedBiomes.push(biome);
-    });
-
-    // Update the canonical storage (pomodoroStudyApp key) so MeadowScreen sees the change
-    updateStorageUserData({
-      level: level,
-      xp: 0,
-      unlockedBiomes: unlockedBiomes.length > 0 ? unlockedBiomes : ['meadow']
-    });
-
-    // Also sync App-level state
-    const newData = {
-      ...userData,
-      level: level,
-      xp: 0,
-      unlockedBiomes: unlockedBiomes.length > 0 ? unlockedBiomes : ['meadow']
-    };
-    setUserData(newData);
-    saveUserData(newData);
-  };
 
   const handleStartFocus = () => {
     setShowCategoryModal(true);
@@ -1310,6 +1220,59 @@ export default function App() {
     setShowCategoryModal(false);
     setIsRunning(true);
   };
+
+  // Load chest animation data on first purchase
+  useEffect(() => {
+    if (chestOpening && !chestAnimData) {
+      fetch('/studyapp/treasure-3d.json')
+        .then(r => r.json())
+        .then(data => setChestAnimData(data))
+        .catch(() => {});
+    }
+  }, [chestOpening, chestAnimData]);
+
+  // Control chest Lottie playback per stage
+  useEffect(() => {
+    if (!chestOpening || !chestLottieRef.current) return;
+    const lottie = chestLottieRef.current;
+    if (chestOpening.stage === 0) {
+      lottie.goToAndStop(0, true);
+    } else if (chestOpening.stage === 1) {
+      lottie.playSegments([0, 45], true);
+    } else if (chestOpening.stage === 2) {
+      lottie.playSegments([45, 90], true);
+    }
+    // Stage 3: chest disappears, so no playback needed
+  }, [chestOpening?.stage]);
+
+  // --- CHEST OPENING CELEBRATION ---
+  const triggerGoldConfetti = useCallback(() => {
+    const gold = ['#FBBF24', '#F59E0B', '#FCD34D', '#FFFFFF', '#EAB308'];
+    confetti({ particleCount: 80, spread: 90, origin: { y: 0.45, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 45 });
+    setTimeout(() => {
+      confetti({ particleCount: 50, spread: 140, origin: { y: 0.5, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 30 });
+    }, 150);
+    setTimeout(() => {
+      confetti({ particleCount: 40, spread: 180, origin: { y: 0.4, x: 0.5 }, colors: gold, shapes: ['circle'], gravity: 1.5, scalar: 0.8 });
+    }, 300);
+  }, []);
+
+  const handleChestTap = useCallback(() => {
+    if (!chestOpening) return;
+    const next = chestOpening.stage + 1;
+    if (next <= 3) {
+      triggerHapticFeedback(20);
+      setChestOpening(prev => prev ? { ...prev, stage: next } : null);
+      if (next === 3) {
+        // Final burst — fire confetti and auto-dismiss
+        triggerGoldConfetti();
+        setTimeout(() => {
+          setChestOpening(null);
+          setShowAnimalSelector(false);
+        }, 2800);
+      }
+    }
+  }, [chestOpening, triggerGoldConfetti]);
 
   const renderContent = () => {
     if (activeTab === 'Timer') return (
@@ -1599,6 +1562,15 @@ export default function App() {
                             ...
                           </div>
                         )}
+                        {!isOwned && (
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: 'rgba(0,0,0,0.4)', borderRadius: '8px',
+                          }}>
+                            <Lock size={16} color="white" strokeWidth={2.5} />
+                          </div>
+                        )}
                       </div>
                       <span style={{
                         fontSize: '12px',
@@ -1759,9 +1731,14 @@ export default function App() {
                       });
                       // Auto-select the newly purchased animal
                       setSelectedAnimal(purchaseTarget.index);
+                      // Launch chest opening celebration
+                      setChestOpening({
+                        stage: 0,
+                        animalIndex: purchaseTarget.index,
+                        animalName: purchaseTarget.name,
+                      });
                     }
                     setPurchaseTarget(null);
-                    setShowAnimalSelector(false);
                   }}
                   style={{
                     flex: 1.5,
@@ -1783,6 +1760,326 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
+
+        {/* Chest Opening Celebration Overlay */}
+        <AnimatePresence>
+          {chestOpening && (
+            <motion.div
+              key="chest-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={handleChestTap}
+              style={{
+                position: 'fixed',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: chestOpening.stage >= 3
+                  ? 'radial-gradient(circle, rgba(251,191,36,0.4) 0%, rgba(0,0,0,0.85) 70%)'
+                  : 'rgba(0, 0, 0, 0.85)',
+                zIndex: 10001,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                transition: 'background 0.5s ease',
+              }}
+            >
+              {/* Golden light rays behind chest (stage 2+) */}
+              {chestOpening.stage >= 2 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.3 }}
+                  animate={{ opacity: [0, 0.8, 0.5], scale: [0.3, 1.5, 1.2] }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  style={{
+                    position: 'absolute',
+                    width: '400px', height: '400px',
+                    background: 'radial-gradient(circle, rgba(251,191,36,0.5) 0%, rgba(245,158,11,0.2) 40%, transparent 70%)',
+                    borderRadius: '50%',
+                    pointerEvents: 'none',
+                  }}
+                />
+              )}
+
+              {/* Rive particle burst on stage 3 */}
+              {chestOpening.stage >= 3 && (
+                <div style={{
+                  position: 'absolute',
+                  width: '500px', height: '500px',
+                  pointerEvents: 'none',
+                  opacity: 0.9,
+                }}>
+                  <RiveComponent
+                    src="/particle-burst.riv"
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                </div>
+              )}
+
+              {/* The 3D Chest (stages 0-2) */}
+              {chestOpening.stage < 3 && (
+                <motion.div
+                  animate={
+                    chestOpening.stage === 0 ? { scale: [0, 1.15, 1], rotate: 0 } :
+                    chestOpening.stage === 1 ? {
+                      rotate: [-4, 4, -4, 4, -3, 3, 0],
+                      scale: [1, 1.06, 1],
+                    } :
+                    {
+                      rotate: [-7, 7, -9, 9, -7, 7, -5, 5, 0],
+                      scale: [1, 1.1, 1.03, 1.1, 1],
+                      y: [0, -8, 0, -5, 0],
+                    }
+                  }
+                  transition={
+                    chestOpening.stage === 0
+                      ? { type: 'spring', stiffness: 300, damping: 15, duration: 0.5 }
+                      : { duration: chestOpening.stage === 1 ? 0.5 : 0.7, ease: 'easeInOut' }
+                  }
+                  style={{
+                    position: 'relative',
+                    width: '200px',
+                    height: '200px',
+                    filter: chestOpening.stage >= 2
+                      ? 'drop-shadow(0 0 30px rgba(251,191,36,0.6))'
+                      : 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))',
+                  }}
+                >
+                  {/* 3D Lottie Chest */}
+                  {chestAnimData && (
+                    <Lottie
+                      lottieRef={chestLottieRef}
+                      animationData={chestAnimData}
+                      loop={false}
+                      autoplay={false}
+                      style={{ width: '100%', height: '100%' }}
+                    />
+                  )}
+
+                  {/* Animal INSIDE the chest peeking out (stage 1+) */}
+                  {chestOpening.stage >= 1 && loadedAnimations[`selected-${activeBiome}-${chestOpening.animalIndex}`] && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '8%', left: '15%',
+                      width: '70%', height: '50%',
+                      overflow: 'hidden',
+                      zIndex: 1,
+                      pointerEvents: 'none',
+                    }}>
+                      <motion.div
+                        initial={{ y: 60, opacity: 0 }}
+                        animate={
+                          chestOpening.stage === 1
+                            ? { y: [30, 15, 30], opacity: 1, rotate: [-4, 4, -4] }
+                            : { y: [10, -8, 10], opacity: 1, rotate: [-6, 6, -6], scale: [1, 1.1, 1] }
+                        }
+                        transition={{
+                          duration: chestOpening.stage === 1 ? 1 : 0.6,
+                          repeat: Infinity,
+                          repeatType: 'reverse',
+                          ease: 'easeInOut',
+                        }}
+                        style={{
+                          width: '90px', height: '90px',
+                          margin: '0 auto',
+                          filter: 'drop-shadow(0 2px 8px rgba(251,191,36,0.5))',
+                        }}
+                      >
+                        <Lottie
+                          animationData={loadedAnimations[`selected-${activeBiome}-${chestOpening.animalIndex}`]}
+                          loop={true}
+                          style={{ width: '100%', height: '100%' }}
+                        />
+                      </motion.div>
+                    </div>
+                  )}
+
+                  {/* Sparkles around chest (stage 1+) */}
+                  {chestOpening.stage >= 1 && (
+                    <>
+                      {[...Array(chestOpening.stage >= 2 ? 10 : 6)].map((_, i) => {
+                        const count = chestOpening.stage >= 2 ? 10 : 6;
+                        const angle = (i / count) * Math.PI * 2;
+                        const radius = chestOpening.stage >= 2 ? 120 : 90;
+                        return (
+                          <motion.div
+                            key={`sparkle-${i}`}
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{
+                              opacity: [0, 1, 0],
+                              scale: [0, 1.5, 0],
+                              x: Math.cos(angle) * radius,
+                              y: Math.sin(angle) * radius,
+                            }}
+                            transition={{
+                              duration: 0.8,
+                              delay: i * 0.06,
+                              repeat: Infinity,
+                              repeatDelay: 0.2,
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: '50%', left: '50%',
+                              width: chestOpening.stage >= 2 ? '8px' : '5px',
+                              height: chestOpening.stage >= 2 ? '8px' : '5px',
+                              background: i % 3 === 0 ? '#FCD34D' : i % 3 === 1 ? '#FBBF24' : '#F59E0B',
+                              borderRadius: '50%',
+                              boxShadow: '0 0 10px rgba(251,191,36,0.8)',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {/* Golden glow pulse on stage 2 */}
+                  {chestOpening.stage >= 2 && (
+                    <motion.div
+                      animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.1, 1] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                      style={{
+                        position: 'absolute',
+                        top: '-20%', left: '-20%',
+                        width: '140%', height: '140%',
+                        background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, transparent 60%)',
+                        borderRadius: '50%',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  )}
+                </motion.div>
+              )}
+
+              {/* Stage 3: Animal Reveal */}
+              {chestOpening.stage >= 3 && (
+                <>
+                  {/* Glow ring */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 1 }}
+                    animate={{ scale: [0, 2], opacity: [1, 0] }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    style={{
+                      position: 'absolute',
+                      width: '200px', height: '200px',
+                      border: '4px solid rgba(251,191,36,0.6)',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 40px rgba(251,191,36,0.4), inset 0 0 40px rgba(251,191,36,0.2)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+
+                  {/* Animal Lottie — big reveal */}
+                  <motion.div
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: [0, 1.35, 1.05], rotate: [-10, 5, 0] }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 12, delay: 0.1 }}
+                    style={{
+                      width: '200px', height: '200px',
+                      filter: 'drop-shadow(0 0 30px rgba(251,191,36,0.7))',
+                      zIndex: 2,
+                    }}
+                  >
+                    {loadedAnimations[`selected-${activeBiome}-${chestOpening.animalIndex}`] && (
+                      <Lottie
+                        animationData={loadedAnimations[`selected-${activeBiome}-${chestOpening.animalIndex}`]}
+                        loop={true}
+                        style={{ width: '100%', height: '100%' }}
+                      />
+                    )}
+                  </motion.div>
+
+                  {/* UNLOCKED! text — high visibility */}
+                  <motion.div
+                    initial={{ y: -40, opacity: 0, scale: 0.5 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.25 }}
+                    style={{
+                      marginTop: '12px',
+                      fontSize: '34px',
+                      fontWeight: 900,
+                      fontFamily: "'Quicksand', sans-serif",
+                      color: '#FDE68A',
+                      textShadow: '0 0 20px rgba(251,191,36,0.9), 0 0 40px rgba(251,191,36,0.5), 0 2px 4px rgba(0,0,0,0.8)',
+                      letterSpacing: '4px',
+                      zIndex: 2,
+                    }}
+                  >
+                    UNLOCKED!
+                  </motion.div>
+
+                  {/* Animal name */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.4 }}
+                    style={{
+                      marginTop: '6px',
+                      fontSize: '20px',
+                      fontWeight: 700,
+                      color: '#FFFFFF',
+                      fontFamily: "'Quicksand', sans-serif",
+                      textShadow: '0 0 12px rgba(251,191,36,0.6), 0 2px 4px rgba(0,0,0,0.7)',
+                      zIndex: 2,
+                    }}
+                  >
+                    {chestOpening.animalName}
+                  </motion.div>
+
+                  {/* Orbiting sparkles */}
+                  {[...Array(8)].map((_, i) => (
+                    <motion.div
+                      key={`orbit-${i}`}
+                      initial={{ opacity: 0 }}
+                      animate={{
+                        opacity: [0, 1, 0],
+                        rotate: [i * 45, i * 45 + 360],
+                      }}
+                      transition={{
+                        duration: 2,
+                        delay: 0.2 + i * 0.05,
+                        ease: 'linear',
+                      }}
+                      style={{
+                        position: 'absolute',
+                        width: '6px', height: '6px',
+                        background: i % 2 === 0 ? '#FBBF24' : '#FCD34D',
+                        borderRadius: '50%',
+                        boxShadow: '0 0 6px rgba(251,191,36,0.8)',
+                        top: `calc(50% + ${Math.sin(i * 0.785) * 110}px)`,
+                        left: `calc(50% + ${Math.cos(i * 0.785) * 110}px)`,
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  ))}
+                </>
+              )}
+
+              {/* Tap prompt (stages 0-2) */}
+              {chestOpening.stage < 3 && (
+                <motion.div
+                  animate={{ opacity: [0.6, 1, 0.6], scale: [0.97, 1.08, 0.97] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  style={{
+                    marginTop: '32px',
+                    fontSize: '20px',
+                    fontWeight: 800,
+                    color: '#FDE68A',
+                    fontFamily: "'Quicksand', sans-serif",
+                    letterSpacing: '3px',
+                    textShadow: '0 0 16px rgba(251,191,36,0.8), 0 2px 4px rgba(0,0,0,0.7)',
+                  }}
+                >
+                  {chestOpening.stage === 0 ? 'TAP TO OPEN!' :
+                   chestOpening.stage === 1 ? 'TAP AGAIN!' :
+                   'ONE MORE TAP!'}
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Zone 3 (Bottom): Action Zone - flex-1.5 */}
         <div style={{
@@ -1976,51 +2273,30 @@ export default function App() {
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '12px'
           }}>
-            {(Object.keys(BACKGROUND_THEMES) as Array<'morning' | 'twilight' | 'golden' | 'midnight'>).map((themeKey) => {
+            {(Object.keys(BACKGROUND_THEMES) as Array<'morning' | 'midnight'>).map((themeKey) => {
               const themeData = BACKGROUND_THEMES[themeKey];
-              const unlocked = isThemeUnlocked(themeKey, userData.level);
               const isSelected = selectedTheme === themeKey;
 
               return (
                 <motion.div
                   key={themeKey}
-                  whileHover={{ scale: unlocked ? 1.02 : 1 }}
-                  whileTap={unlocked ? { scale: 0.98 } : {}}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleThemeChange(themeKey)}
                   style={{
                     position: 'relative',
-                    cursor: unlocked ? 'pointer' : 'not-allowed',
+                    cursor: 'pointer',
                     borderRadius: '16px',
                     overflow: 'hidden',
                     border: isSelected ? '3px solid rgba(167, 139, 250, 0.8)' : '2px solid rgba(200, 220, 255, 0.3)',
                     boxShadow: isSelected ? '0 4px 20px rgba(167, 139, 250, 0.3)' : '0 2px 10px rgba(147, 197, 253, 0.1)',
-                    opacity: unlocked ? 1 : 0.5
                   }}
                 >
                   {/* Theme Swatch */}
                   <div style={{
                     height: '80px',
                     background: themeData.gradient,
-                    position: 'relative'
-                  }}>
-                    {/* Lock Overlay */}
-                    {!unlocked && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'rgba(0, 0, 0, 0.4)',
-                        backdropFilter: 'blur(4px)'
-                      }}>
-                        <Lock size={24} color="white" strokeWidth={2.5} />
-                      </div>
-                    )}
-                  </div>
+                  }} />
 
                   {/* Theme Label */}
                   <div style={{
@@ -2038,16 +2314,6 @@ export default function App() {
                     }}>
                       {themeData.emoji} {themeData.name}
                     </div>
-                    {!unlocked && (
-                      <div style={{
-                        fontSize: '11px',
-                        color: getTextColor(themeKey, 'tertiary'),
-                        marginTop: '2px',
-                        fontFamily: "'Quicksand', sans-serif"
-                      }}>
-                        Level {THEME_UNLOCK_LEVELS[themeKey]}+
-                      </div>
-                    )}
                   </div>
                 </motion.div>
               );
@@ -2066,40 +2332,7 @@ export default function App() {
             Developer Tools
           </h3>
 
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: '12px',
-              fontSize: '14px',
-              color: getTextColor(selectedTheme, 'secondary'),
-              fontWeight: 600,
-              fontFamily: "'Quicksand', sans-serif"
-            }}>
-              <span>Force Level</span>
-              <span>Level {devLevel}</span>
-            </div>
-
-            <input
-              type="range"
-              min="1"
-              max="50"
-              value={devLevel}
-              onChange={(e) => handleDevLevelChange(parseInt(e.target.value))}
-              style={{
-                width: '100%',
-                height: '8px',
-                borderRadius: '10px',
-                outline: 'none',
-                background: 'linear-gradient(90deg, rgba(167, 139, 250, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)',
-                WebkitAppearance: 'none',
-                cursor: 'pointer'
-              }}
-            />
-
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => {
@@ -2149,6 +2382,32 @@ export default function App() {
               }}
             >
               Unlock All Animals
+            </motion.button>
+          </div>
+          <div style={{ marginTop: '10px' }}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                const starterIds = getStarterAnimalIds();
+                updateStorageUserData({ coins: 0, purchasedAnimals: starterIds, unlockedBiomes: ['meadow'] });
+                const newData = { ...userData, coins: 0, purchasedAnimals: starterIds, unlockedBiomes: ['meadow'] };
+                setUserData(newData);
+                saveUserData(newData);
+              }}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: '14px',
+                border: 'none',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.6) 0%, rgba(220, 38, 38, 0.6) 100%)',
+                color: 'white',
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+              }}
+            >
+              Reset All
             </motion.button>
           </div>
 
