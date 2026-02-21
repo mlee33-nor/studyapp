@@ -108,9 +108,8 @@ const biomeBackgroundStyle = (bgImage: string): React.CSSProperties => ({
   backgroundImage: `url(${bgImage})`,
   backgroundSize: 'cover',
   backgroundPosition: 'center bottom',
-  position: 'relative',
-  width: '100%',
-  height: '100%',
+  position: 'absolute',
+  inset: 0,
   overflow: 'hidden',
 });
 

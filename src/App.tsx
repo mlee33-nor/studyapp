@@ -1027,6 +1027,11 @@ export default function App() {
 
     applyBackground(document.documentElement);
     applyBackground(document.body);
+
+    const root = document.getElementById('root');
+    if (root) {
+      applyBackground(root);
+    }
   }, [selectedTheme]);
 
   // Build companion list from the active biome's animals
