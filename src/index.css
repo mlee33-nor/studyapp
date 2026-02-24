@@ -40,6 +40,13 @@ html {
      the viewport canvas DOWN to compensate. This makes the document tall
      enough to fill the resulting gap at the bottom. */
   min-height: calc(100% + env(safe-area-inset-top));
+  overscroll-behavior: none;
+}
+
+html.no-scroll,
+html.no-scroll body {
+  overflow: hidden;
+  height: 100dvh;
 }
 
 body {

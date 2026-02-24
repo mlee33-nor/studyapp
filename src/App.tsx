@@ -1023,6 +1023,12 @@ export default function App() {
     if (root) {
       root.style.overflowY = activeTab === 'Timer' ? 'hidden' : 'auto';
     }
+    // Also lock html/body to prevent browser-level scrolling
+    if (activeTab === 'Timer') {
+      document.documentElement.classList.add('no-scroll');
+    } else {
+      document.documentElement.classList.remove('no-scroll');
+    }
   }, [activeTab]);
 
   // Persistence Engine: Load saved data on mount
@@ -1398,7 +1404,8 @@ export default function App() {
                   <div style={{ width: ANIMALS[selectedAnimal]?.scale ? `${80 * ANIMALS[selectedAnimal].scale}px` : '80px', height: ANIMALS[selectedAnimal]?.scale ? `${80 * ANIMALS[selectedAnimal].scale}px` : '80px', flexShrink: 0 }}>
                     <Lottie
                       animationData={loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`]}
-                      loop={true}
+                      loop={false}
+                      autoplay={false}
                       style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                     />
                   </div>
