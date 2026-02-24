@@ -10,6 +10,8 @@ import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
+import { getNewlyUnlocked } from './utils/achievements';
+import type { Achievement } from './utils/achievements';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
 import { addCompletedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
@@ -908,6 +910,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   } | null>(null);
   const [chestAnimData, setChestAnimData] = useState<any>(null);
   const chestLottieRef = useRef<any>(null);
+  const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
 
   const theme = selectedTheme;
 
@@ -1136,6 +1139,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     updateStreak();
     setIsRunning(false);
 
+    // Snapshot canonical storage data BEFORE the session update (for achievement comparison)
+    const storageBefore = getStorageUserData();
+
     // Save session to enhanced storage (also saves to old format for backward compatibility)
     saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
 
@@ -1159,18 +1165,33 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     // This includes the new permanentCollection and meadowAnimals
     const updatedStorage = getStorageUserData();
 
+    // Check for newly unlocked achievements
+    const newAchievements = getNewlyUnlocked(storageBefore, updatedStorage);
+    if (newAchievements.length > 0) {
+      // Show the first new achievement after a short delay (after celebration)
+      setTimeout(() => {
+        setUnlockedAchievement(newAchievements[0]);
+        // If multiple achievements unlocked, queue them
+        let delay = 3500;
+        for (let i = 1; i < newAchievements.length; i++) {
+          setTimeout(() => setUnlockedAchievement(newAchievements[i]), delay);
+          delay += 3500;
+        }
+      }, 1500);
+    }
+
     // Coins earned = 1 per minute studied
     const coinsEarned = timerMinutes;
 
-    // Update local userData - sync permanentCollection and meadowAnimals from canonical storage
+    // Update local userData - sync from canonical storage (pomodoroStudyApp key)
     const newData = {
-      level: userData.level,
-      xp: userData.xp,
-      sessionsCompleted: userData.sessionsCompleted + 1,
+      level: updatedStorage.level ?? userData.level,
+      xp: updatedStorage.xp ?? userData.xp,
+      sessionsCompleted: (userData.sessionsCompleted || 0) + 1,
       meadowAnimals: updatedStorage.meadowAnimals || [],
       permanentCollection: updatedStorage.permanentCollection || [],
       lastMeadowReset: userData.lastMeadowReset,
-      coins: (userData.coins ?? 0) + coinsEarned,
+      coins: updatedStorage.coins ?? ((userData.coins ?? 0) + coinsEarned),
     };
 
     setUserData({ ...userData, ...newData });
@@ -2174,7 +2195,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
-              <AchievementsScreen userData={userData} theme={selectedTheme} />
+              <AchievementsScreen userData={getStorageUserData()} theme={selectedTheme} />
             </motion.div>
           )}
         </motion.div>
@@ -2491,6 +2512,106 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             })}
         </div>
       </div>
+
+      {/* Achievement Unlocked Popup */}
+      <AnimatePresence>
+        {unlockedAchievement && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setUnlockedAchievement(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: '24px',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: -20 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: selectedTheme === 'morning'
+                  ? 'linear-gradient(135deg, #FFFFFF 0%, #F5F0FF 100%)'
+                  : 'linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)',
+                borderRadius: '32px',
+                padding: '32px 24px',
+                textAlign: 'center',
+                maxWidth: '320px',
+                width: '100%',
+                boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3)',
+                border: `1px solid ${selectedTheme === 'morning' ? 'rgba(167, 139, 250, 0.3)' : 'rgba(167, 139, 250, 0.4)'}`,
+              }}
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                style={{ fontSize: '64px', marginBottom: '16px' }}
+              >
+                {unlockedAchievement.emoji}
+              </motion.div>
+              <div style={{
+                fontSize: '12px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                color: 'rgba(139, 92, 246, 0.9)',
+                marginBottom: '8px',
+                fontFamily: "'Quicksand', sans-serif",
+              }}>
+                Achievement Unlocked!
+              </div>
+              <div style={{
+                fontSize: '22px',
+                fontWeight: 700,
+                color: getTextColor(selectedTheme, 'primary'),
+                marginBottom: '8px',
+                fontFamily: "'Quicksand', sans-serif",
+              }}>
+                {unlockedAchievement.name}
+              </div>
+              <div style={{
+                fontSize: '14px',
+                color: getTextColor(selectedTheme, 'secondary'),
+                marginBottom: '24px',
+                lineHeight: '1.4',
+                fontFamily: "'Quicksand', sans-serif",
+              }}>
+                {unlockedAchievement.description}
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setUnlockedAchievement(null)}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '12px 32px',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: "'Quicksand', sans-serif",
+                  boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)',
+                }}
+              >
+                Awesome!
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

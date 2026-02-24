@@ -341,6 +341,18 @@ export const getAchievementStats = (userData: UserData) => {
   };
 };
 
+// Check for newly unlocked achievements by comparing before/after user data
+export const getNewlyUnlocked = (before: UserData, after: UserData): Achievement[] => {
+  const beforeAchievements = getAchievementsWithProgress(before);
+  const afterAchievements = getAchievementsWithProgress(after);
+
+  const beforeUnlockedIds = new Set(
+    beforeAchievements.filter(a => a.unlocked).map(a => a.id)
+  );
+
+  return afterAchievements.filter(a => a.unlocked && !beforeUnlockedIds.has(a.id));
+};
+
 // Get next achievement to work towards
 export const getNextAchievements = (userData: UserData, limit = 3): Achievement[] => {
   const achievements = getAchievementsWithProgress(userData);
