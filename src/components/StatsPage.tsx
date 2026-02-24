@@ -305,7 +305,9 @@ const WeeklyCalendarStrip: React.FC<{
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(7, 1fr)',
-        gap: '12px'
+        gap: '8px',
+        maxWidth: '420px',
+        margin: '0 auto'
       }}>
         {weekDays.map((day, index) => {
           const dayData = stats.monthlyData.find((d: DayData) => isSameDay(d.date, day));
@@ -343,8 +345,9 @@ const WeeklyCalendarStrip: React.FC<{
 
               {/* Day square with pie chart */}
               <div style={{
-                width: 'clamp(40px, 12vw, 56px)',
-                height: 'clamp(40px, 12vw, 56px)',
+                width: '100%',
+                aspectRatio: '1',
+                maxWidth: '56px',
                 borderRadius: '12px',
                 background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
                 border: isTodayDate
@@ -353,7 +356,7 @@ const WeeklyCalendarStrip: React.FC<{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+                fontSize: '0.875rem',
                 fontWeight: isTodayDate ? 700 : 500,
                 color: (hasSession ? '#FFFFFF' : colors.text.tertiary) as string,
                 position: 'relative',
