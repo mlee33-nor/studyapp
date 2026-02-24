@@ -922,7 +922,7 @@ export default function App() {
   const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'midnight'>(getSelectedTheme());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
-  const [, setFocusHistory] = useState<FocusSession[]>(getFocusHistory());
+  const [, setFocusHistory] = useState<FocusSession[]>([]);
   const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [selectedAnimal, setSelectedAnimal] = useState(0);
@@ -1033,8 +1033,6 @@ export default function App() {
 
   // Persistence Engine: Load saved data on mount
   useEffect(() => {
-    const savedHistory = getFocusHistory();
-    setFocusHistory(savedHistory);
     // Check and reset meadow daily
     const resetData = checkAndResetMeadow();
     setUserData(resetData);
@@ -1170,11 +1168,7 @@ export default function App() {
     updateStreak();
     setIsRunning(false);
 
-    // Save session to both old and enhanced storage
-    const savedSession = saveSession(currentCategory || 'Uncategorized', timerMinutes);
-    setFocusHistory(prev => [...prev, savedSession]);
-
-    // Also save to enhanced session storage with category metadata
+    // Save session to enhanced storage (also saves to old format for backward compatibility)
     saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
 
     // Save the selected animal info to storage so addCompletedSession picks it up
