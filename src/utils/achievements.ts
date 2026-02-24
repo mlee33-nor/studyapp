@@ -358,6 +358,12 @@ export const getNextAchievements = (userData: UserData, limit = 3): Achievement[
   const achievements = getAchievementsWithProgress(userData);
   return achievements
     .filter(a => !a.unlocked)
-    .sort((a, b) => b.progress - a.progress)
+    .sort((a, b) => {
+      // If progress difference is large (>25%), prioritize the closer one.
+      // Otherwise, prefer lower-requirement achievements (more achievable soon).
+      const progressDiff = b.progress - a.progress;
+      if (Math.abs(progressDiff) > 25) return progressDiff;
+      return a.requirement - b.requirement;
+    })
     .slice(0, limit);
 };
