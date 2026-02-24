@@ -128,37 +128,6 @@ const updateStreak = () => {
 };
 
 // --- FOCUS HISTORY STORAGE ---
-interface FocusSession {
-  id: number;
-  category: string;
-  duration: number;
-  date: string;
-}
-
-const getFocusHistory = (): FocusSession[] => {
-  const data = localStorage.getItem('focusHistory');
-  if (data) {
-    return JSON.parse(data);
-  }
-  return [];
-};
-
-const saveFocusHistory = (history: FocusSession[]) => {
-  localStorage.setItem('focusHistory', JSON.stringify(history));
-};
-
-const saveSession = (category: string, duration: number) => {
-  const history = getFocusHistory();
-  const newSession: FocusSession = {
-    id: Date.now(),
-    category: category,
-    duration: duration,
-    date: new Date().toISOString()
-  };
-  history.push(newSession);
-  saveFocusHistory(history);
-  return newSession;
-};
 
 // --- CHART DATA HELPERS (removed - replaced by new stats system) ---
 
@@ -922,8 +891,7 @@ export default function App() {
   const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'midnight'>(getSelectedTheme());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
-  const [, setFocusHistory] = useState<FocusSession[]>([]);
-  const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
+const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [selectedAnimal, setSelectedAnimal] = useState(0);
   const [showAnimalSelector, setShowAnimalSelector] = useState(false);
