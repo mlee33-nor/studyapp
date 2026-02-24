@@ -60,7 +60,7 @@ interface WalkingAnimalInstance {
 }
 
 const WALKING_ANIMAL_NAMES = new Set(['Giraffe', 'Monkey', 'Elephant']);
-const VERTICAL_WALKING_ANIMAL_NAMES = new Set(['Lion']);
+const VERTICAL_WALKING_ANIMAL_NAMES = new Set<string>([]);
 const isWalkingAnimal = (animal: MeadowAnimal) =>
   WALKING_ANIMAL_NAMES.has(animal.name) || VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
 
@@ -932,11 +932,13 @@ const MeadowScreen: React.FC = () => {
                             (() => {
                               const animalScale = getAnimalScale(animal.lottieUrl);
                               const scaledSize = animalScale ? size * animalScale : size;
+                              const isLion = animal.name === 'Lion';
                               return (
                                 <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
                                   <Lottie
                                     animationData={loadedAnimations[animal.id]}
-                                    loop={true}
+                                    loop={!isLion}
+                                    autoplay={!isLion}
                                     style={{
                                       width: '100%',
                                       height: '100%',
