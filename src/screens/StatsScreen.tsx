@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUserData } from '../hooks/useUserData';
 import { useTheme } from '../contexts/ThemeContext';
-import { getWeeklyData } from '../utils/storage';
+import { getWeeklyData, getXpForLevel } from '../utils/storage';
 import { CHARACTER_STAGES } from '../types';
 
 const StatsScreen: React.FC = () => {
@@ -96,18 +96,28 @@ const StatsScreen: React.FC = () => {
 
           {/* XP Progress */}
           <div className="flex-1">
-            <div className="flex justify-between items-baseline mb-2">
-              <span className="text-sm font-medium text-text-primary">
-                {userData.xp % 500} / 500 XP
-              </span>
-              <span className="text-xs text-text-secondary">to Level {userData.level + 1}</span>
-            </div>
-            <div className="h-3 bg-white/50 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-pastel-green to-pastel-green-dark rounded-full transition-all duration-500"
-                style={{ width: `${((userData.xp % 500) / 500) * 100}%` }}
-              />
-            </div>
+            {(() => {
+              const currentLevelXp = getXpForLevel(userData.level);
+              const nextLevelXp = getXpForLevel(userData.level + 1);
+              const xpIntoLevel = userData.xp - currentLevelXp;
+              const xpNeeded = nextLevelXp - currentLevelXp;
+              return (
+                <>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-sm font-medium text-text-primary">
+                      {xpIntoLevel} / {xpNeeded} XP
+                    </span>
+                    <span className="text-xs text-text-secondary">to Level {userData.level + 1}</span>
+                  </div>
+                  <div className="h-3 bg-white/50 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-pastel-green to-pastel-green-dark rounded-full transition-all duration-500"
+                      style={{ width: `${(xpIntoLevel / xpNeeded) * 100}%` }}
+                    />
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
 

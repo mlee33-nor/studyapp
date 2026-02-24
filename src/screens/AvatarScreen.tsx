@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUserData } from '../hooks/useUserData';
 import Character from '../components/Character';
 import { CHARACTER_STAGES } from '../types';
+import { getXpForLevel } from '../utils/storage';
 
 const AvatarScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -43,17 +44,27 @@ const AvatarScreen: React.FC = () => {
 
       {/* Level and XP */}
       <div className="text-center mb-8 mt-16">
-        <div className="text-lg text-text-secondary mb-2">
-          Level {userData.level}: {userData.xp % 500} / 500 XP
-        </div>
-        <div className="max-w-xs mx-auto">
-          <div className="h-3 bg-white/30 rounded-full overflow-hidden backdrop-blur-sm">
-            <div
-              className="h-full bg-gradient-to-r from-white/70 to-white/90 rounded-full transition-all duration-500 shadow-lg"
-              style={{ width: `${((userData.xp % 500) / 500) * 100}%` }}
-            />
-          </div>
-        </div>
+        {(() => {
+          const currentLevelXp = getXpForLevel(userData.level);
+          const nextLevelXp = getXpForLevel(userData.level + 1);
+          const xpIntoLevel = userData.xp - currentLevelXp;
+          const xpNeeded = nextLevelXp - currentLevelXp;
+          return (
+            <>
+              <div className="text-lg text-text-secondary mb-2">
+                Level {userData.level}: {xpIntoLevel} / {xpNeeded} XP
+              </div>
+              <div className="max-w-xs mx-auto">
+                <div className="h-3 bg-white/30 rounded-full overflow-hidden backdrop-blur-sm">
+                  <div
+                    className="h-full bg-gradient-to-r from-white/70 to-white/90 rounded-full transition-all duration-500 shadow-lg"
+                    style={{ width: `${(xpIntoLevel / xpNeeded) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </>
+          );
+        })()}
       </div>
 
       {/* Current Stage Info */}

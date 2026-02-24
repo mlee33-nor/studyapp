@@ -3,6 +3,9 @@ import { getStarterAnimalIds, getAllAnimalIds } from '../data/biomes';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
+// Quadratic XP formula: cumulative XP needed to reach a given level
+export const getXpForLevel = (lvl: number) => lvl * lvl * 50;
+
 const DEFAULT_SETTINGS: UserSettings = {
   soundEnabled: true,
   notificationsEnabled: true,
@@ -255,10 +258,9 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   // Calculate XP and level progression
   const xpEarned = minutes * 10; // 10 XP per minute studied
   const newXp = (currentData.xp || 0) + xpEarned;
-  // Level thresholds: each level requires (level * 100) XP total
-  // e.g. level 2 = 200 XP, level 5 = 500 XP, level 10 = 1000 XP
+  // Level thresholds: quadratic scaling so later levels take much longer
+  // e.g. level 2 = 200 XP, level 5 = 1250 XP, level 10 = 5000 XP
   let newLevel = currentData.level || 1;
-  const getXpForLevel = (lvl: number) => lvl * 100;
   while (newXp >= getXpForLevel(newLevel + 1)) {
     newLevel++;
   }
