@@ -1404,7 +1404,8 @@ export default function App() {
                   <div style={{ width: ANIMALS[selectedAnimal]?.scale ? `${80 * ANIMALS[selectedAnimal].scale}px` : '80px', height: ANIMALS[selectedAnimal]?.scale ? `${80 * ANIMALS[selectedAnimal].scale}px` : '80px', flexShrink: 0 }}>
                     <Lottie
                       animationData={loadedAnimations[`selected-${activeBiome}-${selectedAnimal}`]}
-                      loop={true}
+                      loop={false}
+                      autoplay={false}
                       style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                     />
                   </div>
