@@ -1168,16 +1168,14 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     // Check for newly unlocked achievements
     const newAchievements = getNewlyUnlocked(storageBefore, updatedStorage);
     if (newAchievements.length > 0) {
-      // Show the first new achievement after a short delay (after celebration)
-      setTimeout(() => {
-        setUnlockedAchievement(newAchievements[0]);
-        // If multiple achievements unlocked, queue them
-        let delay = 3500;
-        for (let i = 1; i < newAchievements.length; i++) {
-          setTimeout(() => setUnlockedAchievement(newAchievements[i]), delay);
-          delay += 3500;
-        }
-      }, 1500);
+      // Show first achievement immediately
+      setUnlockedAchievement(newAchievements[0]);
+      // Queue additional achievements if multiple unlocked
+      let delay = 3500;
+      for (let i = 1; i < newAchievements.length; i++) {
+        setTimeout(() => setUnlockedAchievement(newAchievements[i]), delay);
+        delay += 3500;
+      }
     }
 
     // Coins earned = 1 per minute studied
