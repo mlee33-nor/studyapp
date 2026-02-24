@@ -252,6 +252,17 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
 
   const totalCompletedSessions = currentData.totalCompletedSessions + 1;
 
+  // Calculate XP and level progression
+  const xpEarned = minutes * 10; // 10 XP per minute studied
+  const newXp = (currentData.xp || 0) + xpEarned;
+  // Level thresholds: each level requires (level * 100) XP total
+  // e.g. level 2 = 200 XP, level 5 = 500 XP, level 10 = 1000 XP
+  let newLevel = currentData.level || 1;
+  const getXpForLevel = (lvl: number) => lvl * 100;
+  while (newXp >= getXpForLevel(newLevel + 1)) {
+    newLevel++;
+  }
+
   const updatedData = updateUserData({
     totalCompletedSessions,
     dailyStats,
@@ -260,6 +271,8 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     lastStudyDate: today,
     meadowAnimals,
     coins: (currentData.coins || 0) + minutes,
+    xp: newXp,
+    level: newLevel,
   });
 
   // Add collected animal to returned data for UI feedback
