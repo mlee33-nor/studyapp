@@ -459,6 +459,15 @@ const AchievementsScreen: React.FC<AchievementsScreenProps> = ({ userData, theme
                 </div>
                 <div style={{
                   fontSize: '10px',
+                  color: getTextColor(theme, 'secondary'),
+                  marginBottom: '4px',
+                  fontFamily: "'Quicksand', sans-serif",
+                  lineHeight: '1.3'
+                }}>
+                  {achievement.description}
+                </div>
+                <div style={{
+                  fontSize: '10px',
                   color: getTextColor(theme, 'tertiary'),
                   fontFamily: "'Quicksand', sans-serif"
                 }}>
