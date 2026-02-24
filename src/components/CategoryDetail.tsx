@@ -170,6 +170,7 @@ export const CategoryDetail: React.FC<{
         zIndex: 3000,
         overflowY: 'auto',
         padding: '16px',
+        paddingTop: 'max(16px, env(safe-area-inset-top, 16px))',
         paddingBottom: '100px',
         fontFamily: "'Quicksand', sans-serif",
         maxWidth: '100%',
