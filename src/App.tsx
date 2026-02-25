@@ -402,9 +402,10 @@ const InteractiveTimerRing: React.FC<{
   minutes: number;
   onMinutesChange: (minutes: number) => void;
   isRunning: boolean;
+  isPaused: boolean;
   timeLeft: number;
   totalSeconds: number;
-}> = ({ minutes, onMinutesChange, isRunning, timeLeft, totalSeconds }) => {
+}> = ({ minutes, onMinutesChange, isRunning, isPaused, timeLeft, totalSeconds }) => {
   // === GLOBAL CONSTANTS — Single Source of Truth ===
   const SVG_SIZE = 100;
   const CX = SVG_SIZE / 2;
@@ -464,14 +465,14 @@ const InteractiveTimerRing: React.FC<{
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (isRunning) return;
+    if (isRunning || isPaused) return;
     setIsDragging(true);
     (e.target as Element).setPointerCapture?.(e.pointerId);
     updateMinutesFromPosition(e.clientX, e.clientY);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging || isRunning) return;
+    if (!isDragging || isRunning || isPaused) return;
     updateMinutesFromPosition(e.clientX, e.clientY);
   };
 
@@ -551,14 +552,14 @@ const InteractiveTimerRing: React.FC<{
           strokeWidth={STROKE_WIDTH}
           fill="none"
           strokeDasharray={CIRCUMFERENCE}
-          animate={{ strokeDashoffset: isRunning ? dashOffset : 0 }}
+          animate={{ strokeDashoffset: (isRunning || isPaused) ? dashOffset : 0 }}
           strokeLinecap="round"
           transition={{ duration: 1, ease: "easeInOut" }}
           transform={`rotate(-90 ${CX} ${CY})`}
         />
 
         {/* Handle — rendered as SVG elements INSIDE the same coordinate space */}
-        {!isRunning && (
+        {!isRunning && !isPaused && (
           <g style={{ cursor: isDragging ? 'grabbing' : 'grab' }}>
             {/* Invisible larger hit area */}
             <circle
@@ -600,7 +601,7 @@ const InteractiveTimerRing: React.FC<{
       {/* Center Display */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
         <motion.h1
-          key={isRunning ? timeLeft : minutes}
+          key={(isRunning || isPaused) ? timeLeft : minutes}
           initial={{ scale: 1 }}
           animate={{ scale: [1, 1.01, 1] }}
           transition={{ duration: 1 }}
@@ -613,9 +614,9 @@ const InteractiveTimerRing: React.FC<{
             letterSpacing: '0.05em',
           }}
         >
-          {isRunning ? formatTime(timeLeft) : `${minutes}:00`}
+          {(isRunning || isPaused) ? formatTime(timeLeft) : `${minutes}:00`}
         </motion.h1>
-        {!isRunning && (
+        {!isRunning && !isPaused && (
           <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -891,6 +892,7 @@ const CategorySelectionModal: React.FC<{
 export default function App() {
   const [activeTab, setActiveTab] = useState('Timer');
   const [isRunning, setIsRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(getDarkMode());
   const [userData, setUserData] = useState(getUserData());
   const [timerMinutes, setTimerMinutes] = useState(25);
@@ -1144,6 +1146,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const handleCompleteSession = () => {
     updateStreak();
     setIsRunning(false);
+    setIsPaused(false);
 
     // Snapshot canonical storage data BEFORE the session update (for achievement comparison)
     const storageBefore = getStorageUserData();
@@ -1205,6 +1208,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
   const handleFailSession = () => {
     setIsRunning(false);
+    setIsPaused(false);
     setTimeLeft(timerMinutes * 60);
     addFailedSession();
   };
@@ -1379,6 +1383,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 minutes={timerMinutes}
                 onMinutesChange={setTimerMinutes}
                 isRunning={isRunning}
+                isPaused={isPaused}
                 timeLeft={timeLeft}
                 totalSeconds={timerMinutes * 60}
               />
@@ -2112,14 +2117,20 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             maxWidth: '280px',
             width: '100%',
           }}>
-            {!isRunning ? (
-              <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
-            ) : (
+            {isRunning ? (
               <>
-                <SoftButton text="Pause" icon={Pause} onClick={() => setIsRunning(false)} variant="secondary" />
+                <SoftButton text="Pause" icon={Pause} onClick={() => { setIsRunning(false); setIsPaused(true); }} variant="secondary" />
                 <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" />
                 <SoftButton text="Fail Session" icon={X} onClick={handleFailSession} variant="danger" />
               </>
+            ) : isPaused ? (
+              <>
+                <SoftButton text="Resume" icon={Play} onClick={() => { setIsRunning(true); setIsPaused(false); }} variant="primary" />
+                <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" />
+                <SoftButton text="Fail Session" icon={X} onClick={handleFailSession} variant="danger" />
+              </>
+            ) : (
+              <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
             )}
           </div>
 
