@@ -66,45 +66,44 @@ const isWalkingAnimal = (animal: MeadowAnimal) =>
 
 type SanctuaryViewMode = 'today' | 'weekly' | 'monthly' | 'yearly';
 
-// Timeline grid config — fixed columns scaled by time range
-// Weekly: 3 columns (max ~21 animals visible per page)
-// Monthly: 5 columns (max ~50 animals visible per page)
-// Yearly: 8 columns (max ~100 animals visible per page)
-const TIMELINE_CONFIG = {
-  weekly: {
-    gridColumns: 'repeat(3, 1fr)',
-    lottieSize: 80,
-    gap: '16px',
-    padding: '16px',
-    borderRadius: '24px',
-    showName: true,
-    fontSize: '13px',
-    tileBorder: '2px solid rgba(167, 139, 250, 0.3)',
-    tileBackground: 'rgba(255, 255, 255, 0.8)',
-  },
-  monthly: {
-    gridColumns: 'repeat(5, 1fr)',
-    lottieSize: 55,
-    gap: '10px',
-    padding: '10px',
-    borderRadius: '16px',
-    showName: true,
-    fontSize: '10px',
-    tileBorder: '1.5px solid rgba(167, 139, 250, 0.25)',
-    tileBackground: 'rgba(255, 255, 255, 0.7)',
-  },
-  yearly: {
-    gridColumns: 'repeat(8, 1fr)',
-    lottieSize: 32,
-    gap: '6px',
-    padding: '6px',
-    borderRadius: '12px',
-    showName: false,
-    fontSize: '0px',
-    tileBorder: '1px solid rgba(167, 139, 250, 0.2)',
-    tileBackground: 'rgba(255, 255, 255, 0.6)',
-  },
-};
+// Timeline caps — max animals shown per view before oldest are dropped
+const TIMELINE_CAPS = { weekly: 40, monthly: 100, yearly: 365 };
+
+// Dynamic timeline layout based on view mode and animal count
+function getTimelineLayout(viewMode: SanctuaryViewMode, count: number) {
+  let cols: number, size: number, gap: number, showName: boolean | 'small';
+
+  if (viewMode === 'weekly') {
+    if (count <= 6)       { cols = 3; size = 80; gap = 16; showName = true; }
+    else if (count <= 15) { cols = 4; size = 65; gap = 12; showName = true; }
+    else if (count <= 25) { cols = 5; size = 52; gap = 10; showName = 'small'; }
+    else                  { cols = 6; size = 42; gap = 8;  showName = false; }
+  } else if (viewMode === 'monthly') {
+    if (count <= 10)      { cols = 4; size = 65; gap = 14; showName = true; }
+    else if (count <= 25) { cols = 5; size = 55; gap = 10; showName = 'small'; }
+    else if (count <= 50) { cols = 6; size = 42; gap = 8;  showName = false; }
+    else                  { cols = 8; size = 32; gap = 6;  showName = false; }
+  } else {
+    // yearly
+    if (count <= 20)       { cols = 5;  size = 55; gap = 10; showName = false; }
+    else if (count <= 60)  { cols = 8;  size = 32; gap = 6;  showName = false; }
+    else if (count <= 150) { cols = 10; size = 26; gap = 4;  showName = false; }
+    else                   { cols = 14; size = 18; gap = 2;  showName = false; }
+  }
+
+  const fontSize = showName === 'small' ? '9px' : showName ? '13px' : '0px';
+
+  return {
+    gridColumns: `repeat(${cols}, 1fr)`,
+    lottieSize: size,
+    gap: `${gap}px`,
+    gapPx: gap,
+    cols,
+    showName: showName !== false,
+    fontSize,
+    smallName: showName === 'small',
+  };
+}
 
 // Biome background components
 const biomeBackgroundStyle = (bgImage: string): React.CSSProperties => ({
@@ -205,9 +204,9 @@ const MeadowScreen: React.FC = () => {
   // Dynamic bottom boundary that adjusts when the scene grows on larger screens
   const effectiveMaxY = sceneHeight - ANIMAL_SIZE - 20;
 
-  // Timeline: filter permanentCollection by date range and active biome
-  const timelineAnimals = useMemo(() => {
-    if (viewMode === 'today') return [];
+  // Timeline: filter permanentCollection by date range and active biome, with cap
+  const timelineData = useMemo(() => {
+    if (viewMode === 'today') return { displayAnimals: [] as CollectedAnimal[], totalCount: 0 };
 
     let start: Date;
     let end: Date;
@@ -226,13 +225,25 @@ const MeadowScreen: React.FC = () => {
     }
 
     const collection = userData.permanentCollection || [];
-    return collection.filter((animal: CollectedAnimal) => {
+    const filtered = collection.filter((animal: CollectedAnimal) => {
       const collectedDate = new Date(animal.collectedAt);
       const inRange = isWithinInterval(collectedDate, { start, end });
       const matchesBiome = animal.biome === activeBiome;
       return inRange && matchesBiome;
     });
+
+    // Sort by collectedAt ascending, keep most recent N
+    const sorted = [...filtered].sort(
+      (a, b) => new Date(a.collectedAt).getTime() - new Date(b.collectedAt).getTime()
+    );
+    const cap = TIMELINE_CAPS[viewMode as keyof typeof TIMELINE_CAPS] || sorted.length;
+    const displayAnimals = sorted.length > cap ? sorted.slice(-cap) : sorted;
+
+    return { displayAnimals, totalCount: sorted.length };
   }, [viewMode, currentDate, userData.permanentCollection, activeBiome]);
+
+  const timelineAnimals = timelineData.displayAnimals;
+  const timelineTotalCount = timelineData.totalCount;
 
   // Collect unique lottie URLs for timeline animals
   const timelineUrls = useMemo(() => {
@@ -552,6 +563,20 @@ const MeadowScreen: React.FC = () => {
 
   const periodLabel = viewMode === 'weekly' ? 'this week' : viewMode === 'monthly' ? 'this month' : 'this year';
 
+  // Dynamic timeline grid layout based on animal count
+  const timelineLayout = useMemo(
+    () => getTimelineLayout(viewMode, timelineAnimals.length),
+    [viewMode, timelineAnimals.length]
+  );
+
+  // Dynamic container height based on rows
+  const timelineContainerHeight = useMemo(() => {
+    if (timelineAnimals.length === 0) return 450;
+    const rows = Math.ceil(timelineAnimals.length / timelineLayout.cols);
+    const computed = rows * (timelineLayout.lottieSize + (timelineLayout.showName ? 20 : 0) + timelineLayout.gapPx) + 40;
+    return Math.max(450, Math.min(computed, 600));
+  }, [timelineAnimals.length, timelineLayout]);
+
   return (
     <div style={{
       minHeight: '100dvh',
@@ -800,7 +825,9 @@ const MeadowScreen: React.FC = () => {
               <p className="text-2xl font-bold text-text-primary">
                 {viewMode === 'today'
                   ? `${biomeAnimals.length} Animals`
-                  : `${timelineAnimals.length} Animals`
+                  : timelineTotalCount > timelineAnimals.length
+                    ? `${timelineAnimals.length} of ${timelineTotalCount} Animals`
+                    : `${timelineAnimals.length} Animals`
                 }
               </p>
             </div>
@@ -1001,7 +1028,7 @@ const MeadowScreen: React.FC = () => {
                   <div
                     style={{
                       position: 'relative',
-                      minHeight: '450px',
+                      minHeight: `${timelineContainerHeight}px`,
                       borderRadius: '28px',
                       overflow: 'hidden',
                       boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)'
@@ -1041,27 +1068,27 @@ const MeadowScreen: React.FC = () => {
                       </div>
                     ) : (
                       <div style={{
-                        position: 'absolute',
-                        inset: 0,
+                        position: 'relative',
                         padding: '20px',
                         display: 'grid',
-                        gridTemplateColumns: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gridColumns,
-                        gap: TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG].gap,
+                        gridTemplateColumns: timelineLayout.gridColumns,
+                        gap: timelineLayout.gap,
                         alignContent: 'start',
                       }}>
                         {timelineAnimals.map((animal: CollectedAnimal, index: number) => {
-                          const cfg = TIMELINE_CONFIG[viewMode as keyof typeof TIMELINE_CONFIG];
                           const animalScale = getAnimalScale(animal.lottieUrl);
-                          const lottieSize = cfg.lottieSize;
+                          const lottieSize = timelineLayout.lottieSize;
                           const innerSize = animalScale ? lottieSize * animalScale : lottieSize;
+                          const isDense = timelineAnimals.length > 60;
+                          const isSmall = lottieSize < 40;
 
                           return (
                             <motion.div
                               key={`${animal.id}-${index}`}
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: Math.min(index * 0.02, 0.8) }}
-                              whileHover={{ scale: 1.08 }}
+                              transition={{ delay: Math.min(index * (isDense ? 0.01 : 0.02), 0.3) }}
+                              whileHover={isSmall ? undefined : { scale: 1.08 }}
                               title={animal.name}
                               style={{
                                 textAlign: 'center',
@@ -1069,8 +1096,8 @@ const MeadowScreen: React.FC = () => {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                gap: cfg.showName ? '4px' : '0px',
-                                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
+                                gap: timelineLayout.showName ? '4px' : '0px',
+                                filter: isDense ? undefined : 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
                               }}
                             >
                               <div style={{
@@ -1088,7 +1115,7 @@ const MeadowScreen: React.FC = () => {
                                   }}>
                                     <Lottie
                                       animationData={timelineLoadedAnimations[animal.lottieUrl]}
-                                      loop={true}
+                                      loop={!isDense}
                                       style={{ width: '100%', height: '100%', pointerEvents: 'none' }}
                                     />
                                   </div>
@@ -1102,9 +1129,9 @@ const MeadowScreen: React.FC = () => {
                                 )}
                               </div>
 
-                              {cfg.showName && (
+                              {timelineLayout.showName && (
                                 <div style={{
-                                  fontSize: cfg.fontSize,
+                                  fontSize: timelineLayout.fontSize,
                                   fontWeight: 700,
                                   color: 'rgba(255, 255, 255, 0.95)',
                                   fontFamily: "'Quicksand', sans-serif",
