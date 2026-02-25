@@ -61,4 +61,4 @@ export interface OverallStats {
   yearlyData: DayData[];
 }
 
-export type ViewMode = 'weekly' | 'monthly' | 'yearly';
+export type ViewMode = 'daily' | 'weekly' | 'monthly' | 'yearly';
