@@ -1593,7 +1593,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                           background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(167, 139, 250, 0.3)',
                           fontSize: '11px',
                           fontWeight: 700,
-                          color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
+                          color: canAfford ? '#CA8A04' : '#DC2626',
                           fontFamily: "'Quicksand', sans-serif",
                         }}>
                           <span style={{ fontSize: '11px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span>{animal.price}
