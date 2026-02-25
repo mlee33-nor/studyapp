@@ -79,8 +79,10 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
       dates: string[];
     }> = {};
     biomeAnimals.forEach(animal => {
-      if (!counts[animal.id]) {
-        counts[animal.id] = {
+      // Group by species (name), not instance id (which is unique per collection)
+      const speciesKey = animal.name;
+      if (!counts[speciesKey]) {
+        counts[speciesKey] = {
           count: 0,
           name: animal.name,
           lottieUrl: animal.lottieUrl,
@@ -89,13 +91,13 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
           dates: [],
         };
       }
-      counts[animal.id].count++;
-      counts[animal.id].dates.push(animal.collectedAt);
-      if (animal.collectedAt < counts[animal.id].firstCollected) {
-        counts[animal.id].firstCollected = animal.collectedAt;
+      counts[speciesKey].count++;
+      counts[speciesKey].dates.push(animal.collectedAt);
+      if (animal.collectedAt < counts[speciesKey].firstCollected) {
+        counts[speciesKey].firstCollected = animal.collectedAt;
       }
-      if (animal.collectedAt > counts[animal.id].lastCollected) {
-        counts[animal.id].lastCollected = animal.collectedAt;
+      if (animal.collectedAt > counts[speciesKey].lastCollected) {
+        counts[speciesKey].lastCollected = animal.collectedAt;
       }
     });
     return Object.entries(counts).sort(([, a], [, b]) => b.count - a.count);
@@ -146,10 +148,11 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
     // Per-species counts in range
     const speciesCounts: Record<string, { count: number; name: string; lottieUrl: string }> = {};
     rangeAnimals.forEach(a => {
-      if (!speciesCounts[a.id]) {
-        speciesCounts[a.id] = { count: 0, name: a.name, lottieUrl: a.lottieUrl };
+      const speciesKey = a.name;
+      if (!speciesCounts[speciesKey]) {
+        speciesCounts[speciesKey] = { count: 0, name: a.name, lottieUrl: a.lottieUrl };
       }
-      speciesCounts[a.id].count++;
+      speciesCounts[speciesKey].count++;
     });
 
     return {
@@ -235,9 +238,9 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
     setSelectedAnimal(animal);
   };
 
-  // Get count for a specific animal species
-  const getAnimalCount = (animalId: string) => {
-    return biomeAnimals.filter(a => a.id === animalId).length;
+  // Get count for a specific animal species (by name, since id is unique per instance)
+  const getAnimalCount = (animalName: string) => {
+    return biomeAnimals.filter(a => a.name === animalName).length;
   };
 
   // Timeline navigation
@@ -678,7 +681,92 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                 maxCount={maxDayCount}
                 biomeColor={biomeConfig.primaryColor}
               />
+            ) : timelineView === 'weekly' ? (
+              /* Weekly: Horizontal day strip with animal avatars */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {timelineData.days.map((day, i) => {
+                  const isToday = isSameDay(day.date, new Date());
+                  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                  return (
+                    <div key={i} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 12px',
+                      borderRadius: '14px',
+                      background: isToday
+                        ? `${biomeConfig.primaryColor}12`
+                        : day.count > 0 ? 'rgba(0,0,0,0.02)' : 'transparent',
+                      border: isToday ? `2px solid ${biomeConfig.primaryColor}40` : '1px solid rgba(0,0,0,0.04)',
+                    }}>
+                      {/* Day label */}
+                      <div style={{ width: '44px', flexShrink: 0 }}>
+                        <div style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: isToday ? biomeConfig.primaryColor : 'rgba(15, 23, 42, 0.9)',
+                        }}>
+                          {dayNames[day.date.getDay()]}
+                        </div>
+                        <div style={{
+                          fontSize: '0.65rem',
+                          color: 'rgba(100, 116, 139, 0.6)',
+                        }}>
+                          {format(day.date, 'MMM d')}
+                        </div>
+                      </div>
+                      {/* Animal avatars or empty */}
+                      <div style={{ flex: 1, display: 'flex', gap: '4px', flexWrap: 'wrap', minHeight: '28px', alignItems: 'center' }}>
+                        {day.count > 0 ? (
+                          day.animals.map((animal, ai) => (
+                            <div key={ai} style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '8px',
+                              background: `${biomeConfig.primaryColor}20`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              overflow: 'hidden',
+                            }}>
+                              {speciesLottie[animal.lottieUrl] ? (
+                                <Lottie
+                                  animationData={speciesLottie[animal.lottieUrl]}
+                                  loop={true}
+                                  autoplay={true}
+                                  style={{ width: '24px', height: '24px' }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: '0.7rem' }}>{biomeConfig.emoji}</span>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <span style={{ fontSize: '0.7rem', color: 'rgba(100, 116, 139, 0.4)', fontStyle: 'italic' }}>
+                            No collections
+                          </span>
+                        )}
+                      </div>
+                      {/* Count badge */}
+                      {day.count > 0 && (
+                        <div style={{
+                          padding: '4px 8px',
+                          borderRadius: '8px',
+                          background: `${biomeConfig.primaryColor}15`,
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          color: biomeConfig.primaryColor,
+                          flexShrink: 0,
+                        }}>
+                          +{day.count}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
+              /* Monthly: Calendar grid */
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(7, 1fr)',
@@ -818,7 +906,7 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
         {selectedAnimal && (
           <AnimalPopup
             animal={selectedAnimal}
-            count={getAnimalCount(selectedAnimal.id)}
+            count={getAnimalCount(selectedAnimal.name)}
             biomeConfig={biomeConfig}
             lottieData={loadedAnimations[selectedAnimal.id] || speciesLottie[selectedAnimal.lottieUrl]}
             onClose={() => setSelectedAnimal(null)}

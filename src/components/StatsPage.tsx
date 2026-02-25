@@ -977,13 +977,14 @@ const TagAnimalBreakdown: React.FC<{
   const userData = getUserData();
   const collection = userData.permanentCollection || [];
 
-  // Count animal frequency from collection (each entry = 1 earned)
+  // Count animal frequency from collection - group by species (name+biome), not instance id
   const animalCounts: Record<string, { count: number; name: string; biome: BiomeType; lottieUrl: string }> = {};
   collection.forEach(animal => {
-    if (!animalCounts[animal.id]) {
-      animalCounts[animal.id] = { count: 0, name: animal.name, biome: animal.biome, lottieUrl: animal.lottieUrl };
+    const speciesKey = `${animal.name}__${animal.biome}`;
+    if (!animalCounts[speciesKey]) {
+      animalCounts[speciesKey] = { count: 0, name: animal.name, biome: animal.biome, lottieUrl: animal.lottieUrl };
     }
-    animalCounts[animal.id].count++;
+    animalCounts[speciesKey].count++;
   });
 
   const topAnimals = Object.entries(animalCounts)
