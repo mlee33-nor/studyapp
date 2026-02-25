@@ -321,17 +321,7 @@ const SettingsScreen: React.FC = () => {
               <Character stage={userData.currentStage} />
             </div>
 
-            <div className="text-center mb-6">
-              <div className="text-sm text-text-secondary mb-2">
-                Level {userData.level}: {userData.xp % 500} / 500 XP
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
-                <div
-                  className="h-full bg-pastel-green rounded-full transition-all duration-500"
-                  style={{ width: `${((userData.xp % 500) / 500) * 100}%` }}
-                />
-              </div>
-            </div>
+            <div className="mb-6" />
 
             {/* Evolution Stages */}
             <div className="grid grid-cols-4 gap-3">

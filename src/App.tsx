@@ -1192,8 +1192,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
     // Update local userData - sync from canonical storage (pomodoroStudyApp key)
     const newData = {
-      level: updatedStorage.level ?? userData.level,
-      xp: updatedStorage.xp ?? userData.xp,
       sessionsCompleted: (userData.sessionsCompleted || 0) + 1,
       meadowAnimals: updatedStorage.meadowAnimals || [],
       permanentCollection: updatedStorage.permanentCollection || [],
