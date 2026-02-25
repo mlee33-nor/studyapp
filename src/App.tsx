@@ -1317,7 +1317,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px' }}>&#x1F4B0;</span> {userData.coins ?? 0}
+                <span style={{ fontSize: '14px' }}>🪙</span> {userData.coins ?? 0}
               </div>
             </div>
             {currentCategory && (
@@ -1495,7 +1495,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px' }}>&#x1F4B0;</span> {userData.coins ?? 0} coins
+                <span style={{ fontSize: '14px' }}>🪙</span> {userData.coins ?? 0} coins
               </div>
               <div style={{
                 display: 'flex',
@@ -1590,15 +1590,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                           gap: '3px',
                           padding: '2px 8px',
                           borderRadius: '10px',
-                          background: canAfford ? 'rgba(251, 191, 36, 0.25)' : 'rgba(150, 150, 150, 0.2)',
+                          background: 'rgba(251, 191, 36, 0.25)',
                           fontSize: '11px',
                           fontWeight: 700,
-                          color: canAfford
-                            ? (BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309')
-                            : getTextColor(selectedTheme, 'tertiary'),
+                          color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                           fontFamily: "'Quicksand', sans-serif",
                         }}>
-                          <span style={{ fontSize: '11px' }}>&#x1F4B0;</span>{animal.price}
+                          <span style={{ fontSize: '11px' }}>🪙</span>{animal.price}
                         </div>
                       )}
                     </motion.button>
@@ -1691,7 +1689,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 fontFamily: "'Quicksand', sans-serif",
                 marginBottom: '20px',
               }}>
-                <span style={{ fontSize: '16px' }}>&#x1F4B0;</span> {purchaseTarget.price}
+                <span style={{ fontSize: '16px' }}>🪙</span> {purchaseTarget.price}
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <motion.button

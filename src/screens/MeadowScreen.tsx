@@ -643,8 +643,8 @@ const MeadowScreen: React.FC = () => {
                   <div style={{
                     fontSize: '9px',
                     fontWeight: 700,
-                    color: canAffordBiome ? '#B45309' : 'rgba(100, 116, 139, 0.6)',
-                    background: canAffordBiome ? 'rgba(251, 191, 36, 0.25)' : 'rgba(150, 150, 150, 0.15)',
+                    color: '#B45309',
+                    background: 'rgba(251, 191, 36, 0.25)',
                     padding: '1px 6px',
                     borderRadius: '8px',
                     fontFamily: "'Quicksand', sans-serif",
