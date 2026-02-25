@@ -1310,11 +1310,11 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 alignItems: 'center',
                 gap: '4px',
                 padding: '4px 10px',
-                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(251, 191, 36, 0.25)',
+                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(167, 139, 250, 0.3)',
                 borderRadius: '12px',
                 fontSize: '13px',
                 fontWeight: 700,
-                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
+                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
                 <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0}
@@ -1492,7 +1492,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 marginBottom: '16px',
                 fontSize: '13px',
                 fontWeight: 700,
-                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
+                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
                 <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0} coins
@@ -1590,10 +1590,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                           gap: '3px',
                           padding: '2px 8px',
                           borderRadius: '10px',
-                          background: 'rgba(251, 191, 36, 0.25)',
+                          background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(167, 139, 250, 0.3)',
                           fontSize: '11px',
                           fontWeight: 700,
-                          color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
+                          color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
                           fontFamily: "'Quicksand', sans-serif",
                         }}>
                           <span style={{ fontSize: '11px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span>{animal.price}
@@ -1681,11 +1681,11 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 alignItems: 'center',
                 gap: '4px',
                 padding: '6px 14px',
-                background: 'rgba(251, 191, 36, 0.2)',
+                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(139, 92, 246, 0.25)' : 'rgba(167, 139, 250, 0.3)',
                 borderRadius: '14px',
                 fontSize: '15px',
                 fontWeight: 700,
-                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
+                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
                 fontFamily: "'Quicksand', sans-serif",
                 marginBottom: '20px',
               }}>
