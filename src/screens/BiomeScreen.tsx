@@ -1,14 +1,36 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import BiomeBackgrounds from '../components/BiomeBackgrounds';
-import type { BiomeType } from '../types';
-import { getAnimalScale } from '../data/biomes';
+import type { BiomeType, CollectedAnimal } from '../types';
+import { getAnimalScale, BIOME_CONFIG } from '../data/biomes';
+import {
+  format,
+  parseISO,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear,
+  subWeeks,
+  subMonths,
+  subYears,
+  addWeeks,
+  addMonths,
+  addYears,
+  eachDayOfInterval,
+  isSameDay,
+  isAfter,
+  isBefore,
+} from 'date-fns';
 
 // Biome container dimensions
 const BIOME_HEIGHT = 450;
 const ANIMAL_SIZE = 60;
+
+type TimelineViewMode = 'weekly' | 'monthly' | 'yearly';
 
 interface BiomeScreenProps {
   biomeId: BiomeType;
@@ -23,7 +45,12 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
   const { userData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [draggingAnimalId, setDraggingAnimalId] = useState<string | null>(null);
+  const [selectedAnimal, setSelectedAnimal] = useState<CollectedAnimal | null>(null);
+  const [timelineView, setTimelineView] = useState<TimelineViewMode>('monthly');
+  const [timelineDate, setTimelineDate] = useState(new Date());
   const biomeRef = useRef<HTMLDivElement>(null);
+
+  const biomeConfig = BIOME_CONFIG[biomeId];
 
   // Generate grass blades for depth effect
   const grassBlades = useMemo(() =>
@@ -35,22 +62,116 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
       depth: Math.random() * 10,
     })), []);
 
-  // Get animals for this biome from permanent collection
+  // Get ALL animals for this biome from permanent collection
   const biomeAnimals = useMemo(() => {
     if (!userData.permanentCollection) return [];
     return userData.permanentCollection.filter(animal => animal.biome === biomeId);
   }, [userData.permanentCollection, biomeId]);
 
+  // Get unique animal species in this biome with counts
+  const animalSpecies = useMemo(() => {
+    const counts: Record<string, {
+      count: number;
+      name: string;
+      lottieUrl: string;
+      firstCollected: string;
+      lastCollected: string;
+      dates: string[];
+    }> = {};
+    biomeAnimals.forEach(animal => {
+      if (!counts[animal.id]) {
+        counts[animal.id] = {
+          count: 0,
+          name: animal.name,
+          lottieUrl: animal.lottieUrl,
+          firstCollected: animal.collectedAt,
+          lastCollected: animal.collectedAt,
+          dates: [],
+        };
+      }
+      counts[animal.id].count++;
+      counts[animal.id].dates.push(animal.collectedAt);
+      if (animal.collectedAt < counts[animal.id].firstCollected) {
+        counts[animal.id].firstCollected = animal.collectedAt;
+      }
+      if (animal.collectedAt > counts[animal.id].lastCollected) {
+        counts[animal.id].lastCollected = animal.collectedAt;
+      }
+    });
+    return Object.entries(counts).sort(([, a], [, b]) => b.count - a.count);
+  }, [biomeAnimals]);
+
+  // Timeline data based on view mode
+  const timelineData = useMemo(() => {
+    let start: Date;
+    let end: Date;
+
+    if (timelineView === 'weekly') {
+      start = startOfWeek(timelineDate, { weekStartsOn: 0 });
+      end = endOfWeek(timelineDate, { weekStartsOn: 0 });
+    } else if (timelineView === 'monthly') {
+      start = startOfMonth(timelineDate);
+      end = endOfMonth(timelineDate);
+    } else {
+      start = startOfYear(timelineDate);
+      end = endOfYear(timelineDate);
+    }
+
+    const days = eachDayOfInterval({ start, end });
+
+    // Count collections per day in this biome
+    const dayMap: Record<string, { date: Date; animals: CollectedAnimal[]; count: number }> = {};
+    days.forEach(day => {
+      const key = format(day, 'yyyy-MM-dd');
+      dayMap[key] = { date: day, animals: [], count: 0 };
+    });
+
+    biomeAnimals.forEach(animal => {
+      if (!animal.collectedAt) return;
+      const d = parseISO(animal.collectedAt);
+      const key = format(d, 'yyyy-MM-dd');
+      if (dayMap[key]) {
+        dayMap[key].animals.push(animal);
+        dayMap[key].count++;
+      }
+    });
+
+    // Get animals collected in this time range for breakdown
+    const rangeAnimals = biomeAnimals.filter(a => {
+      if (!a.collectedAt) return false;
+      const d = parseISO(a.collectedAt);
+      return !isBefore(d, start) && !isAfter(d, end);
+    });
+
+    // Per-species counts in range
+    const speciesCounts: Record<string, { count: number; name: string; lottieUrl: string }> = {};
+    rangeAnimals.forEach(a => {
+      if (!speciesCounts[a.id]) {
+        speciesCounts[a.id] = { count: 0, name: a.name, lottieUrl: a.lottieUrl };
+      }
+      speciesCounts[a.id].count++;
+    });
+
+    return {
+      days: Object.values(dayMap),
+      start,
+      end,
+      totalInRange: rangeAnimals.length,
+      speciesInRange: Object.entries(speciesCounts).sort(([, a], [, b]) => b.count - a.count),
+    };
+  }, [biomeAnimals, timelineDate, timelineView]);
+
   // Load Lottie animations
   useEffect(() => {
     const loadAnimations = async () => {
       const toLoad = biomeAnimals.filter(a => !loadedAnimations[a.id]);
+      const uniqueToLoad = toLoad.filter((a, i, arr) => arr.findIndex(b => b.lottieUrl === a.lottieUrl) === i);
       const results = await Promise.all(
-        toLoad.map(async (animal) => {
+        uniqueToLoad.map(async (animal) => {
           try {
             const response = await fetch(animal.lottieUrl);
             const data = await response.json();
-            return { id: animal.id, data };
+            return { id: animal.id, lottieUrl: animal.lottieUrl, data };
           } catch (error) {
             console.error('Error loading animation:', animal.id, error);
             return null;
@@ -60,7 +181,15 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
 
       const animations: Record<string, any> = {};
       for (const result of results) {
-        if (result) animations[result.id] = result.data;
+        if (result) {
+          animations[result.id] = result.data;
+          // Also map other animals with the same URL
+          toLoad.forEach(a => {
+            if (a.lottieUrl === result.lottieUrl) {
+              animations[a.id] = result.data;
+            }
+          });
+        }
       }
       if (Object.keys(animations).length > 0) {
         setLoadedAnimations(prev => ({ ...prev, ...animations }));
@@ -68,25 +197,79 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
     };
 
     loadAnimations();
-  }, [biomeAnimals, loadedAnimations]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [biomeAnimals.length]);
+
+  // Load lottie for species breakdown (uses lottieUrl as key)
+  const [speciesLottie, setSpeciesLottie] = useState<Record<string, any>>({});
+  const speciesUrls = animalSpecies.map(([, info]) => info.lottieUrl).join(',');
+
+  useEffect(() => {
+    if (animalSpecies.length === 0) return;
+    const toLoad = animalSpecies.filter(([, info]) => !speciesLottie[info.lottieUrl]);
+    if (toLoad.length === 0) return;
+    Promise.all(
+      toLoad.map(([, info]) =>
+        fetch(info.lottieUrl)
+          .then(r => r.json())
+          .then(data => ({ url: info.lottieUrl, data }))
+          .catch(() => null)
+      )
+    ).then(results => {
+      const newData: Record<string, any> = {};
+      results.forEach(r => { if (r) newData[r.url] = r.data; });
+      if (Object.keys(newData).length > 0) {
+        setSpeciesLottie(prev => ({ ...prev, ...newData }));
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speciesUrls]);
 
   // Handle drag end with smooth constraints
   const handleDragEnd = (_animalId: string, _event: any) => {
-    // For now, we don't persist position changes for permanent collection
-    // This can be enhanced with a position tracking system
     setDraggingAnimalId(null);
   };
 
-  // Toggle flip on tap
-  const handleAnimalTap = () => {
-    // Optional: add tap feedback animation
+  // Handle animal tap - show popup
+  const handleAnimalTap = (animal: CollectedAnimal) => {
+    setSelectedAnimal(animal);
   };
+
+  // Get count for a specific animal species
+  const getAnimalCount = (animalId: string) => {
+    return biomeAnimals.filter(a => a.id === animalId).length;
+  };
+
+  // Timeline navigation
+  const navigatePrev = () => {
+    if (timelineView === 'weekly') setTimelineDate(d => subWeeks(d, 1));
+    else if (timelineView === 'monthly') setTimelineDate(d => subMonths(d, 1));
+    else setTimelineDate(d => subYears(d, 1));
+  };
+
+  const navigateNext = () => {
+    if (timelineView === 'weekly') setTimelineDate(d => addWeeks(d, 1));
+    else if (timelineView === 'monthly') setTimelineDate(d => addMonths(d, 1));
+    else setTimelineDate(d => addYears(d, 1));
+  };
+
+  const getTimelineLabel = () => {
+    if (timelineView === 'weekly') {
+      return `${format(timelineData.start, 'MMM d')} - ${format(timelineData.end, 'MMM d, yyyy')}`;
+    } else if (timelineView === 'monthly') {
+      return format(timelineDate, 'MMMM yyyy');
+    }
+    return format(timelineDate, 'yyyy');
+  };
+
+  // Max count for heatmap scaling
+  const maxDayCount = Math.max(1, ...timelineData.days.map(d => d.count));
 
   return (
     <div className="min-h-screen pb-24 pt-8 px-6" style={{ background: '#f8f9fa' }}>
       <div className="max-w-lg mx-auto">
         <h1 className="text-3xl font-bold text-text-primary mb-2">
-          Your {biomeId.charAt(0).toUpperCase() + biomeId.slice(1)}
+          Your {biomeConfig.name}
         </h1>
         <p className="text-text-secondary mb-6">
           Explore and admire your collected animals
@@ -101,12 +284,11 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                 {biomeAnimals.length}
               </p>
             </div>
-            <div className="text-4xl">
-              {biomeId === 'forest' && '🌲'}
-              {biomeId === 'ocean' && '🌊'}
-              {biomeId === 'arctic' && '❄️'}
-              {biomeId === 'mountain' && '⛰️'}
-              {biomeId === 'safari' && '🦁'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="text-sm text-text-secondary">
+                {animalSpecies.length} species
+              </span>
+              <span className="text-4xl">{biomeConfig.emoji}</span>
             </div>
           </div>
         </div>
@@ -192,16 +374,16 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
               ) : (
                 biomeAnimals.map((animal) => (
                   <motion.div
-                    key={animal.id}
+                    key={`${animal.id}-${animal.collectedAt}`}
                     drag
                     dragMomentum={false}
                     dragElastic={0}
                     dragConstraints={biomeRef}
-                    onDragStart={() => setDraggingAnimalId(animal.id)}
+                    onDragStart={() => setDraggingAnimalId(animal.id + animal.collectedAt)}
                     onDragEnd={(event) => handleDragEnd(animal.id, event)}
-                    onClick={() => handleAnimalTap()}
-                    animate={draggingAnimalId !== animal.id ? { x: 0, y: 0 } : undefined}
-                    transition={draggingAnimalId === animal.id ? { duration: 0 } : { type: "tween", duration: 0.2 }}
+                    onClick={() => handleAnimalTap(animal)}
+                    animate={draggingAnimalId !== animal.id + animal.collectedAt ? { x: 0, y: 0 } : undefined}
+                    transition={draggingAnimalId === animal.id + animal.collectedAt ? { duration: 0 } : { type: "tween", duration: 0.2 }}
                     className="absolute cursor-grab active:cursor-grabbing"
                     style={{
                       position: 'absolute',
@@ -250,14 +432,696 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
         </div>
 
         {/* Instructions */}
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4">
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 mb-6">
           <p className="text-sm text-text-secondary text-center">
-            🐾 Drag to move animals • Hover for 3D effect
-          </p>
-          <p className="text-xs text-text-secondary text-center mt-2">
-            Your collection is permanent - return anytime to visit your friends!
+            🐾 Tap an animal for details • Drag to move
           </p>
         </div>
+
+        {/* Animal Species Breakdown */}
+        {animalSpecies.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.1 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(100, 116, 139, 0.15)',
+              padding: '20px',
+              marginBottom: '16px'
+            }}
+          >
+            <div style={{
+              fontSize: '0.8rem',
+              color: 'rgba(100, 116, 139, 0.7)',
+              marginBottom: '16px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              {biomeConfig.emoji} Species Breakdown
+            </div>
+
+            {/* Donut chart */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <AnimalDonutChart
+                species={animalSpecies}
+                total={biomeAnimals.length}
+                biomeColor={biomeConfig.primaryColor}
+              />
+            </div>
+
+            {/* Species list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {animalSpecies.map(([animalId, info], i) => {
+                const percent = biomeAnimals.length > 0 ? Math.round((info.count / biomeAnimals.length) * 100) : 0;
+                return (
+                  <div key={animalId} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px',
+                    borderRadius: '12px',
+                    background: i === 0 ? `${biomeConfig.primaryColor}10` : 'transparent',
+                  }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '12px',
+                      background: `${biomeConfig.primaryColor}20`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      flexShrink: 0,
+                    }}>
+                      {speciesLottie[info.lottieUrl] ? (
+                        <Lottie
+                          animationData={speciesLottie[info.lottieUrl]}
+                          loop={true}
+                          autoplay={true}
+                          style={{ width: '34px', height: '34px' }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '1.2rem' }}>{biomeConfig.emoji}</span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: '0.9rem',
+                        fontWeight: 700,
+                        color: 'rgba(15, 23, 42, 0.95)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {info.name}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'rgba(100, 116, 139, 0.7)' }}>
+                        First: {format(parseISO(info.firstCollected), 'MMM d, yyyy')}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: 'rgba(100, 116, 139, 0.7)',
+                      }}>
+                        {percent}%
+                      </span>
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '4px 10px',
+                        borderRadius: '10px',
+                        background: `${biomeConfig.primaryColor}15`,
+                      }}>
+                        <div style={{
+                          fontSize: '1rem',
+                          fontWeight: 700,
+                          color: biomeConfig.primaryColor,
+                        }}>
+                          {info.count}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Collection Timeline */}
+        {biomeAnimals.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 100, damping: 20, delay: 0.2 }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(100, 116, 139, 0.15)',
+              padding: '20px',
+              marginBottom: '16px'
+            }}
+          >
+            <div style={{
+              fontSize: '0.8rem',
+              color: 'rgba(100, 116, 139, 0.7)',
+              marginBottom: '16px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Collection Timeline
+            </div>
+
+            {/* View Mode Toggle */}
+            <div style={{
+              display: 'flex',
+              gap: '4px',
+              padding: '4px',
+              borderRadius: '12px',
+              background: 'rgba(0,0,0,0.04)',
+              marginBottom: '16px',
+            }}>
+              {(['weekly', 'monthly', 'yearly'] as TimelineViewMode[]).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setTimelineView(mode)}
+                  style={{
+                    flex: 1,
+                    padding: '8px 4px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    background: timelineView === mode ? 'white' : 'transparent',
+                    color: timelineView === mode ? biomeConfig.primaryColor : 'rgba(100, 116, 139, 0.7)',
+                    boxShadow: timelineView === mode ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                  }}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Time Navigator */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px',
+            }}>
+              <button
+                onClick={navigatePrev}
+                style={{
+                  background: 'rgba(0,0,0,0.04)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  color: 'rgba(51, 65, 85, 0.8)',
+                }}
+              >
+                &#8249;
+              </button>
+              <span style={{
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                color: 'rgba(15, 23, 42, 0.95)',
+              }}>
+                {getTimelineLabel()}
+              </span>
+              <button
+                onClick={navigateNext}
+                style={{
+                  background: 'rgba(0,0,0,0.04)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  color: 'rgba(51, 65, 85, 0.8)',
+                }}
+              >
+                &#8250;
+              </button>
+            </div>
+
+            {/* Summary stat */}
+            <div style={{
+              textAlign: 'center',
+              padding: '12px',
+              borderRadius: '14px',
+              background: `${biomeConfig.primaryColor}10`,
+              marginBottom: '16px',
+            }}>
+              <span style={{ fontSize: '1.5rem', fontWeight: 700, color: biomeConfig.primaryColor }}>
+                {timelineData.totalInRange}
+              </span>
+              <span style={{ fontSize: '0.85rem', color: 'rgba(100, 116, 139, 0.7)', marginLeft: '8px' }}>
+                animals collected
+              </span>
+            </div>
+
+            {/* Heatmap / Activity Grid */}
+            {timelineView === 'yearly' ? (
+              <YearlyHeatmapGrid
+                days={timelineData.days}
+                maxCount={maxDayCount}
+                biomeColor={biomeConfig.primaryColor}
+              />
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '4px',
+              }}>
+                {/* Day headers */}
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                  <div key={i} style={{
+                    textAlign: 'center',
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    color: 'rgba(100, 116, 139, 0.5)',
+                    padding: '4px 0',
+                  }}>
+                    {d}
+                  </div>
+                ))}
+                {/* Calendar cells */}
+                {(() => {
+                  const firstDayOfWeek = timelineData.days[0]?.date.getDay() ?? 0;
+                  const paddingCells = Array.from({ length: firstDayOfWeek }, (_, i) => (
+                    <div key={`pad-${i}`} />
+                  ));
+                  const dayCells = timelineData.days.map((day, i) => {
+                    const isToday = isSameDay(day.date, new Date());
+                    const intensity = day.count > 0 ? Math.min(day.count / maxDayCount, 1) : 0;
+                    return (
+                      <motion.div
+                        key={i}
+                        whileHover={{ scale: 1.2 }}
+                        style={{
+                          aspectRatio: '1',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: day.count > 0
+                            ? `${biomeConfig.primaryColor}${Math.round(intensity * 0.6 * 255).toString(16).padStart(2, '0')}`
+                            : 'rgba(0,0,0,0.03)',
+                          border: isToday ? `2px solid ${biomeConfig.primaryColor}` : '1px solid rgba(0,0,0,0.05)',
+                          cursor: day.count > 0 ? 'pointer' : 'default',
+                          position: 'relative',
+                        }}
+                        title={`${format(day.date, 'MMM d')}: ${day.count} animals`}
+                      >
+                        <span style={{
+                          fontSize: '0.65rem',
+                          fontWeight: isToday ? 700 : 500,
+                          color: day.count > 0 ? biomeConfig.primaryColor : 'rgba(100, 116, 139, 0.5)',
+                        }}>
+                          {format(day.date, 'd')}
+                        </span>
+                        {day.count > 0 && (
+                          <span style={{
+                            fontSize: '0.55rem',
+                            fontWeight: 700,
+                            color: biomeConfig.primaryColor,
+                          }}>
+                            {day.count}
+                          </span>
+                        )}
+                      </motion.div>
+                    );
+                  });
+                  return [...paddingCells, ...dayCells];
+                })()}
+              </div>
+            )}
+
+            {/* Per-species breakdown for this time range */}
+            {timelineData.speciesInRange.length > 0 && (
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(100, 116, 139, 0.15)' }}>
+                <div style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(100, 116, 139, 0.6)',
+                  marginBottom: '8px',
+                  fontWeight: 600,
+                }}>
+                  Collected this {timelineView === 'weekly' ? 'week' : timelineView === 'monthly' ? 'month' : 'year'}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {timelineData.speciesInRange.map(([animalId, info]) => (
+                    <div key={animalId} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 10px',
+                      borderRadius: '10px',
+                      background: `${biomeConfig.primaryColor}10`,
+                      border: `1px solid ${biomeConfig.primaryColor}20`,
+                    }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '6px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                        {speciesLottie[info.lottieUrl] ? (
+                          <Lottie
+                            animationData={speciesLottie[info.lottieUrl]}
+                            loop={true}
+                            autoplay={true}
+                            style={{ width: '22px', height: '22px' }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '0.8rem' }}>{biomeConfig.emoji}</span>
+                        )}
+                      </div>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(15, 23, 42, 0.95)' }}>
+                        {info.name}
+                      </span>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: biomeConfig.primaryColor,
+                        background: `${biomeConfig.primaryColor}15`,
+                        padding: '2px 6px',
+                        borderRadius: '6px',
+                      }}>
+                        x{info.count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
+      </div>
+
+      {/* Animal Detail Popup */}
+      <AnimatePresence>
+        {selectedAnimal && (
+          <AnimalPopup
+            animal={selectedAnimal}
+            count={getAnimalCount(selectedAnimal.id)}
+            biomeConfig={biomeConfig}
+            lottieData={loadedAnimations[selectedAnimal.id] || speciesLottie[selectedAnimal.lottieUrl]}
+            onClose={() => setSelectedAnimal(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Animal detail popup component
+const AnimalPopup: React.FC<{
+  animal: CollectedAnimal;
+  count: number;
+  biomeConfig: { name: string; emoji: string; primaryColor: string; secondaryColor: string };
+  lottieData: any;
+  onClose: () => void;
+}> = ({ animal, count, biomeConfig, lottieData, onClose }) => {
+  const collectedDate = animal.collectedAt ? format(parseISO(animal.collectedAt), 'MMM d, yyyy') : 'Unknown';
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 100,
+        }}
+      />
+      {/* Popup */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+        style={{
+          position: 'fixed',
+          bottom: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '85%',
+          maxWidth: '360px',
+          background: 'white',
+          borderRadius: '24px',
+          padding: '24px',
+          zIndex: 101,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: '12px',
+            right: '12px',
+            background: 'rgba(0,0,0,0.06)',
+            border: 'none',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            cursor: 'pointer',
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'rgba(0,0,0,0.4)',
+          }}
+        >
+          x
+        </button>
+
+        {/* Animal animation */}
+        <div style={{
+          width: '100px',
+          height: '100px',
+          margin: '0 auto 16px',
+          borderRadius: '24px',
+          background: `linear-gradient(135deg, ${biomeConfig.primaryColor}25, ${biomeConfig.secondaryColor}25)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}>
+          {lottieData ? (
+            <Lottie
+              animationData={lottieData}
+              loop={true}
+              autoplay={true}
+              style={{ width: '85px', height: '85px' }}
+            />
+          ) : (
+            <span style={{ fontSize: '3rem' }}>{biomeConfig.emoji}</span>
+          )}
+        </div>
+
+        {/* Animal name */}
+        <h3 style={{
+          textAlign: 'center',
+          fontSize: '1.3rem',
+          fontWeight: 700,
+          color: '#0f172a',
+          margin: '0 0 4px',
+        }}>
+          {animal.name}
+        </h3>
+        <p style={{
+          textAlign: 'center',
+          fontSize: '0.85rem',
+          color: 'rgba(100, 116, 139, 0.7)',
+          margin: '0 0 20px',
+        }}>
+          {biomeConfig.emoji} {biomeConfig.name} Biome
+        </p>
+
+        {/* Stats row */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '10px',
+        }}>
+          <div style={{
+            textAlign: 'center',
+            padding: '12px',
+            borderRadius: '14px',
+            background: `${biomeConfig.primaryColor}10`,
+          }}>
+            <div style={{ fontSize: '1.4rem', fontWeight: 700, color: biomeConfig.primaryColor }}>
+              {count}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'rgba(100, 116, 139, 0.7)', fontWeight: 600, marginTop: '2px' }}>
+              Times Earned
+            </div>
+          </div>
+          <div style={{
+            textAlign: 'center',
+            padding: '12px',
+            borderRadius: '14px',
+            background: 'rgba(0,0,0,0.03)',
+          }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+              {collectedDate}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'rgba(100, 116, 139, 0.7)', fontWeight: 600, marginTop: '2px' }}>
+              This One Collected
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+};
+
+// Donut chart for species breakdown
+const AnimalDonutChart: React.FC<{
+  species: [string, { count: number; name: string; lottieUrl: string }][];
+  total: number;
+  biomeColor: string;
+}> = ({ species, total, biomeColor }) => {
+  const size = 130;
+  const radius = 45;
+  const strokeWidth = 18;
+  const circumference = 2 * Math.PI * radius;
+
+  // Generate distinct colors based on biome primary
+  const colors = species.map((_, i) => {
+    const hueShift = i * 35;
+    return `hsl(${(parseInt(biomeColor.slice(1, 3), 16) + hueShift) % 360}, 60%, ${55 + i * 5}%)`;
+  });
+
+  let cumulativePercent = 0;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="rgba(0,0,0,0.04)"
+        strokeWidth={strokeWidth}
+      />
+      {species.map(([, info], i) => {
+        const percent = total > 0 ? (info.count / total) * 100 : 0;
+        const offset = circumference - (circumference * cumulativePercent) / 100;
+        const length = (circumference * percent) / 100;
+        cumulativePercent += percent;
+        return (
+          <circle
+            key={i}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={colors[i]}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${length} ${circumference - length}`}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            style={{ transition: 'all 0.5s ease' }}
+          />
+        );
+      })}
+      <text
+        x={size / 2}
+        y={size / 2 - 6}
+        textAnchor="middle"
+        fill="#0f172a"
+        fontSize="16"
+        fontWeight="700"
+        fontFamily="'Quicksand', sans-serif"
+      >
+        {total}
+      </text>
+      <text
+        x={size / 2}
+        y={size / 2 + 10}
+        textAnchor="middle"
+        fill="rgba(100, 116, 139, 0.7)"
+        fontSize="9"
+        fontFamily="'Quicksand', sans-serif"
+      >
+        Total
+      </text>
+    </svg>
+  );
+};
+
+// Yearly heatmap grid (GitHub-style)
+const YearlyHeatmapGrid: React.FC<{
+  days: { date: Date; count: number }[];
+  maxCount: number;
+  biomeColor: string;
+}> = ({ days, maxCount, biomeColor }) => {
+  // Build weeks array
+  const weeks: { date: Date; count: number }[][] = [];
+  let currentWeek: { date: Date; count: number }[] = [];
+
+  if (days.length > 0) {
+    const firstDay = days[0].date.getDay();
+    for (let i = 0; i < firstDay; i++) {
+      currentWeek.push({ date: new Date(0), count: -1 }); // placeholder
+    }
+  }
+
+  days.forEach(day => {
+    currentWeek.push(day);
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+  });
+
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) {
+      currentWeek.push({ date: new Date(0), count: -1 });
+    }
+    weeks.push(currentWeek);
+  }
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: '3px', minWidth: 'fit-content' }}>
+        {weeks.map((week, wi) => (
+          <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            {week.map((day, di) => {
+              if (day.count < 0) {
+                return <div key={di} style={{ width: '11px', height: '11px' }} />;
+              }
+              const intensity = day.count > 0 ? Math.min(day.count / maxCount, 1) : 0;
+              const isToday = isSameDay(day.date, new Date());
+              return (
+                <div
+                  key={di}
+                  title={`${format(day.date, 'MMM d')}: ${day.count} animals`}
+                  style={{
+                    width: '11px',
+                    height: '11px',
+                    borderRadius: '2px',
+                    background: day.count > 0
+                      ? `${biomeColor}${Math.round((0.25 + intensity * 0.75) * 255).toString(16).padStart(2, '0')}`
+                      : 'rgba(0,0,0,0.06)',
+                    border: isToday ? `2px solid ${biomeColor}` : 'none',
+                  }}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      {/* Month labels */}
+      <div style={{ display: 'flex', marginTop: '6px', fontSize: '0.55rem', color: 'rgba(100, 116, 139, 0.5)' }}>
+        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
+          <span key={i} style={{ flex: 1, textAlign: 'center' }}>{m}</span>
+        ))}
       </div>
     </div>
   );

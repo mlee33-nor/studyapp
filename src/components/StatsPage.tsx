@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   format,
@@ -973,7 +973,7 @@ const TagAnimalBreakdown: React.FC<{
     return { ...cat, percent, offset, length };
   });
 
-  // Top Animal Companion
+  // Top 3 Animal Companions
   const userData = getUserData();
   const collection = userData.permanentCollection || [];
 
@@ -986,21 +986,36 @@ const TagAnimalBreakdown: React.FC<{
     animalCounts[animal.id].count++;
   });
 
-  const topAnimal = Object.entries(animalCounts).sort(([, a], [, b]) => b.count - a.count)[0];
-  const topAnimalBiomeConfig = topAnimal ? BIOME_CONFIG[topAnimal[1].biome] : null;
+  const topAnimals = Object.entries(animalCounts)
+    .sort(([, a], [, b]) => b.count - a.count)
+    .slice(0, 3);
 
-  // Lottie animation data loading
-  const [lottieData, setLottieData] = useState<any>(null);
-  const lottieRef = useRef<any>(null);
+  // Stable key for lottie loading dependency
+  const topAnimalsKey = topAnimals.map(([id]) => id).join(',');
+
+  // Lottie animation data loading for top 3
+  const [topLottieData, setTopLottieData] = useState<Record<string, any>>({});
 
   useEffect(() => {
-    if (topAnimal) {
-      fetch(topAnimal[1].lottieUrl)
-        .then(r => r.json())
-        .then(data => setLottieData(data))
-        .catch(() => {});
-    }
-  }, [topAnimal?.[0]]);
+    if (topAnimals.length === 0) return;
+    const toLoad = topAnimals.filter(([id]) => !topLottieData[id]);
+    if (toLoad.length === 0) return;
+    Promise.all(
+      toLoad.map(([id, info]) =>
+        fetch(info.lottieUrl)
+          .then(r => r.json())
+          .then(data => ({ id, data }))
+          .catch(() => null)
+      )
+    ).then(results => {
+      const newData: Record<string, any> = {};
+      results.forEach(r => { if (r) newData[r.id] = r.data; });
+      if (Object.keys(newData).length > 0) {
+        setTopLottieData(prev => ({ ...prev, ...newData }));
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topAnimalsKey]);
 
   const accentColor = colors.isDark ? '#3B82F6' : '#8B5CF6';
 
@@ -1119,65 +1134,117 @@ const TagAnimalBreakdown: React.FC<{
         </div>
       )}
 
-      {/* Top Animal Companion */}
-      {topAnimal && (
+      {/* Top Animal Companions */}
+      {topAnimals.length > 0 && (
         <div style={{
           marginTop: '20px',
           paddingTop: '16px',
           borderTop: `1px solid ${colors.border}`
         }}>
           <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Top Animal Companion
+            Top Animal Companions
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
-              background: topAnimalBiomeConfig
-                ? `linear-gradient(135deg, ${topAnimalBiomeConfig.primaryColor}33, ${topAnimalBiomeConfig.secondaryColor}33)`
-                : (colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              flexShrink: 0
-            }}>
-              {lottieData ? (
-                <Lottie
-                  lottieRef={lottieRef}
-                  animationData={lottieData}
-                  loop={true}
-                  autoplay={true}
-                  style={{ width: '48px', height: '48px' }}
-                />
-              ) : (
-                <span style={{ fontSize: '1.5rem' }}>
-                  {topAnimalBiomeConfig?.emoji || '🐾'}
-                </span>
-              )}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: colors.text.primary }}>
-                {topAnimal[1].name}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: colors.text.tertiary }}>
-                {topAnimalBiomeConfig?.emoji} {topAnimalBiomeConfig?.name} Biome
-              </div>
-            </div>
-            <div style={{
-              textAlign: 'center',
-              padding: '8px 12px',
-              borderRadius: '12px',
-              background: colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-            }}>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: accentColor }}>
-                {topAnimal[1].count}
-              </div>
-              <div style={{ fontSize: '0.65rem', color: colors.text.tertiary, fontWeight: 600 }}>
-                Earned
-              </div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {topAnimals.map(([animalId, info], index) => {
+              const biomeConfig = BIOME_CONFIG[info.biome];
+              const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+              const medalLabels = ['1st', '2nd', '3rd'];
+              return (
+                <div key={animalId} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px',
+                  borderRadius: '14px',
+                  background: index === 0
+                    ? (colors.isDark ? 'rgba(255,215,0,0.08)' : 'rgba(255,215,0,0.1)')
+                    : 'transparent'
+                }}>
+                  {/* Rank badge */}
+                  <div style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    background: `${medalColors[index]}30`,
+                    border: `2px solid ${medalColors[index]}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    color: medalColors[index],
+                    flexShrink: 0
+                  }}>
+                    {medalLabels[index]}
+                  </div>
+                  {/* Animal avatar */}
+                  <div style={{
+                    width: index === 0 ? '52px' : '42px',
+                    height: index === 0 ? '52px' : '42px',
+                    borderRadius: '14px',
+                    background: biomeConfig
+                      ? `linear-gradient(135deg, ${biomeConfig.primaryColor}33, ${biomeConfig.secondaryColor}33)`
+                      : (colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0
+                  }}>
+                    {topLottieData[animalId] ? (
+                      <Lottie
+                        animationData={topLottieData[animalId]}
+                        loop={true}
+                        autoplay={true}
+                        style={{
+                          width: index === 0 ? '44px' : '36px',
+                          height: index === 0 ? '44px' : '36px'
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: index === 0 ? '1.5rem' : '1.2rem' }}>
+                        {biomeConfig?.emoji || '🐾'}
+                      </span>
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: index === 0 ? '0.95rem' : '0.85rem',
+                      fontWeight: 700,
+                      color: colors.text.primary,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {info.name}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
+                      {biomeConfig?.emoji} {biomeConfig?.name}
+                    </div>
+                  </div>
+                  {/* Count */}
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '6px 10px',
+                    borderRadius: '10px',
+                    background: colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                    flexShrink: 0
+                  }}>
+                    <div style={{
+                      fontSize: index === 0 ? '1.1rem' : '0.95rem',
+                      fontWeight: 700,
+                      color: accentColor
+                    }}>
+                      {info.count}
+                    </div>
+                    <div style={{ fontSize: '0.6rem', color: colors.text.tertiary, fontWeight: 600 }}>
+                      Earned
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
