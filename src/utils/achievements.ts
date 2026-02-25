@@ -277,10 +277,12 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
   // Calculate total study time from daily stats
   const totalMinutes = Object.values(userData?.dailyStats ?? {}).reduce((sum, mins) => sum + mins, 0);
 
-  // Perfect days: past days with at least one completed session (today excluded — day isn't over yet)
+  // Perfect days: past days with at least one completed session and zero failures
+  // (today excluded — day isn't over yet)
   const today = new Date().toISOString().split('T')[0];
+  const failedByDay = userData?.dailyFailedSessions ?? {};
   const perfectDays = Object.entries(userData?.dailyStats ?? {})
-    .filter(([date, mins]) => date !== today && mins > 0).length;
+    .filter(([date, mins]) => date !== today && mins > 0 && !(failedByDay[date] > 0)).length;
 
   return ACHIEVEMENTS.map(achievement => {
     let progress = 0;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Home, Settings as SettingsIcon, Play, Pause, RotateCcw, Volume2, Bell, Moon, Lock, FileText, Image } from 'lucide-react';
+import { Home, Settings as SettingsIcon, Play, Pause, Volume2, Bell, Moon, Lock, FileText, Image, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -13,7 +13,7 @@ import AchievementsScreen from './screens/AchievementsScreen';
 import { getNewlyUnlocked } from './utils/achievements';
 import type { Achievement } from './utils/achievements';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
-import { addCompletedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
+import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
 import type { StudyCategory } from './types/stats';
@@ -338,7 +338,7 @@ const SoftButton: React.FC<{
   text?: string;
   icon?: LucideIcon;
   onClick: () => void;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
 }> = ({ text, icon: Icon, onClick, variant = 'primary' }) => {
   const colors = {
     primary: {
@@ -355,6 +355,11 @@ const SoftButton: React.FC<{
       bg: 'rgba(255, 255, 255, 0.05)',
       shadow: '0 4px 15px rgba(45, 212, 191, 0.15)',
       hoverShadow: '0 6px 25px rgba(45, 212, 191, 0.25)'
+    },
+    danger: {
+      bg: 'linear-gradient(135deg, rgba(239, 68, 68, 0.7) 0%, rgba(185, 28, 28, 0.7) 100%)',
+      shadow: '0 4px 20px rgba(239, 68, 68, 0.3)',
+      hoverShadow: '0 6px 30px rgba(239, 68, 68, 0.5)'
     }
   };
 
@@ -378,7 +383,7 @@ const SoftButton: React.FC<{
         justifyContent: 'center',
         gap: '8px',
         cursor: 'pointer',
-        color: variant === 'primary' ? 'white' : 'rgba(100, 100, 150, 1)',
+        color: (variant === 'primary' || variant === 'danger') ? 'white' : 'rgba(100, 100, 150, 1)',
         fontSize: '15px',
         fontWeight: 600,
         boxShadow: style.shadow,
@@ -1197,6 +1202,11 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     triggerCelebration();
   };
 
+  const handleFailSession = () => {
+    setIsRunning(false);
+    setTimeLeft(timerMinutes * 60);
+    addFailedSession();
+  };
 
   const handleStartFocus = () => {
     setShowCategoryModal(true);
@@ -2106,12 +2116,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             ) : (
               <>
                 <SoftButton text="Pause" icon={Pause} onClick={() => setIsRunning(false)} variant="secondary" />
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <div style={{ flex: 1 }}>
-                    <SoftButton text="Complete" onClick={handleCompleteSession} variant="primary" />
-                  </div>
-                  <SoftButton icon={RotateCcw} onClick={() => setIsRunning(false)} variant="ghost" />
-                </div>
+                <SoftButton text="Fail Session" icon={X} onClick={handleFailSession} variant="danger" />
               </>
             )}
           </div>

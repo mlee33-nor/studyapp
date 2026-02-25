@@ -42,6 +42,8 @@ export interface UserData {
   lastDailyReset: string | null;
   // Selected animal for pomodoro session
   selectedAnimal: SelectedAnimal | null;
+  // Failed session tracking
+  dailyFailedSessions: DailyFailedSessions;
   // Coin economy
   coins: number;
   purchasedAnimals: string[];
@@ -53,6 +55,10 @@ export interface UserData {
 
 export interface DailyStats {
   [date: string]: number; // date (YYYY-MM-DD) -> minutes studied
+}
+
+export interface DailyFailedSessions {
+  [date: string]: number; // date (YYYY-MM-DD) -> number of failed pomodoros
 }
 
 export interface WeeklyStats {
