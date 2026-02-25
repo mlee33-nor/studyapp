@@ -579,7 +579,9 @@ const MeadowScreen: React.FC = () => {
             const isActive = activeBiome === biomeId;
             const isUnlocked = unlockedBiomes.includes(biomeId);
             const cost = getBiomeCost(biomeId);
-            const currentCoins = getUserData().coins ?? 0;
+            const storageCoins = getUserData().coins ?? 0;
+            const appCoins = (() => { try { const d = JSON.parse(localStorage.getItem('userData') || '{}'); return d.coins ?? 0; } catch { return 0; } })();
+            const currentCoins = Math.max(storageCoins, appCoins);
             const canAffordBiome = currentCoins >= cost;
             return (
               <motion.button
