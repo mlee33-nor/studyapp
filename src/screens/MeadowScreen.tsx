@@ -574,14 +574,15 @@ const MeadowScreen: React.FC = () => {
           paddingBottom: '8px',
           scrollBehavior: 'smooth'
         }}>
-          {ALL_BIOME_IDS.map((biomeId) => {
+          {(() => {
+            const storageCoins = getUserData().coins ?? 0;
+            const appCoins = (() => { try { const d = JSON.parse(localStorage.getItem('userData') || '{}'); return d.coins ?? 0; } catch { return 0; } })();
+            const currentCoins = Math.max(storageCoins, appCoins);
+            return ALL_BIOME_IDS.map((biomeId) => {
             const biomeConfig = BIOME_CONFIG[biomeId];
             const isActive = activeBiome === biomeId;
             const isUnlocked = unlockedBiomes.includes(biomeId);
             const cost = getBiomeCost(biomeId);
-            const storageCoins = getUserData().coins ?? 0;
-            const appCoins = (() => { try { const d = JSON.parse(localStorage.getItem('userData') || '{}'); return d.coins ?? 0; } catch { return 0; } })();
-            const currentCoins = Math.max(storageCoins, appCoins);
             const canAffordBiome = currentCoins >= cost;
             return (
               <motion.button
@@ -646,7 +647,7 @@ const MeadowScreen: React.FC = () => {
                   <div style={{
                     fontSize: '9px',
                     fontWeight: 700,
-                    color: canAffordBiome ? '#B45309' : '#DC2626',
+                    color: canAffordBiome ? '#CA8A04' : '#DC2626',
                     background: 'rgba(167, 139, 250, 0.3)',
                     padding: '1px 6px',
                     borderRadius: '8px',
@@ -657,7 +658,8 @@ const MeadowScreen: React.FC = () => {
                 )}
               </motion.button>
             );
-          })}
+          });
+          })()}
         </div>
 
         {/* View Mode Toggle: Today / Weekly / Monthly / Yearly */}
