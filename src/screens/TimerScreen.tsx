@@ -470,30 +470,51 @@ const TimerScreen: React.FC = () => {
       {/* Control Buttons */}
       <div className="flex justify-center gap-3 mb-6">
         {!timer.isRunning ? (
-          <button
-            onClick={timer.start}
-            className="px-12 py-3 bg-white text-text-primary rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
-          >
-            Start
-          </button>
+          <>
+            <button
+              onClick={timer.start}
+              className="px-10 py-3 bg-white text-text-primary rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
+            >
+              Start
+            </button>
+            {timerMode === 'study' && timer.progress > 0 && (
+              <button
+                onClick={handleTimerComplete}
+                className="px-6 py-3 bg-pastel-green text-text-primary rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
+              >
+                Complete
+              </button>
+            )}
+          </>
         ) : (
           <>
             <button
               onClick={timer.pause}
-              className="px-8 py-3 bg-pastel-purple text-text-primary rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
+              className="px-6 py-3 bg-pastel-purple text-text-primary rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
             >
               Pause
             </button>
             {timerMode === 'study' && (
-              <button
-                onClick={() => {
-                  timer.pause();
-                  timer.reset(customDuration);
-                }}
-                className="px-8 py-3 bg-red-100 text-red-600 rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
-              >
-                Fail
-              </button>
+              <>
+                <button
+                  onClick={() => {
+                    timer.pause();
+                    handleTimerComplete();
+                  }}
+                  className="px-6 py-3 bg-pastel-green text-text-primary rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
+                >
+                  Complete
+                </button>
+                <button
+                  onClick={() => {
+                    timer.pause();
+                    timer.reset(customDuration);
+                  }}
+                  className="px-6 py-3 bg-red-100 text-red-600 rounded-full font-medium shadow-soft hover:shadow-soft-lg transition-all duration-200 active:scale-95"
+                >
+                  Fail
+                </button>
+              </>
             )}
           </>
         )}

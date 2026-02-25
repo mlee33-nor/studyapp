@@ -20,10 +20,15 @@ export const useTimer = ({ initialMinutes, onComplete, soundEnabled = true }: Us
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<number | null>(null);
   const totalTime = useRef(initialMinutes * 60);
+  const onCompleteRef = useRef(onComplete);
+  const soundEnabledRef = useRef(soundEnabled);
+
+  // Keep refs up to date without triggering effect re-runs
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
 
   const playCompletionSound = useCallback(() => {
-    if (soundEnabled) {
-      // Create a simple beep sound
+    if (soundEnabledRef.current) {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -40,7 +45,7 @@ export const useTimer = ({ initialMinutes, onComplete, soundEnabled = true }: Us
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.5);
     }
-  }, [soundEnabled]);
+  }, []);
 
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
@@ -49,7 +54,7 @@ export const useTimer = ({ initialMinutes, onComplete, soundEnabled = true }: Us
           if (prev <= 1) {
             setIsRunning(false);
             playCompletionSound();
-            onComplete?.();
+            onCompleteRef.current?.();
             return 0;
           }
           return prev - 1;
@@ -66,7 +71,7 @@ export const useTimer = ({ initialMinutes, onComplete, soundEnabled = true }: Us
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, timeLeft, onComplete, playCompletionSound]);
+  }, [isRunning, timeLeft, playCompletionSound]);
 
   const start = useCallback(() => {
     setIsRunning(true);
