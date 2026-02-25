@@ -579,7 +579,8 @@ const MeadowScreen: React.FC = () => {
             const isActive = activeBiome === biomeId;
             const isUnlocked = unlockedBiomes.includes(biomeId);
             const cost = getBiomeCost(biomeId);
-            const canAffordBiome = (userData.coins ?? 0) >= cost;
+            const currentCoins = getUserData().coins ?? 0;
+            const canAffordBiome = currentCoins >= cost;
             return (
               <motion.button
                 key={biomeId}
