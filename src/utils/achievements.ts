@@ -8,7 +8,7 @@ export interface Achievement {
   unlocked: boolean;
   progress: number; // 0-100
   requirement: number;
-  category: 'sessions' | 'streak' | 'collection' | 'time' | 'perfect' | 'special';
+  category: 'sessions' | 'streak' | 'collection' | 'time' | 'special';
 }
 
 // Achievement Definitions
@@ -149,27 +149,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'time',
   },
 
-  // Perfect Day Achievements
-  {
-    id: 'ten_perfect',
-    name: 'Excellence Habit',
-    description: 'Achieve 10 perfect study days',
-    emoji: '🌈',
-    unlocked: false,
-    progress: 0,
-    requirement: 10,
-    category: 'perfect',
-  },
-  {
-    id: 'thirty_perfect',
-    name: 'Perfectionist',
-    description: 'Complete 30 perfect study days',
-    emoji: '💎',
-    unlocked: false,
-    progress: 0,
-    requirement: 30,
-    category: 'perfect',
-  },
 
   // Collection Achievements
   {
@@ -215,12 +194,6 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
   // Calculate total study time from daily stats
   const totalMinutes = Object.values(userData?.dailyStats ?? {}).reduce((sum, mins) => sum + mins, 0);
 
-  // Perfect days: past days with at least one completed session and zero failures
-  // (today excluded — day isn't over yet)
-  const today = new Date().toISOString().split('T')[0];
-  const failedByDay = userData?.dailyFailedSessions ?? {};
-  const perfectDays = Object.entries(userData?.dailyStats ?? {})
-    .filter(([date, mins]) => date !== today && mins > 0 && !(failedByDay[date] > 0)).length;
 
   return ACHIEVEMENTS.map(achievement => {
     let progress = 0;
@@ -247,10 +220,6 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
         unlocked = totalMinutes >= achievement.requirement;
         break;
 
-      case 'perfect':
-        progress = Math.min(perfectDays, achievement.requirement);
-        unlocked = perfectDays >= achievement.requirement;
-        break;
 
       default:
         break;
