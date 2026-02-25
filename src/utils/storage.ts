@@ -3,8 +3,8 @@ import { getStarterAnimalIds, getAllAnimalIds } from '../data/biomes';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
-// Quadratic XP formula: cumulative XP needed to reach a given level
-export const getXpForLevel = (lvl: number) => lvl * lvl * 50;
+// XP needed to reach a given level: ~60 min for level 3, ~500 hours for level 50
+export const getXpForLevel = (lvl: number) => Math.round(53 * Math.pow(lvl, 2.2));
 
 const DEFAULT_SETTINGS: UserSettings = {
   soundEnabled: true,
