@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   format,
@@ -15,13 +15,18 @@ import {
   subMonths,
   addYears,
   subYears,
-  isToday
+  isToday,
+  parseISO,
+  subDays
 } from 'date-fns';
+import Lottie from 'lottie-react';
 import { useAnalytics } from '../hooks/useAnalytics';
-import type { ViewMode, DayData, CategoryStats as CategoryStatsType } from '../types/stats';
-import { TrendingUp, Award, Flame, Target, Calendar, Check, ChevronLeft, ChevronRight } from 'lucide-react';
-import { DailyReport } from './DailyReport';
+import type { ViewMode, DayData, CategoryStats as CategoryStatsType, EnhancedFocusSession } from '../types/stats';
+import { TrendingUp, Award, Flame, Target, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CategoryDetail } from './CategoryDetail';
+import { getUserData } from '../utils/storage';
+import { BIOME_CONFIG } from '../data/biomes';
+import type { BiomeType } from '../types';
 
 const SOFT_SPRING = { type: "spring" as const, stiffness: 100, damping: 20 };
 
@@ -104,8 +109,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   const [navigationView, setNavigationView] = useState<NavigationView>('main');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryStatsType | null>(null);
-  const [selectedViewMode, setSelectedViewMode] = useState<ViewMode>('monthly');
-  const { overallStats, categoryStats } = useAnalytics(viewMode, 60);
+  const { overallStats, sessions } = useAnalytics(viewMode, 60);
 
   const colors = getThemeColors(theme);
 
@@ -134,11 +138,6 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
     setNavigationView('daily');
   };
 
-  const handleCategoryClick = (category: CategoryStatsType) => {
-    setSelectedCategory(category);
-    setSelectedViewMode(viewMode); // Save the current viewMode
-    setNavigationView('category');
-  };
 
   const handleBackToMain = () => {
     setNavigationView('main');
@@ -146,19 +145,84 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
     setSelectedCategory(null);
   };
 
-  // Render drill-down views
-  if (navigationView === 'daily' && selectedDate) {
-    return <DailyReport date={selectedDate} theme={theme} onClose={handleBackToMain} />;
-  }
-
+  // Render category detail drill-down
   if (navigationView === 'category' && selectedCategory) {
     return (
       <CategoryDetail
         category={selectedCategory}
         theme={theme}
-        viewMode={selectedViewMode}
+        viewMode={viewMode === 'daily' ? 'monthly' : viewMode}
         onClose={handleBackToMain}
       />
+    );
+  }
+
+  // Render day drill-down inline (reuses daily view cards for any date)
+  if (navigationView === 'daily' && selectedDate) {
+    const selectedDaySessions = sessions.filter(s => isSameDay(parseISO(s.date), selectedDate));
+    const selectedDayStart = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+    const selectedDayEnd = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59);
+
+    return (
+      <div style={{
+        minHeight: '100dvh',
+        color: colors.text.primary,
+        padding: '24px 16px calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))',
+        fontFamily: "'Quicksand', sans-serif"
+      }}>
+        {/* Back + Date Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={SOFT_SPRING}
+          style={{ marginBottom: '16px' }}
+        >
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleBackToMain}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              color: colors.text.secondary,
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              fontFamily: "'Quicksand', sans-serif",
+              marginBottom: '12px'
+            }}
+          >
+            <ChevronLeft size={18} />
+            Back
+          </motion.button>
+          <h1 style={{
+            fontSize: '1.75rem',
+            fontWeight: 700,
+            margin: '0 0 4px 0',
+            color: colors.headerTextColor,
+            textShadow: !colors.isDark ? '0 1px 2px rgba(0, 0, 0, 0.05)' : 'none'
+          }}>
+            {format(selectedDate, 'EEEE, MMMM d')}
+          </h1>
+          <p style={{ margin: 0, color: colors.text.tertiary, fontSize: '0.875rem' }}>
+            {selectedDaySessions.length} session{selectedDaySessions.length !== 1 ? 's' : ''} · {selectedDaySessions.reduce((s, sess) => s + sess.duration, 0)} minutes
+          </p>
+        </motion.div>
+
+        {/* Reuse daily cards scoped to the selected date */}
+        <FocusedTimeDistributionForDate sessions={sessions} date={selectedDate} colors={colors} />
+        <TagAnimalBreakdown
+          sessions={sessions}
+          colors={colors}
+          label="Tag Breakdown"
+          filterStart={selectedDayStart}
+          filterEnd={selectedDayEnd}
+          animationDelay={0.1}
+        />
+      </div>
     );
   }
 
@@ -206,7 +270,16 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         />
       )}
 
-      {/* Yearly View: Comprehensive High-Density View */}
+      {/* Daily View: Today's Detailed Analytics */}
+      {viewMode === 'daily' && (
+        <>
+          <FocusedTimeDistribution sessions={sessions} colors={colors} />
+          <FocusTrendCard sessions={sessions} colors={colors} />
+          <TagAnimalBreakdown sessions={sessions} colors={colors} />
+        </>
+      )}
+
+      {/* Yearly View: Compact Activity Overview */}
       {viewMode === 'yearly' && (
         <>
           {/* Overall Yearly Heatmap */}
@@ -216,16 +289,6 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
             colors={colors}
             onDateClick={handleDateClick}
           />
-
-          {/* Per-Category Yearly Heatmaps */}
-          {categoryStats.length > 0 && (
-            <CategoryYearlyHeatmaps
-              categoryStats={categoryStats}
-              colors={colors}
-              onDateClick={handleDateClick}
-              onCategoryClick={handleCategoryClick}
-            />
-          )}
 
           {/* Yearly Summary Stats */}
           <YearlySummaryStats
@@ -255,11 +318,35 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         />
       )}
 
-      {/* Category Habit Cards (Colorful, Clean Design) */}
-      {(viewMode === 'weekly' || viewMode === 'monthly') && categoryStats.length > 0 && (
-        <CategoryHabitCards
-          categoryStats={categoryStats}
+      {/* Tag & Animal Breakdown for weekly/monthly/yearly */}
+      {viewMode === 'weekly' && (
+        <TagAnimalBreakdown
+          sessions={sessions}
           colors={colors}
+          label="This Week's Breakdown"
+          filterStart={startOfWeek(new Date(), { weekStartsOn: 0 })}
+          filterEnd={endOfWeek(new Date(), { weekStartsOn: 0 })}
+          animationDelay={0.1}
+        />
+      )}
+      {viewMode === 'monthly' && (
+        <TagAnimalBreakdown
+          sessions={sessions}
+          colors={colors}
+          label={`${format(currentDate, 'MMMM')} Breakdown`}
+          filterStart={startOfMonth(currentDate)}
+          filterEnd={endOfMonth(currentDate)}
+          animationDelay={0.1}
+        />
+      )}
+      {viewMode === 'yearly' && (
+        <TagAnimalBreakdown
+          sessions={sessions}
+          colors={colors}
+          label={`${format(currentDate, 'yyyy')} Breakdown`}
+          filterStart={startOfYear(currentDate)}
+          filterEnd={endOfYear(currentDate)}
+          animationDelay={0.1}
         />
       )}
     </div>
@@ -478,7 +565,7 @@ const ViewModeToggle: React.FC<{
   setViewMode: (mode: ViewMode) => void;
   colors: ReturnType<typeof getThemeColors>;
 }> = ({ viewMode, setViewMode, colors }) => {
-  const modes: ViewMode[] = ['weekly', 'monthly', 'yearly'];
+  const modes: ViewMode[] = ['daily', 'weekly', 'monthly', 'yearly'];
 
   return (
     <motion.div
@@ -520,6 +607,648 @@ const ViewModeToggle: React.FC<{
           {mode}
         </motion.button>
       ))}
+    </motion.div>
+  );
+};
+
+// Helper: format minutes as readable time string
+const formatTime = (minutes: number): string => {
+  if (minutes === 0) return '0 mins';
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  if (hours === 0) return `${mins} min${mins !== 1 ? 's' : ''}`;
+  if (mins === 0) return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  return `${hours} hour${hours !== 1 ? 's' : ''} ${mins} min${mins !== 1 ? 's' : ''}`;
+};
+
+// Helper: format minutes as compact time (e.g., "3 H 30 M")
+const formatTimeCompact = (minutes: number): string => {
+  if (minutes === 0) return '0 M';
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  if (hours === 0) return `${mins} M`;
+  if (mins === 0) return `${hours} H`;
+  return `${hours} H ${mins} M`;
+};
+
+// ==========================================
+// DAILY VIEW CARD 1: Focused Time Distribution
+// ==========================================
+const FocusedTimeDistribution: React.FC<{
+  sessions: EnhancedFocusSession[];
+  colors: ReturnType<typeof getThemeColors>;
+}> = ({ sessions, colors }) => {
+  const today = new Date();
+
+  const todaySessions = sessions.filter(s => isSameDay(parseISO(s.date), today));
+  const totalMinutes = todaySessions.reduce((sum, s) => sum + s.duration, 0);
+
+  // Group by hour
+  const sessionsByHour = Array.from({ length: 24 }, (_, i) => {
+    const hourSessions = todaySessions.filter(s => {
+      const hour = new Date(s.date).getHours();
+      return hour === i;
+    });
+    return {
+      hour: i,
+      minutes: hourSessions.reduce((sum, s) => sum + s.duration, 0)
+    };
+  });
+
+  const maxMinutes = Math.max(...sessionsByHour.map(h => h.minutes), 1);
+  const xLabels = ['12 AM', '3 AM', '6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM'];
+  const chartWidth = 320;
+  const chartHeight = 140;
+  const barWidth = chartWidth / 24 - 2;
+  const accentColor = colors.isDark ? '#3B82F6' : '#8B5CF6';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SOFT_SPRING}
+      style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `1px solid ${colors.border}`,
+        padding: '20px',
+        marginBottom: '16px'
+      }}
+    >
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Total focused time
+        </div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 700, color: colors.text.primary }}>
+          {formatTime(totalMinutes)}
+        </div>
+      </div>
+
+      {/* Bar Chart */}
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 30}`} style={{ width: '100%', height: 'auto' }}>
+          {/* Bars */}
+          {sessionsByHour.map((h, i) => {
+            const barHeight = maxMinutes > 0 ? (h.minutes / maxMinutes) * chartHeight : 0;
+            const x = i * (chartWidth / 24) + 1;
+            return (
+              <rect
+                key={i}
+                x={x}
+                y={chartHeight - barHeight}
+                width={barWidth}
+                height={Math.max(barHeight, 0)}
+                rx={2}
+                fill={h.minutes > 0 ? accentColor : (colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)')}
+                opacity={h.minutes > 0 ? 0.85 : 1}
+              />
+            );
+          })}
+          {/* X-axis labels */}
+          {xLabels.map((label, i) => (
+            <text
+              key={label}
+              x={i * (chartWidth / 8) + chartWidth / 16}
+              y={chartHeight + 18}
+              textAnchor="middle"
+              fill={colors.text.tertiary}
+              fontSize="8"
+              fontFamily="'Quicksand', sans-serif"
+              fontWeight={500}
+            >
+              {label}
+            </text>
+          ))}
+        </svg>
+      </div>
+    </motion.div>
+  );
+};
+
+// ==========================================
+// Date-specific Focused Time Distribution (for drill-down)
+// ==========================================
+const FocusedTimeDistributionForDate: React.FC<{
+  sessions: EnhancedFocusSession[];
+  date: Date;
+  colors: ReturnType<typeof getThemeColors>;
+}> = ({ sessions, date, colors }) => {
+  const daySessions = sessions.filter(s => isSameDay(parseISO(s.date), date));
+  const totalMinutes = daySessions.reduce((sum, s) => sum + s.duration, 0);
+
+  const sessionsByHour = Array.from({ length: 24 }, (_, i) => {
+    const hourSessions = daySessions.filter(s => {
+      const hour = new Date(s.date).getHours();
+      return hour === i;
+    });
+    return { hour: i, minutes: hourSessions.reduce((sum, s) => sum + s.duration, 0) };
+  });
+
+  const maxMinutes = Math.max(...sessionsByHour.map(h => h.minutes), 1);
+  const xLabels = ['12 AM', '3 AM', '6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM'];
+  const chartWidth = 320;
+  const chartHeight = 140;
+  const barWidth = chartWidth / 24 - 2;
+  const accentColor = colors.isDark ? '#3B82F6' : '#8B5CF6';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SOFT_SPRING}
+      style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `1px solid ${colors.border}`,
+        padding: '20px',
+        marginBottom: '16px'
+      }}
+    >
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Focused time
+        </div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 700, color: colors.text.primary }}>
+          {formatTime(totalMinutes)}
+        </div>
+      </div>
+
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 30}`} style={{ width: '100%', height: 'auto' }}>
+          {sessionsByHour.map((h, i) => {
+            const barHeight = maxMinutes > 0 ? (h.minutes / maxMinutes) * chartHeight : 0;
+            const x = i * (chartWidth / 24) + 1;
+            return (
+              <rect
+                key={i}
+                x={x}
+                y={chartHeight - barHeight}
+                width={barWidth}
+                height={Math.max(barHeight, 0)}
+                rx={2}
+                fill={h.minutes > 0 ? accentColor : (colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)')}
+                opacity={h.minutes > 0 ? 0.85 : 1}
+              />
+            );
+          })}
+          {xLabels.map((label, i) => (
+            <text
+              key={label}
+              x={i * (chartWidth / 8) + chartWidth / 16}
+              y={chartHeight + 18}
+              textAnchor="middle"
+              fill={colors.text.tertiary}
+              fontSize="8"
+              fontFamily="'Quicksand', sans-serif"
+              fontWeight={500}
+            >
+              {label}
+            </text>
+          ))}
+        </svg>
+      </div>
+    </motion.div>
+  );
+};
+
+// ==========================================
+// DAILY VIEW CARD 2: Focus Trend Card
+// ==========================================
+const FocusTrendCard: React.FC<{
+  sessions: EnhancedFocusSession[];
+  colors: ReturnType<typeof getThemeColors>;
+}> = ({ sessions, colors }) => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = subDays(today, 1);
+  const dayBefore = subDays(today, 2);
+
+  // For fair comparison: only count minutes up to current time-of-day
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  const getMinutesUpToNow = (date: Date): number => {
+    return sessions
+      .filter(s => isSameDay(parseISO(s.date), date))
+      .filter(s => {
+        // For today, count all sessions. For past days, only count up to current time
+        if (isSameDay(date, today)) return true;
+        const sessionDate = new Date(s.date);
+        return sessionDate.getHours() < currentHour ||
+          (sessionDate.getHours() === currentHour && sessionDate.getMinutes() <= currentMinute);
+      })
+      .reduce((sum, s) => sum + s.duration, 0);
+  };
+
+  const todayMins = getMinutesUpToNow(today);
+  const yesterdayMins = getMinutesUpToNow(yesterday);
+  const dayBeforeMins = getMinutesUpToNow(dayBefore);
+
+  const getTrend = (current: number, previous: number) => {
+    const diff = current - previous;
+    if (diff === 0) return { text: 'Same as before', color: colors.text.tertiary, positive: true };
+    const absDiff = Math.abs(diff);
+    if (diff > 0) return { text: `${formatTime(absDiff)} longer`, color: '#10B981', positive: true };
+    return { text: `${formatTime(absDiff)} shorter`, color: '#EF4444', positive: false };
+  };
+
+  const trend1 = getTrend(todayMins, yesterdayMins);
+  const trend2 = getTrend(yesterdayMins, dayBeforeMins);
+
+  const rows = [
+    { label: 'Today', minutes: todayMins, trend: null as null | typeof trend1 },
+    { label: 'Yesterday', minutes: yesterdayMins, trend: trend1 },
+    { label: 'Day Before Yesterday', minutes: dayBeforeMins, trend: trend2 }
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...SOFT_SPRING, delay: 0.1 }}
+      style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `1px solid ${colors.border}`,
+        padding: '20px',
+        marginBottom: '16px'
+      }}
+    >
+      <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '16px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        Focus Trend
+      </div>
+
+      {rows.map((row, i) => (
+        <React.Fragment key={row.label}>
+          {/* Trend label between rows */}
+          {row.trend && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 0',
+              marginLeft: '8px'
+            }}>
+              <TrendingUp size={12} color={row.trend.color} style={{ transform: row.trend.positive ? 'none' : 'rotate(180deg)' }} />
+              <span style={{ fontSize: '0.75rem', color: row.trend.color, fontWeight: 600 }}>
+                {row.trend.text}
+              </span>
+            </div>
+          )}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 0',
+            borderBottom: i < rows.length - 1 ? `1px solid ${colors.border}` : 'none'
+          }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: 600, color: i === 0 ? colors.text.primary : colors.text.secondary }}>
+              {row.label}
+            </span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: colors.text.primary }}>
+              {formatTime(row.minutes)}
+            </span>
+          </div>
+        </React.Fragment>
+      ))}
+
+      <div style={{ fontSize: '0.7rem', color: colors.text.tertiary, marginTop: '8px', fontStyle: 'italic' }}>
+        Past days compared up to {format(now, 'h:mm a')} for fair comparison
+      </div>
+    </motion.div>
+  );
+};
+
+// ==========================================
+// DAILY VIEW CARD 3: Tag & Animal Breakdown
+// ==========================================
+const TagAnimalBreakdown: React.FC<{
+  sessions: EnhancedFocusSession[];
+  colors: ReturnType<typeof getThemeColors>;
+  label?: string;
+  filterStart?: Date;
+  filterEnd?: Date;
+  animationDelay?: number;
+}> = ({ sessions, colors, label = 'Tag Breakdown', filterStart, filterEnd, animationDelay = 0.2 }) => {
+  const today = new Date();
+
+  // If explicit date range provided, filter to that range; otherwise default to today
+  const filteredSessions = (filterStart && filterEnd)
+    ? sessions.filter(s => {
+        const d = parseISO(s.date);
+        return d >= filterStart && d <= filterEnd;
+      })
+    : sessions.filter(s => isSameDay(parseISO(s.date), today));
+  const totalMinutes = filteredSessions.reduce((sum, s) => sum + s.duration, 0);
+
+  // Group by category
+  const categoryMap: Record<string, { emoji: string; title: string; themeColor: string; minutes: number }> = {};
+  filteredSessions.forEach(s => {
+    if (!categoryMap[s.categoryId]) {
+      categoryMap[s.categoryId] = { emoji: s.emoji, title: s.category, themeColor: s.themeColor, minutes: 0 };
+    }
+    categoryMap[s.categoryId].minutes += s.duration;
+  });
+  const categories = Object.values(categoryMap).sort((a, b) => b.minutes - a.minutes);
+
+  // Donut chart SVG params
+  const donutSize = 140;
+  const radius = 50;
+  const strokeWidth = 20;
+  const circumference = 2 * Math.PI * radius;
+
+  // Build donut segments
+  let cumulativePercent = 0;
+  const segments = categories.map(cat => {
+    const percent = totalMinutes > 0 ? (cat.minutes / totalMinutes) * 100 : 0;
+    const offset = circumference - (circumference * cumulativePercent) / 100;
+    const length = (circumference * percent) / 100;
+    cumulativePercent += percent;
+    return { ...cat, percent, offset, length };
+  });
+
+  // Top 3 Animal Companions
+  const userData = getUserData();
+  const collection = userData.permanentCollection || [];
+
+  // Count animal frequency from collection - group by species (name+biome), not instance id
+  const animalCounts: Record<string, { count: number; name: string; biome: BiomeType; lottieUrl: string }> = {};
+  collection.forEach(animal => {
+    const speciesKey = `${animal.name}__${animal.biome}`;
+    if (!animalCounts[speciesKey]) {
+      animalCounts[speciesKey] = { count: 0, name: animal.name, biome: animal.biome, lottieUrl: animal.lottieUrl };
+    }
+    animalCounts[speciesKey].count++;
+  });
+
+  const topAnimals = Object.entries(animalCounts)
+    .sort(([, a], [, b]) => b.count - a.count)
+    .slice(0, 3);
+
+  // Stable key for lottie loading dependency
+  const topAnimalsKey = topAnimals.map(([id]) => id).join(',');
+
+  // Lottie animation data loading for top 3
+  const [topLottieData, setTopLottieData] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    if (topAnimals.length === 0) return;
+    const toLoad = topAnimals.filter(([id]) => !topLottieData[id]);
+    if (toLoad.length === 0) return;
+    Promise.all(
+      toLoad.map(([id, info]) =>
+        fetch(info.lottieUrl)
+          .then(r => r.json())
+          .then(data => ({ id, data }))
+          .catch(() => null)
+      )
+    ).then(results => {
+      const newData: Record<string, any> = {};
+      results.forEach(r => { if (r) newData[r.id] = r.data; });
+      if (Object.keys(newData).length > 0) {
+        setTopLottieData(prev => ({ ...prev, ...newData }));
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topAnimalsKey]);
+
+  const accentColor = colors.isDark ? '#3B82F6' : '#8B5CF6';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...SOFT_SPRING, delay: animationDelay }}
+      style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '20px',
+        border: `1px solid ${colors.border}`,
+        padding: '20px',
+        marginBottom: '16px'
+      }}
+    >
+      <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '16px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        {label}
+      </div>
+
+      {categories.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '24px 0', color: colors.text.tertiary, fontSize: '0.9rem' }}>
+          No sessions today yet. Start a focus session to see your breakdown!
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Donut Chart */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width={donutSize} height={donutSize} viewBox={`0 0 ${donutSize} ${donutSize}`}>
+              {/* Background circle */}
+              <circle
+                cx={donutSize / 2}
+                cy={donutSize / 2}
+                r={radius}
+                fill="none"
+                stroke={colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}
+                strokeWidth={strokeWidth}
+              />
+              {/* Segments */}
+              {segments.map((seg, i) => (
+                <circle
+                  key={i}
+                  cx={donutSize / 2}
+                  cy={donutSize / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={seg.themeColor}
+                  strokeWidth={strokeWidth}
+                  strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                  strokeDashoffset={seg.offset}
+                  strokeLinecap="round"
+                  transform={`rotate(-90 ${donutSize / 2} ${donutSize / 2})`}
+                  style={{ transition: 'all 0.5s ease' }}
+                />
+              ))}
+              {/* Center text */}
+              <text
+                x={donutSize / 2}
+                y={donutSize / 2 - 6}
+                textAnchor="middle"
+                fill={colors.text.primary}
+                fontSize="16"
+                fontWeight="700"
+                fontFamily="'Quicksand', sans-serif"
+              >
+                {formatTimeCompact(totalMinutes)}
+              </text>
+              <text
+                x={donutSize / 2}
+                y={donutSize / 2 + 10}
+                textAnchor="middle"
+                fill={colors.text.tertiary}
+                fontSize="9"
+                fontFamily="'Quicksand', sans-serif"
+              >
+                Total
+              </text>
+            </svg>
+          </div>
+
+          {/* Category List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {segments.map((seg, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 0',
+                borderBottom: i < segments.length - 1 ? `1px solid ${colors.border}` : 'none'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                  <div style={{
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: seg.themeColor,
+                    flexShrink: 0
+                  }} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: colors.text.primary }}>
+                    {seg.emoji} {seg.title}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.text.tertiary }}>
+                    {Math.round(seg.percent)}%
+                  </span>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: colors.text.secondary, minWidth: '60px', textAlign: 'right' }}>
+                    {formatTimeCompact(seg.minutes)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Top Animal Companions */}
+      {topAnimals.length > 0 && (
+        <div style={{
+          marginTop: '20px',
+          paddingTop: '16px',
+          borderTop: `1px solid ${colors.border}`
+        }}>
+          <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Top Animal Companions
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {topAnimals.map(([animalId, info], index) => {
+              const biomeConfig = BIOME_CONFIG[info.biome];
+              const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+              const medalLabels = ['1st', '2nd', '3rd'];
+              return (
+                <div key={animalId} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px',
+                  borderRadius: '14px',
+                  background: index === 0
+                    ? (colors.isDark ? 'rgba(255,215,0,0.08)' : 'rgba(255,215,0,0.1)')
+                    : 'transparent'
+                }}>
+                  {/* Rank badge */}
+                  <div style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    background: `${medalColors[index]}30`,
+                    border: `2px solid ${medalColors[index]}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.6rem',
+                    fontWeight: 800,
+                    color: medalColors[index],
+                    flexShrink: 0
+                  }}>
+                    {medalLabels[index]}
+                  </div>
+                  {/* Animal avatar */}
+                  <div style={{
+                    width: index === 0 ? '52px' : '42px',
+                    height: index === 0 ? '52px' : '42px',
+                    borderRadius: '14px',
+                    background: biomeConfig
+                      ? `linear-gradient(135deg, ${biomeConfig.primaryColor}33, ${biomeConfig.secondaryColor}33)`
+                      : (colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0
+                  }}>
+                    {topLottieData[animalId] ? (
+                      <Lottie
+                        animationData={topLottieData[animalId]}
+                        loop={true}
+                        autoplay={true}
+                        style={{
+                          width: index === 0 ? '44px' : '36px',
+                          height: index === 0 ? '44px' : '36px'
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: index === 0 ? '1.5rem' : '1.2rem' }}>
+                        {biomeConfig?.emoji || '🐾'}
+                      </span>
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: index === 0 ? '0.95rem' : '0.85rem',
+                      fontWeight: 700,
+                      color: colors.text.primary,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {info.name}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
+                      {biomeConfig?.emoji} {biomeConfig?.name}
+                    </div>
+                  </div>
+                  {/* Count */}
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '6px 10px',
+                    borderRadius: '10px',
+                    background: colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                    flexShrink: 0
+                  }}>
+                    <div style={{
+                      fontSize: index === 0 ? '1.1rem' : '0.95rem',
+                      fontWeight: 700,
+                      color: accentColor
+                    }}>
+                      {info.count}
+                    </div>
+                    <div style={{ fontSize: '0.6rem', color: colors.text.tertiary, fontWeight: 600 }}>
+                      Earned
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 };
@@ -1008,181 +1737,6 @@ const MonthlyCalendarHeatmap: React.FC<{
   );
 };
 
-// Category Habit Cards
-const CategoryHabitCards: React.FC<{
-  categoryStats: CategoryStatsType[];
-  colors: ReturnType<typeof getThemeColors>;
-}> = ({ categoryStats, colors }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...SOFT_SPRING, delay: 0.1 }}
-      style={{ marginBottom: '32px' }}
-    >
-      <h2 style={{
-        fontSize: '1.25rem',
-        fontWeight: 600,
-        marginBottom: '16px',
-        color: colors.text.primary
-      }}>
-        Category Progress
-      </h2>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {categoryStats.map((cat, index) => (
-          <CategoryCard
-            key={cat.categoryId}
-            category={cat}
-            delay={index * 0.05}
-            colors={colors}
-          />
-        ))}
-      </div>
-    </motion.div>
-  );
-};
-
-// Category Card Component
-const CategoryCard: React.FC<{
-  category: CategoryStatsType;
-  delay: number;
-  colors: ReturnType<typeof getThemeColors>;
-}> = ({ category, delay, colors }) => {
-  const hours = Math.floor(category.totalMinutes / 60);
-  const minutes = category.totalMinutes % 60;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ ...SOFT_SPRING, delay }}
-      style={{
-        background: colors.cardBg,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '20px',
-        border: `2px solid ${category.themeColor}40`,
-        padding: '20px'
-      }}
-    >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-        <div style={{
-          fontSize: '2rem',
-          width: '48px',
-          height: '48px',
-          borderRadius: '14px',
-          background: `${category.themeColor}20`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: `2px solid ${category.themeColor}40`
-        }}>
-          {category.emoji}
-        </div>
-        <div style={{ flex: 1 }}>
-          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
-            {category.title}
-          </h3>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: colors.text.tertiary }}>
-            {hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`} · {category.sessionCount} sessions
-          </p>
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: '8px',
-          fontSize: '0.75rem',
-          color: colors.text.tertiary
-        }}>
-          <span>Weekly Goal (3h)</span>
-          <span style={{ fontWeight: 600, color: category.themeColor }}>
-            {Math.round(category.weeklyProgress)}%
-          </span>
-        </div>
-        <div style={{
-          height: '8px',
-          borderRadius: '999px',
-          background: colors.heatmap.empty,
-          overflow: 'hidden',
-          border: `1px solid ${category.themeColor}20`
-        }}>
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${Math.min(category.weeklyProgress, 100)}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            style={{
-              height: '100%',
-              background: `linear-gradient(90deg, ${category.themeColor}, ${category.themeColor}CC)`,
-              borderRadius: '999px'
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Mini Stats */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '12px'
-      }}>
-        <MiniStat
-          icon={<Flame size={16} />}
-          label="Streak"
-          value={`${category.currentStreak}d`}
-          color={category.themeColor}
-          colors={colors}
-        />
-        <MiniStat
-          icon={<Award size={16} />}
-          label="Best"
-          value={`${category.bestStreak}d`}
-          color={category.themeColor}
-          colors={colors}
-        />
-        <MiniStat
-          icon={<Check size={16} />}
-          label="Days"
-          value={category.perfectDays.toString()}
-          color={category.themeColor}
-          colors={colors}
-        />
-      </div>
-    </motion.div>
-  );
-};
-
-// Mini Stat Component
-const MiniStat: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: string;
-  colors: ReturnType<typeof getThemeColors>;
-}> = ({ icon, label, value, color, colors }) => {
-  return (
-    <div style={{
-      background: colors.isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-      borderRadius: '12px',
-      padding: '10px',
-      textAlign: 'center'
-    }}>
-      <div style={{ color, marginBottom: '4px' }}>{icon}</div>
-      <div style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '2px', color: colors.text.primary }}>
-        {value}
-      </div>
-      <div style={{ fontSize: '0.625rem', color: colors.text.tertiary }}>
-        {label}
-      </div>
-    </div>
-  );
-};
-
 // Yearly GitHub-Style Heatmap
 const YearlyHeatmap: React.FC<{
   yearlyData: DayData[];
@@ -1228,8 +1782,7 @@ const YearlyHeatmap: React.FC<{
         borderRadius: '24px',
         border: `1px solid ${colors.border}`,
         padding: '24px',
-        marginBottom: '32px',
-        overflowX: 'auto'
+        marginBottom: '32px'
       }}
     >
       <h2 style={{
@@ -1241,12 +1794,12 @@ const YearlyHeatmap: React.FC<{
         {format(currentDate, 'yyyy')} Activity
       </h2>
 
-      <div style={{ display: 'flex', gap: '4px', minWidth: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: '2px', width: '100%' }}>
         {weeks.map((week, weekIndex) => (
-          <div key={weekIndex} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div key={weekIndex} style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
             {week.map((day, dayIndex) => {
               if (!day.date) {
-                return <div key={dayIndex} style={{ width: '14px', height: '14px' }} />;
+                return <div key={dayIndex} style={{ width: '100%', aspectRatio: '1' }} />;
               }
 
               const intensity = getIntensity(day.totalMinutes);
@@ -1264,13 +1817,13 @@ const YearlyHeatmap: React.FC<{
                   whileTap={{ scale: 0.9 }}
                   onClick={() => day.hasSession && onDateClick(day.date)}
                   style={{
-                    width: '14px',
-                    height: '14px',
-                    borderRadius: '3px',
+                    width: '100%',
+                    aspectRatio: '1',
+                    borderRadius: '2px',
                     background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
                     border: isTodayDate
-                      ? `2px solid ${colors.heatmap.currentDayBorder}`
-                      : `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
+                      ? `1.5px solid ${colors.heatmap.currentDayBorder}`
+                      : `0.5px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
                     cursor: day.hasSession ? 'pointer' : 'default',
                     position: 'relative',
                     overflow: 'hidden'
@@ -1380,9 +1933,9 @@ const YearlyHeatmap: React.FC<{
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        marginTop: '16px',
-        fontSize: '0.75rem',
+        gap: '6px',
+        marginTop: '12px',
+        fontSize: '0.7rem',
         color: colors.text.tertiary
       }}>
         <span>Less</span>
@@ -1390,188 +1943,15 @@ const YearlyHeatmap: React.FC<{
           <div
             key={level}
             style={{
-              width: '14px',
-              height: '14px',
-              borderRadius: '3px',
+              width: '10px',
+              height: '10px',
+              borderRadius: '2px',
               background: level === 0 ? colors.heatmap.empty : colors.heatmap.levels[level - 1],
-              border: `1px solid ${level === 0 ? colors.heatmap.emptyBorder : 'transparent'}`
+              border: `0.5px solid ${level === 0 ? colors.heatmap.emptyBorder : 'transparent'}`
             }}
           />
         ))}
         <span>More</span>
-      </div>
-    </motion.div>
-  );
-};
-
-// Category Yearly Heatmaps - Per-Category Yearly View
-const CategoryYearlyHeatmaps: React.FC<{
-  categoryStats: CategoryStatsType[];
-  colors: ReturnType<typeof getThemeColors>;
-  onDateClick: (date: Date) => void;
-  onCategoryClick: (category: CategoryStatsType) => void;
-}> = ({ categoryStats, colors, onDateClick, onCategoryClick }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...SOFT_SPRING, delay: 0.2 }}
-      style={{ marginBottom: '32px' }}
-    >
-      <h2 style={{
-        fontSize: '1.25rem',
-        fontWeight: 600,
-        marginBottom: '16px',
-        color: colors.text.primary
-      }}>
-        Category Activity
-      </h2>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {categoryStats.map((category, index) => (
-          <CategoryYearlyCard
-            key={category.categoryId}
-            category={category}
-            colors={colors}
-            delay={index * 0.05}
-            onDateClick={onDateClick}
-            onCategoryClick={() => onCategoryClick(category)}
-          />
-        ))}
-      </div>
-    </motion.div>
-  );
-};
-
-// Category Yearly Card
-const CategoryYearlyCard: React.FC<{
-  category: CategoryStatsType;
-  colors: ReturnType<typeof getThemeColors>;
-  delay: number;
-  onDateClick: (date: Date) => void;
-  onCategoryClick: () => void;
-}> = ({ category, colors, delay, onDateClick, onCategoryClick }) => {
-  const yearStart = startOfYear(new Date());
-  const yearEnd = endOfYear(new Date());
-  const yearlyDays = eachDayOfInterval({ start: yearStart, end: yearEnd });
-
-  // Build weeks for GitHub-style heatmap
-  const weeks: any[][] = [];
-  let currentWeek: any[] = [];
-  const firstDayOfWeek = getDay(yearStart);
-
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    currentWeek.push({});
-  }
-
-  yearlyDays.forEach((day) => {
-    const dayData = category.monthlyData.find(d => isSameDay(d.date, day));
-    currentWeek.push({
-      date: day,
-      hasSession: dayData?.hasSession || false,
-      minutes: dayData?.totalMinutes || 0
-    });
-
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
-    }
-  });
-
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) {
-      currentWeek.push({});
-    }
-    weeks.push(currentWeek);
-  }
-
-  const hours = Math.floor(category.totalMinutes / 60);
-  const minutes = category.totalMinutes % 60;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ ...SOFT_SPRING, delay }}
-      style={{
-        background: colors.cardBg,
-        backdropFilter: 'blur(20px)',
-        borderRadius: '20px',
-        border: `2px solid ${category.themeColor}40`,
-        padding: '20px'
-      }}
-    >
-      {/* Header - Clickable to navigate to CategoryDetail */}
-      <motion.div
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        onClick={onCategoryClick}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          marginBottom: '16px',
-          cursor: 'pointer'
-        }}
-      >
-        <div style={{
-          fontSize: '2rem',
-          width: '48px',
-          height: '48px',
-          borderRadius: '14px',
-          background: `${category.themeColor}20`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: `2px solid ${category.themeColor}60`
-        }}>
-          {category.emoji}
-        </div>
-        <div style={{ flex: 1 }}>
-          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600, color: colors.text.primary }}>
-            {category.title}
-          </h3>
-          <p style={{ margin: 0, fontSize: '0.875rem', color: colors.text.tertiary }}>
-            {hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`} · {category.sessionCount} sessions · Tap for details
-          </p>
-        </div>
-      </motion.div>
-
-      {/* Yearly Heatmap */}
-      <div style={{ overflowX: 'auto' }}>
-        <div style={{ display: 'flex', gap: '4px', minWidth: 'fit-content' }}>
-          {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              {week.map((day: any, dayIndex: number) => {
-                if (!day.date) {
-                  return <div key={dayIndex} style={{ width: '12px', height: '12px' }} />;
-                }
-
-                const isTodayDate = isToday(day.date);
-
-                return (
-                  <motion.div
-                    key={dayIndex}
-                    whileHover={{ scale: 1.5, zIndex: 10 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => day.hasSession && onDateClick(day.date)}
-                    style={{
-                      width: '12px',
-                      height: '12px',
-                      borderRadius: '2px',
-                      background: day.hasSession ? `${category.themeColor}CC` : colors.heatmap.empty,
-                      border: isTodayDate
-                        ? `2px solid ${category.themeColor}`
-                        : `1px solid ${day.hasSession ? category.themeColor : colors.heatmap.emptyBorder}`,
-                      cursor: day.hasSession ? 'pointer' : 'default'
-                    }}
-                    title={`${format(day.date, 'MMM d')}: ${day.minutes}min`}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
       </div>
     </motion.div>
   );

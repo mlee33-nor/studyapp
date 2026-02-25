@@ -23,6 +23,82 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { BiomeType, CollectedAnimal } from '../types';
 import { getBiomeConfig, BIOME_CONFIG, getAnimalScale } from '../data/biomes';
 
+// Donut chart for species breakdown
+const AnimalDonutChart: React.FC<{
+  species: { name: string; count: number }[];
+  total: number;
+  theme: 'morning' | 'midnight';
+}> = ({ species, total, theme }) => {
+  const size = 130;
+  const radius = 45;
+  const strokeWidth = 18;
+  const circumference = 2 * Math.PI * radius;
+  const isDark = theme === 'midnight';
+
+  const colors = [
+    '#a78bfa', '#f472b6', '#60a5fa', '#34d399', '#fbbf24',
+    '#fb923c', '#c084fc', '#22d3ee', '#f87171', '#a3e635',
+  ];
+
+  let cumulativePercent = 0;
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}
+        strokeWidth={strokeWidth}
+      />
+      {species.map((s, i) => {
+        const percent = total > 0 ? (s.count / total) * 100 : 0;
+        const offset = circumference - (circumference * cumulativePercent) / 100;
+        const length = (circumference * percent) / 100;
+        cumulativePercent += percent;
+        return (
+          <circle
+            key={i}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={colors[i % colors.length]}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${length} ${circumference - length}`}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+            style={{ transition: 'all 0.5s ease' }}
+          />
+        );
+      })}
+      <text
+        x={size / 2}
+        y={size / 2 - 6}
+        textAnchor="middle"
+        fill={isDark ? 'rgba(255,255,255,0.9)' : '#0f172a'}
+        fontSize="16"
+        fontWeight="700"
+        fontFamily="'Quicksand', sans-serif"
+      >
+        {total}
+      </text>
+      <text
+        x={size / 2}
+        y={size / 2 + 10}
+        textAnchor="middle"
+        fill={isDark ? 'rgba(255,255,255,0.5)' : 'rgba(100, 116, 139, 0.7)'}
+        fontSize="9"
+        fontFamily="'Quicksand', sans-serif"
+      >
+        Total
+      </text>
+    </svg>
+  );
+};
+
 type TimelineViewMode = 'weekly' | 'monthly' | 'yearly';
 
 interface GalleryScreenProps {
@@ -522,7 +598,7 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
         })}
       </div>
 
-      {/* Gallery Grid - Animals on Biome Backgrounds */}
+      {/* Species Breakdown + Gallery */}
       {groupedAnimals.length === 0 ? (
         <div style={{
           background: getCardBackground(theme, 'primary'),
@@ -555,14 +631,154 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
           </div>
         </div>
       ) : (
-        <BiomeGalleryGrid
-          groupedAnimals={groupedAnimals}
-          selectedBiome={selectedBiome}
-          viewMode={viewMode}
-          config={config}
-          loadedAnimations={loadedAnimations}
-          theme={theme}
-        />
+        <>
+          {/* Donut Chart + Species Breakdown */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              background: getCardBackground(theme, 'primary'),
+              backdropFilter: 'blur(25px)',
+              WebkitBackdropFilter: 'blur(25px)',
+              borderRadius: '24px',
+              padding: '20px',
+              marginBottom: '12px',
+              border: `1px solid ${getCardBorder(theme, 'primary')}`,
+              boxShadow: getCardShadow(theme),
+            }}
+          >
+            {/* Donut Chart */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <AnimalDonutChart
+                species={groupedAnimals.map(a => ({ name: a.name, count: a.count }))}
+                total={filteredCollection.length}
+                theme={theme}
+              />
+            </div>
+
+            {/* Species List with Progress Bars */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {groupedAnimals
+                .sort((a, b) => b.count - a.count)
+                .map((animal, i) => {
+                  const percent = filteredCollection.length > 0
+                    ? Math.round((animal.count / filteredCollection.length) * 100)
+                    : 0;
+                  const colors = [
+                    '#a78bfa', '#f472b6', '#60a5fa', '#34d399', '#fbbf24',
+                    '#fb923c', '#c084fc', '#22d3ee', '#f87171', '#a3e635',
+                  ];
+                  const color = colors[i % colors.length];
+
+                  return (
+                    <div key={`${animal.name}-${animal.biome}`} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px 10px',
+                      borderRadius: '14px',
+                      background: i === 0 ? `${color}10` : 'transparent',
+                      borderBottom: i < groupedAnimals.length - 1
+                        ? `1px solid ${theme === 'midnight' ? 'rgba(255,255,255,0.06)' : 'rgba(100,116,139,0.08)'}`
+                        : 'none',
+                    }}>
+                      {/* Animal avatar */}
+                      <div style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '10px',
+                        background: `${color}18`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        flexShrink: 0,
+                      }}>
+                        {loadedAnimations[animal.lottieUrl] ? (
+                          <Lottie
+                            animationData={loadedAnimations[animal.lottieUrl]}
+                            loop={true}
+                            autoplay={true}
+                            style={{ width: '32px', height: '32px' }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '1rem' }}>
+                            {getBiomeConfig(animal.biome as BiomeType)?.emoji || '🐾'}
+                          </span>
+                        )}
+                      </div>
+                      {/* Name + progress bar */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          color: getTextColor(theme, 'primary'),
+                          marginBottom: '4px',
+                          fontFamily: "'Quicksand', sans-serif",
+                        }}>
+                          {animal.name}
+                        </div>
+                        <div style={{
+                          height: '5px',
+                          borderRadius: '3px',
+                          background: theme === 'midnight' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                          overflow: 'hidden',
+                        }}>
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percent}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                            style={{
+                              height: '100%',
+                              borderRadius: '3px',
+                              background: color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {/* Percentage */}
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        color: getTextColor(theme, 'tertiary'),
+                        minWidth: '32px',
+                        textAlign: 'right',
+                        fontFamily: "'Quicksand', sans-serif",
+                      }}>
+                        {percent}%
+                      </span>
+                      {/* Count badge */}
+                      <div style={{
+                        padding: '3px 8px',
+                        borderRadius: '8px',
+                        background: `${color}18`,
+                        flexShrink: 0,
+                      }}>
+                        <span style={{
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          color: color,
+                          fontFamily: "'Quicksand', sans-serif",
+                        }}>
+                          {animal.count}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </motion.div>
+
+          {/* Animal Grid */}
+          <BiomeGalleryGrid
+            groupedAnimals={groupedAnimals}
+            selectedBiome={selectedBiome}
+            viewMode={viewMode}
+            config={config}
+            loadedAnimations={loadedAnimations}
+            theme={theme}
+          />
+        </>
       )}
     </motion.div>
   );
