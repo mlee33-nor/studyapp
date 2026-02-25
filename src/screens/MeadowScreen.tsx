@@ -644,7 +644,7 @@ const MeadowScreen: React.FC = () => {
                     fontSize: '9px',
                     fontWeight: 700,
                     color: canAffordBiome ? '#B45309' : '#DC2626',
-                    background: canAffordBiome ? 'rgba(251, 191, 36, 0.25)' : 'rgba(220, 38, 38, 0.15)',
+                    background: 'rgba(167, 139, 250, 0.3)',
                     padding: '1px 6px',
                     borderRadius: '8px',
                     fontFamily: "'Quicksand', sans-serif",
