@@ -1312,20 +1312,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 alignItems: 'center',
                 gap: '4px',
                 padding: '4px 10px',
-                background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(167, 139, 250, 0.2)' : 'rgba(139, 92, 246, 0.2)',
-                borderRadius: '12px',
-                fontSize: '13px',
-                fontWeight: 700,
-                color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
-                fontFamily: "'Quicksand', sans-serif",
-              }}>
-                Lv.{userData.level ?? 1}
-              </div>
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '4px 10px',
                 background: BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(251, 191, 36, 0.2)' : 'rgba(251, 191, 36, 0.25)',
                 borderRadius: '12px',
                 fontSize: '13px',
