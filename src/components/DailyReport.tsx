@@ -1,27 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { format, parseISO, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from 'date-fns';
-import { X, Flame, Clock, TrendingUp, Star } from 'lucide-react';
+import { X, Flame, Clock, TrendingUp } from 'lucide-react';
 import { useAnalytics } from '../hooks/useAnalytics';
 import type { CategoryStats as CategoryStatsType } from '../types/stats';
 
 type Theme = 'morning' | 'midnight';
-
-// Calculate XP earned from session duration
-const calculateXP = (minutes: number): number => {
-  // Base XP: 10 XP per minute
-  // Bonus: +50% for sessions >= 25 min (Pomodoro)
-  // Bonus: +100% for sessions >= 50 min (Deep Work)
-  let xp = minutes * 10;
-
-  if (minutes >= 50) {
-    xp = Math.floor(xp * 2); // Double XP for deep work
-  } else if (minutes >= 25) {
-    xp = Math.floor(xp * 1.5); // 50% bonus for Pomodoro
-  }
-
-  return xp;
-};
 
 // Theme colors helper (same as StatsPage)
 const getThemeColors = (theme: Theme) => {
@@ -378,7 +362,6 @@ export const DailyReport: React.FC<{
             daySessions
               .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
               .map((session) => {
-                const xpEarned = calculateXP(session.duration);
                 return (
                   <div
                     key={session.id}
@@ -412,21 +395,8 @@ export const DailyReport: React.FC<{
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ fontSize: '0.875rem', color: colors.text.tertiary }}>
-                            {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            color: '#FBBF24'
-                          }}>
-                            <Star size={14} fill="#FBBF24" />
-                            +{xpEarned} XP
-                          </div>
+                        <div style={{ fontSize: '0.875rem', color: colors.text.tertiary }}>
+                          {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                     </div>

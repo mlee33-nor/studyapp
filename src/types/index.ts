@@ -49,8 +49,6 @@ export interface UserData {
   purchasedAnimals: string[];
   // Legacy fields (for compatibility with unused screen files)
   currentStage: number;
-  xp: number;
-  level: number;
 }
 
 export interface DailyStats {

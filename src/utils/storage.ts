@@ -3,9 +3,6 @@ import { getStarterAnimalIds, getAllAnimalIds } from '../data/biomes';
 
 const STORAGE_KEY = 'pomodoroStudyApp';
 
-// XP needed to reach a given level: ~60 min for level 3, ~500 hours for level 50
-export const getXpForLevel = (lvl: number) => Math.round(53 * Math.pow(lvl, 2.2));
-
 const DEFAULT_SETTINGS: UserSettings = {
   soundEnabled: true,
   notificationsEnabled: true,
@@ -45,8 +42,6 @@ const DEFAULT_USER_DATA: UserData = {
   purchasedAnimals: [],
   // Legacy fields for compatibility
   currentStage: 1,
-  xp: 0,
-  level: 1,
 };
 
 export const getUserData = (): UserData => {
@@ -257,16 +252,6 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
 
   const totalCompletedSessions = currentData.totalCompletedSessions + 1;
 
-  // Calculate XP and level progression
-  const xpEarned = minutes * 10; // 10 XP per minute studied
-  const newXp = (currentData.xp || 0) + xpEarned;
-  // Level thresholds: quadratic scaling so later levels take much longer
-  // e.g. level 2 = 200 XP, level 5 = 1250 XP, level 10 = 5000 XP
-  let newLevel = currentData.level || 1;
-  while (newXp >= getXpForLevel(newLevel + 1)) {
-    newLevel++;
-  }
-
   const updatedData = updateUserData({
     totalCompletedSessions,
     dailyStats,
@@ -275,8 +260,6 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     lastStudyDate: today,
     meadowAnimals,
     coins: (currentData.coins || 0) + minutes,
-    xp: newXp,
-    level: newLevel,
   });
 
   // Add collected animal to returned data for UI feedback
@@ -351,12 +334,10 @@ export const purchaseAnimal = (animalId: string, price: number): UserData | null
   });
 };
 
-// Dev Mode: Unlock all biomes by setting level to 50
+// Dev Mode: Unlock all biomes and animals
 export const unlockAllBiomes = (): UserData => {
   const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
   const newData = updateUserData({
-    level: 50,
-    xp: 25000, // Max XP
     unlockedBiomes: biomeIds,
     activeBiome: 'meadow',
     coins: 9999,

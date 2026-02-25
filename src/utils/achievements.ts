@@ -8,7 +8,7 @@ export interface Achievement {
   unlocked: boolean;
   progress: number; // 0-100
   requirement: number;
-  category: 'sessions' | 'streak' | 'collection' | 'level' | 'time' | 'perfect' | 'special';
+  category: 'sessions' | 'streak' | 'collection' | 'time' | 'perfect' | 'special';
 }
 
 // Achievement Definitions
@@ -151,16 +151,6 @@ export const ACHIEVEMENTS: Achievement[] = [
 
   // Perfect Day Achievements
   {
-    id: 'first_perfect',
-    name: 'Perfect Execution',
-    description: 'Complete a day without failing a Pomodoro',
-    emoji: '✨',
-    unlocked: false,
-    progress: 0,
-    requirement: 1,
-    category: 'perfect',
-  },
-  {
     id: 'ten_perfect',
     name: 'Excellence Habit',
     description: 'Achieve 10 perfect study days',
@@ -213,57 +203,6 @@ export const ACHIEVEMENTS: Achievement[] = [
     category: 'collection',
   },
 
-  // Level Achievements
-  {
-    id: 'level_five',
-    name: 'Novice Scholar',
-    description: 'Reach level 5',
-    emoji: '📝',
-    unlocked: false,
-    progress: 0,
-    requirement: 5,
-    category: 'level',
-  },
-  {
-    id: 'level_ten',
-    name: 'Rising Star',
-    description: 'Reach level 10',
-    emoji: '⭐',
-    unlocked: false,
-    progress: 0,
-    requirement: 10,
-    category: 'level',
-  },
-  {
-    id: 'level_twenty',
-    name: 'Expert Learner',
-    description: 'Reach level 20',
-    emoji: '🎓',
-    unlocked: false,
-    progress: 0,
-    requirement: 20,
-    category: 'level',
-  },
-  {
-    id: 'level_thirty',
-    name: 'Academic Elite',
-    description: 'Reach level 30',
-    emoji: '👑',
-    unlocked: false,
-    progress: 0,
-    requirement: 30,
-    category: 'level',
-  },
-  {
-    id: 'level_fifty',
-    name: 'Legendary Scholar',
-    description: 'Reach the legendary level 50',
-    emoji: '🌟',
-    unlocked: false,
-    progress: 0,
-    requirement: 50,
-    category: 'level',
-  },
 ];
 
 // Get achievements with updated progress based on user data
@@ -272,7 +211,6 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
   const totalSessions = userData?.totalCompletedSessions ?? 0;
   const streak = userData?.studyStreak ?? 0;
   const collectionLength = userData?.permanentCollection?.length ?? 0;
-  const level = userData?.level ?? 1;
 
   // Calculate total study time from daily stats
   const totalMinutes = Object.values(userData?.dailyStats ?? {}).reduce((sum, mins) => sum + mins, 0);
@@ -302,11 +240,6 @@ export const getAchievementsWithProgress = (userData: UserData): Achievement[] =
       case 'collection':
         progress = Math.min(collectionLength, achievement.requirement);
         unlocked = collectionLength >= achievement.requirement;
-        break;
-
-      case 'level':
-        progress = Math.min(level, achievement.requirement);
-        unlocked = level >= achievement.requirement;
         break;
 
       case 'time':
