@@ -153,7 +153,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first_perfect',
     name: 'Perfect Execution',
-    description: 'Complete a day without failing a timer',
+    description: 'Complete a day without failing a Pomodoro',
     emoji: '✨',
     unlocked: false,
     progress: 0,
