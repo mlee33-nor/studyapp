@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Home, Settings as SettingsIcon, Play, Pause, Volume2, Bell, Moon, Lock, FileText, Image, X } from 'lucide-react';
+import { Home, Settings as SettingsIcon, Play, Pause, Volume2, Bell, Moon, Lock, FileText, Image, X, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -1079,12 +1079,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     }
   }, [activeTab, userData.meadowAnimals]);
 
-  // Update timeLeft when timerMinutes changes
+  // Update timeLeft when timerMinutes changes (NOT when isRunning changes)
   useEffect(() => {
     if (!isRunning) {
       setTimeLeft(timerMinutes * 60);
     }
-  }, [timerMinutes, isRunning]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerMinutes]);
 
   // Countdown logic
   useEffect(() => {
@@ -2116,6 +2117,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             ) : (
               <>
                 <SoftButton text="Pause" icon={Pause} onClick={() => setIsRunning(false)} variant="secondary" />
+                <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" />
                 <SoftButton text="Fail Session" icon={X} onClick={handleFailSession} variant="danger" />
               </>
             )}
