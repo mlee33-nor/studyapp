@@ -429,8 +429,8 @@ const InteractiveTimerRing: React.FC<{
   };
 
   // === HANDLE POSITION — Pure Trigonometry ===
-  // Angle: map minutes (5–60) to radians, starting at 12 o'clock (-π/2)
-  const durationFraction = (minutes - 5) / (60 - 5);
+  // Angle: map minutes (1–60) to radians, starting at 12 o'clock (-π/2)
+  const durationFraction = (minutes - 1) / (60 - 1);
   const handleAngle = durationFraction * 2 * Math.PI - Math.PI / 2;
   const handleX = CX + RADIUS * Math.cos(handleAngle);
   const handleY = CY + RADIUS * Math.sin(handleAngle);
@@ -452,8 +452,8 @@ const InteractiveTimerRing: React.FC<{
     let angle = Math.atan2(dx, -dy) * (180 / Math.PI);
     if (angle < 0) angle += 360;
 
-    const newMinutes = Math.round((angle / 360) * (60 - 5) + 5);
-    const clampedMinutes = Math.max(5, Math.min(60, newMinutes));
+    const newMinutes = Math.round((angle / 360) * (60 - 1) + 1);
+    const clampedMinutes = Math.max(1, Math.min(60, newMinutes));
 
     // Trigger haptic feedback when the value changes
     if (clampedMinutes !== prevMinutesRef.current) {
