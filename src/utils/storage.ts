@@ -38,6 +38,8 @@ const DEFAULT_USER_DATA: UserData = {
     biome: 'meadow',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json',
   },
+  // Failed session tracking
+  dailyFailedSessions: {},
   // Coin economy
   coins: 0,
   purchasedAnimals: [],
@@ -282,6 +284,14 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     ...updatedData,
     collectedAnimal,
   } as any;
+};
+
+export const addFailedSession = (): UserData => {
+  const currentData = getUserData();
+  const today = new Date().toISOString().split('T')[0];
+  const dailyFailedSessions = { ...currentData.dailyFailedSessions };
+  dailyFailedSessions[today] = (dailyFailedSessions[today] || 0) + 1;
+  return updateUserData({ dailyFailedSessions });
 };
 
 const getWeekStart = (date: Date): string => {
