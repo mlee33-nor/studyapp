@@ -649,7 +649,7 @@ const MeadowScreen: React.FC = () => {
                     borderRadius: '8px',
                     fontFamily: "'Quicksand', sans-serif",
                   }}>
-                    🪙 {cost.toLocaleString()}
+                    <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {cost.toLocaleString()}
                   </div>
                 )}
               </motion.button>
@@ -1213,7 +1213,7 @@ const MeadowScreen: React.FC = () => {
                 fontFamily: "'Quicksand', sans-serif",
                 marginBottom: '20px',
               }}>
-                🪙 {biomePurchaseTarget.cost.toLocaleString()}
+                <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {biomePurchaseTarget.cost.toLocaleString()}
               </div>
 
               {/* Buttons */}

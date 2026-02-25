@@ -628,7 +628,7 @@ const InteractiveTimerRing: React.FC<{
               fontWeight: 500
             }}
           >
-            🪙 {minutes} coins
+            <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {minutes} coins
           </motion.div>
         )}
       </div>
@@ -1317,7 +1317,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px' }}>🪙</span> {userData.coins ?? 0}
+                <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0}
               </div>
             </div>
             {currentCategory && (
@@ -1495,7 +1495,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px' }}>🪙</span> {userData.coins ?? 0} coins
+                <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0} coins
               </div>
               <div style={{
                 display: 'flex',
@@ -1596,7 +1596,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                           color: BACKGROUND_THEMES[selectedTheme].isDark ? '#FBBF24' : '#B45309',
                           fontFamily: "'Quicksand', sans-serif",
                         }}>
-                          <span style={{ fontSize: '11px' }}>🪙</span>{animal.price}
+                          <span style={{ fontSize: '11px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span>{animal.price}
                         </div>
                       )}
                     </motion.button>
@@ -1689,7 +1689,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 fontFamily: "'Quicksand', sans-serif",
                 marginBottom: '20px',
               }}>
-                <span style={{ fontSize: '16px' }}>🪙</span> {purchaseTarget.price}
+                <span style={{ fontSize: '16px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {purchaseTarget.price}
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <motion.button
