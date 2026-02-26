@@ -19,15 +19,6 @@ import type { BiomeType } from './types';
 import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
-const getDarkMode = () => {
-  const stored = localStorage.getItem('darkMode');
-  return stored === 'true';
-};
-
-const setDarkMode = (enabled: boolean) => {
-  localStorage.setItem('darkMode', String(enabled));
-};
-
 const getSelectedTheme = (): 'morning' | 'midnight' => {
   const stored = localStorage.getItem('selectedTheme');
   if (stored && ['morning', 'midnight'].includes(stored)) {
@@ -893,7 +884,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('Timer');
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(getDarkMode());
   const [userData, setUserData] = useState(getUserData());
   const [timerMinutes, setTimerMinutes] = useState(25);
   const [timeLeft, setTimeLeft] = useState(timerMinutes * 60);
