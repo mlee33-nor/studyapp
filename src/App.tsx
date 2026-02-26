@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Home, Settings as SettingsIcon, Play, Pause, Volume2, Bell, Moon, Lock, FileText, Image, X, Check } from 'lucide-react';
+import { Home, Settings as SettingsIcon, Play, Pause, Bell, Lock, FileText, Image, X, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -1106,12 +1106,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       handleCompleteSession();
     }
   }, [timeLeft, isRunning]);
-
-  const toggleDarkMode = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    setDarkMode(newMode);
-  };
 
   const handleThemeChange = (theme: 'morning' | 'midnight') => {
     setSelectedThemeState(theme);
