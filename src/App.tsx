@@ -2234,9 +2234,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
         <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
           {[
-            { icon: Volume2, label: 'Sound', enabled: false, toggle: () => { } },
             { icon: Bell, label: 'Notifications', enabled: false, toggle: () => { } },
-            { icon: Moon, label: 'Dark Mode', enabled: isDarkMode, toggle: toggleDarkMode }
           ].map((item, i) => (
             <motion.div
               key={i}
@@ -2246,7 +2244,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 display: 'flex',
                 alignItems: 'center',
                 padding: '20px 0',
-                borderBottom: i !== 2 ? `1px solid ${getBorderColor(selectedTheme)}` : 'none',
               }}
             >
               <item.icon size={20} color={getTextColor(selectedTheme, 'secondary')} strokeWidth={2.5} />
