@@ -1664,11 +1664,6 @@ const MonthlyCalendarHeatmap: React.FC<{
           const hasSession = dayData?.hasSession || false;
           const isTodayDate = isToday(day);
 
-          // Get category colors for this day
-          const categoryColors = dayData && dayData.sessions.length > 0
-            ? Array.from(new Set(dayData.sessions.map(s => s.themeColor)))
-            : [];
-
           return (
             <motion.div
               key={index}
@@ -1678,7 +1673,7 @@ const MonthlyCalendarHeatmap: React.FC<{
               style={{
                 aspectRatio: '1',
                 borderRadius: '12px',
-                background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
+                background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
                 border: isTodayDate
                   ? `2px solid ${colors.heatmap.currentDayBorder}`
                   : `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
@@ -1688,104 +1683,10 @@ const MonthlyCalendarHeatmap: React.FC<{
                 fontSize: '0.875rem',
                 fontWeight: isTodayDate ? 700 : 500,
                 color: intensity > 0 ? '#FFFFFF' : colors.text.tertiary,
-                position: 'relative',
                 cursor: hasSession ? 'pointer' : 'default',
-                overflow: 'hidden'
+                position: 'relative'
               }}
             >
-              {/* Quadrant-based color fill for categories */}
-              {categoryColors.length === 1 ? (
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  background: categoryColors[0]
-                }} />
-              ) : categoryColors.length === 2 ? (
-                <>
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '50%',
-                    height: '100%',
-                    background: categoryColors[0]
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    width: '50%',
-                    height: '100%',
-                    background: categoryColors[1]
-                  }} />
-                </>
-              ) : categoryColors.length === 3 ? (
-                <>
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '50%',
-                    height: '50%',
-                    background: categoryColors[0]
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    width: '50%',
-                    height: '50%',
-                    background: categoryColors[1]
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '50%',
-                    background: categoryColors[2]
-                  }} />
-                </>
-              ) : categoryColors.length >= 4 ? (
-                <>
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '50%',
-                    height: '50%',
-                    background: categoryColors[0]
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    right: 0,
-                    width: '50%',
-                    height: '50%',
-                    background: categoryColors[1]
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    width: '50%',
-                    height: '50%',
-                    background: categoryColors[2]
-                  }} />
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 0,
-                    width: '50%',
-                    height: '50%',
-                    background: categoryColors[3]
-                  }} />
-                </>
-              ) : null}
-
               {/* Day number */}
               <span style={{
                 position: 'relative',
@@ -1884,11 +1785,6 @@ const YearlyHeatmap: React.FC<{
               const intensity = getIntensity(day.totalMinutes);
               const isTodayDate = isToday(day.date);
 
-              // Get category colors for this day
-              const categoryColors = day.sessions && day.sessions.length > 0
-                ? Array.from(new Set(day.sessions.map(s => s.themeColor)))
-                : [];
-
               return (
                 <motion.div
                   key={dayIndex}
@@ -1899,109 +1795,14 @@ const YearlyHeatmap: React.FC<{
                     width: '100%',
                     aspectRatio: '1',
                     borderRadius: '2px',
-                    background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
+                    background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
                     border: isTodayDate
                       ? `1.5px solid ${colors.heatmap.currentDayBorder}`
                       : `0.5px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
-                    cursor: day.hasSession ? 'pointer' : 'default',
-                    position: 'relative',
-                    overflow: 'hidden'
+                    cursor: day.hasSession ? 'pointer' : 'default'
                   }}
                   title={`${format(day.date, 'MMM d')}: ${day.totalMinutes}min`}
-                >
-                  {/* Pie chart for multiple categories */}
-                  {categoryColors.length === 1 ? (
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      background: categoryColors[0]
-                    }} />
-                  ) : categoryColors.length === 2 ? (
-                    <>
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '50%',
-                        height: '100%',
-                        background: categoryColors[0]
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        width: '50%',
-                        height: '100%',
-                        background: categoryColors[1]
-                      }} />
-                    </>
-                  ) : categoryColors.length === 3 ? (
-                    <>
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '50%',
-                        height: '50%',
-                        background: categoryColors[0]
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        width: '50%',
-                        height: '50%',
-                        background: categoryColors[1]
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: '50%',
-                        background: categoryColors[2]
-                      }} />
-                    </>
-                  ) : categoryColors.length >= 4 ? (
-                    <>
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '50%',
-                        height: '50%',
-                        background: categoryColors[0]
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        right: 0,
-                        width: '50%',
-                        height: '50%',
-                        background: categoryColors[1]
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        width: '50%',
-                        height: '50%',
-                        background: categoryColors[2]
-                      }} />
-                      <div style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        right: 0,
-                        width: '50%',
-                        height: '50%',
-                        background: categoryColors[3]
-                      }} />
-                    </>
-                  ) : null}
-                </motion.div>
+                />
               );
             })}
           </div>
