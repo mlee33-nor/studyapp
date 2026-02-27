@@ -2038,7 +2038,7 @@ const YearlyHeatmap: React.FC<{
   );
 };
 
-// Expanded Yearly Heatmap (full-screen overlay)
+// Expanded Yearly Heatmap (full-screen overlay, vertical month-by-month layout)
 const ExpandedYearlyHeatmap: React.FC<{
   yearlyData: DayData[];
   currentDate: Date;
@@ -2047,54 +2047,48 @@ const ExpandedYearlyHeatmap: React.FC<{
   dailyGoal: number;
   onClose: () => void;
 }> = ({ yearlyData, currentDate, colors, onDateClick, dailyGoal, onClose }) => {
-  const yearStart = startOfYear(currentDate);
+  // Group days by month
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
+  const dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-  const weeks: DayData[][] = [];
+  const months: { name: string; weeks: DayData[][] }[] = [];
+  let currentMonthIndex = -1;
   let currentWeek: DayData[] = [];
 
-  const firstDayOfWeek = getDay(yearStart);
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    currentWeek.push({} as DayData);
-  }
-
   yearlyData.forEach((day) => {
+    const m = day.date.getMonth();
+    if (m !== currentMonthIndex) {
+      // Finish previous month's last week
+      if (currentWeek.length > 0) {
+        while (currentWeek.length < 7) currentWeek.push({} as DayData);
+        months[months.length - 1].weeks.push(currentWeek);
+        currentWeek = [];
+      }
+      currentMonthIndex = m;
+      months.push({ name: monthNames[m], weeks: [] });
+      // Pad start of first week
+      const dow = getDay(day.date);
+      for (let i = 0; i < dow; i++) currentWeek.push({} as DayData);
+    }
+
     currentWeek.push(day);
     if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
+      months[months.length - 1].weeks.push(currentWeek);
       currentWeek = [];
     }
   });
 
   if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) {
-      currentWeek.push({} as DayData);
-    }
-    weeks.push(currentWeek);
+    while (currentWeek.length < 7) currentWeek.push({} as DayData);
+    months[months.length - 1].weeks.push(currentWeek);
   }
 
-  // Compute month label positions
-  const monthLabels: { label: string; weekIndex: number }[] = [];
-  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  let lastMonth = -1;
-  weeks.forEach((week, weekIndex) => {
-    for (const day of week) {
-      if (day.date) {
-        const m = day.date.getMonth();
-        if (m !== lastMonth) {
-          monthLabels.push({ label: monthNames[m], weekIndex });
-          lastMonth = m;
-        }
-        break;
-      }
-    }
-  });
-
-  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const cellSize = 14;
-  const cellGap = 3;
-  const dayLabelWidth = 32;
-  const monthLabelHeight = 20;
-  const gridWidth = weeks.length * (cellSize + cellGap);
+  // Compute total minutes for each month for the summary
+  const monthTotals = months.map(month =>
+    month.weeks.reduce((sum, week) =>
+      sum + week.reduce((ws, day) => ws + (day.totalMinutes || 0), 0), 0)
+  );
 
   return (
     <motion.div
@@ -2122,6 +2116,7 @@ const ExpandedYearlyHeatmap: React.FC<{
         justifyContent: 'space-between',
         padding: '16px 20px',
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+        flexShrink: 0,
       }}>
         <h2 style={{
           fontSize: '1.25rem',
@@ -2151,127 +2146,138 @@ const ExpandedYearlyHeatmap: React.FC<{
         </motion.button>
       </div>
 
-      {/* Scrollable heatmap area */}
+      {/* Legend */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '6px',
+        padding: '0 20px 12px',
+        fontSize: '0.7rem',
+        color: colors.text.tertiary,
+        flexShrink: 0,
+      }}>
+        <span>Less</span>
+        {[0, 1, 2, 3, 4, 5].map(level => (
+          <div
+            key={level}
+            style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '3px',
+              background: level === 0 ? colors.heatmap.empty : colors.heatmap.levels[level - 1],
+              border: `0.5px solid ${level === 0 ? colors.heatmap.emptyBorder : 'transparent'}`
+            }}
+          />
+        ))}
+        <span>More</span>
+      </div>
+
+      {/* Scrollable month-by-month grid */}
       <div style={{
         flex: 1,
-        overflowX: 'auto',
         overflowY: 'auto',
-        padding: '8px 20px 20px',
+        overflowX: 'hidden',
+        padding: '0 16px 20px',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
         WebkitOverflowScrolling: 'touch',
       }}>
-        <div style={{ minWidth: dayLabelWidth + gridWidth + 16 }}>
-          {/* Month labels row */}
-          <div style={{
-            display: 'flex',
-            marginLeft: dayLabelWidth,
-            height: monthLabelHeight,
-            marginBottom: '4px',
-          }}>
-            {monthLabels.map(({ label, weekIndex }, i) => (
-              <span
-                key={i}
-                style={{
-                  position: 'absolute',
-                  left: `${dayLabelWidth + 20 + weekIndex * (cellSize + cellGap)}px`,
-                  fontSize: '0.7rem',
-                  fontWeight: 600,
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '12px',
+        }}>
+          {months.map((month, monthIdx) => (
+            <motion.div
+              key={monthIdx}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...SOFT_SPRING, delay: monthIdx * 0.03 }}
+              style={{
+                background: colors.cardBg,
+                borderRadius: '16px',
+                border: `1px solid ${colors.border}`,
+                padding: '12px',
+              }}
+            >
+              {/* Month header */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+                marginBottom: '8px',
+              }}>
+                <span style={{
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: colors.text.primary,
+                }}>
+                  {month.name}
+                </span>
+                <span style={{
+                  fontSize: '0.65rem',
                   color: colors.text.tertiary,
-                }}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
+                }}>
+                  {monthTotals[monthIdx] > 0 ? `${Math.round(monthTotals[monthIdx])}m` : ''}
+                </span>
+              </div>
 
-          {/* Day labels + grid */}
-          <div style={{ display: 'flex', position: 'relative' }}>
-            {/* Day-of-week labels */}
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: `${cellGap}px`,
-              marginRight: '4px',
-              flexShrink: 0,
-              width: dayLabelWidth,
-            }}>
-              {dayLabels.map((label, i) => (
-                <div
-                  key={i}
-                  style={{
-                    height: `${cellSize}px`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    fontSize: '0.65rem',
+              {/* Day-of-week headers */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '3px',
+                marginBottom: '3px',
+              }}>
+                {dayHeaders.map((d, i) => (
+                  <div key={i} style={{
+                    textAlign: 'center',
+                    fontSize: '0.55rem',
                     color: colors.text.tertiary,
-                  }}
-                >
-                  {i % 2 === 1 ? label : ''}
-                </div>
-              ))}
-            </div>
+                    lineHeight: '1',
+                    paddingBottom: '2px',
+                  }}>
+                    {d}
+                  </div>
+                ))}
+              </div>
 
-            {/* Heatmap grid */}
-            <div style={{
-              display: 'flex',
-              gap: `${cellGap}px`,
-            }}>
-              {weeks.map((week, weekIndex) => (
-                <div key={weekIndex} style={{ display: 'flex', flexDirection: 'column', gap: `${cellGap}px` }}>
-                  {week.map((day, dayIndex) => {
-                    if (!day.date) {
-                      return <div key={dayIndex} style={{ width: cellSize, height: cellSize }} />;
-                    }
+              {/* Weeks grid */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                {month.weeks.map((week, weekIdx) => (
+                  <div key={weekIdx} style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(7, 1fr)',
+                    gap: '3px',
+                  }}>
+                    {week.map((day, dayIdx) => {
+                      if (!day.date) {
+                        return <div key={dayIdx} style={{ aspectRatio: '1' }} />;
+                      }
 
-                    const intensity = getIntensity(day.totalMinutes, dailyGoal);
+                      const intensity = getIntensity(day.totalMinutes, dailyGoal);
 
-                    return (
-                      <motion.div
-                        key={dayIndex}
-                        whileHover={{ scale: 1.8, zIndex: 10 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => day.hasSession && onDateClick(day.date)}
-                        style={{
-                          width: cellSize,
-                          height: cellSize,
-                          borderRadius: '3px',
-                          background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
-                          border: `0.5px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
-                          cursor: day.hasSession ? 'pointer' : 'default',
-                        }}
-                        title={`${format(day.date, 'MMM d')}: ${day.totalMinutes}min`}
-                      />
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            marginTop: '20px',
-            marginLeft: dayLabelWidth,
-            fontSize: '0.7rem',
-            color: colors.text.tertiary
-          }}>
-            <span>Less</span>
-            {[0, 1, 2, 3, 4, 5].map(level => (
-              <div
-                key={level}
-                style={{
-                  width: '12px',
-                  height: '12px',
-                  borderRadius: '3px',
-                  background: level === 0 ? colors.heatmap.empty : colors.heatmap.levels[level - 1],
-                  border: `0.5px solid ${level === 0 ? colors.heatmap.emptyBorder : 'transparent'}`
-                }}
-              />
-            ))}
-            <span>More</span>
-          </div>
+                      return (
+                        <motion.div
+                          key={dayIdx}
+                          whileTap={{ scale: 0.85 }}
+                          onClick={() => day.hasSession && onDateClick(day.date)}
+                          style={{
+                            aspectRatio: '1',
+                            borderRadius: '3px',
+                            background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
+                            border: `0.5px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
+                            cursor: day.hasSession ? 'pointer' : 'default',
+                          }}
+                          title={`${format(day.date, 'MMM d')}: ${day.totalMinutes}min`}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </motion.div>
