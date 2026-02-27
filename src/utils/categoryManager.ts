@@ -109,7 +109,7 @@ export const saveEnhancedSessions = (sessions: EnhancedFocusSession[]) => {
   localStorage.setItem(ENHANCED_SESSIONS_KEY, JSON.stringify(sessions));
 };
 
-export const saveEnhancedSession = (categoryTitle: string, duration: number): EnhancedFocusSession => {
+export const saveEnhancedSession = (categoryTitle: string, duration: number, success: boolean = true): EnhancedFocusSession => {
   const category = getOrCreateCategory(categoryTitle);
   const sessions = getEnhancedSessions();
 
@@ -122,7 +122,7 @@ export const saveEnhancedSession = (categoryTitle: string, duration: number): En
     duration,
     date: new Date().toISOString(),
     timestamp: Date.now(),
-    successStatus: true
+    successStatus: success
   };
 
   sessions.push(newSession);
