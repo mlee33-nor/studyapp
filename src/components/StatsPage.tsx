@@ -53,7 +53,7 @@ const getThemeColors = (theme: Theme) => {
           'rgba(167, 139, 250, 0.35)',   // Level 2
           'rgba(167, 139, 250, 0.55)',   // Level 3
           'rgba(167, 139, 250, 0.75)',   // Level 4
-          'rgba(167, 139, 250, 0.95)'    // Level 5
+          'rgba(16, 185, 129, 0.9)'      // Level 5 - Goal met (green)
         ],
         currentDayBorder: 'rgba(139, 92, 246, 0.8)',
         selectedBorder: 'rgba(244, 114, 182, 0.9)'
@@ -79,7 +79,7 @@ const getThemeColors = (theme: Theme) => {
           'rgba(59, 130, 246, 0.4)',
           'rgba(59, 130, 246, 0.6)',
           'rgba(59, 130, 246, 0.8)',
-          'rgba(59, 130, 246, 1)'
+          'rgba(16, 185, 129, 1)'         // Level 5 - Goal met (green)
         ],
         currentDayBorder: '#3B82F6',
         selectedBorder: '#8B5CF6'
