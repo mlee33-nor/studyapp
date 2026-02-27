@@ -1715,7 +1715,11 @@ const StatCard: React.FC<{
       background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
       borderRadius: '16px',
       padding: '16px',
-      border: `1px solid ${colors.border}`
+      border: `1px solid ${colors.border}`,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      height: '100%',
     }}>
       <div style={{
         display: 'flex',
@@ -1729,7 +1733,7 @@ const StatCard: React.FC<{
           {label}
         </span>
       </div>
-      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary }}>
+      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary, marginTop: 'auto' }}>
         {value}
       </div>
     </div>
