@@ -141,6 +141,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         bestStreak: 0,
         perfectDays: 0,
         successRate: 0,
+        successfulSessions: 0,
         categoriesCount: 0,
         monthlyData,
       };
@@ -161,6 +162,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         bestStreak: 0,
         perfectDays: 0,
         successRate: 0,
+        successfulSessions: 0,
         categoriesCount: 0,
         monthlyData,
       };
@@ -188,6 +190,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       bestStreak,
       perfectDays,
       successRate,
+      successfulSessions,
       categoriesCount: new Set(monthSessions.map(s => s.categoryId)).size,
       monthlyData,
     };
@@ -1671,8 +1674,8 @@ const OverallDashboard: React.FC<{
             />
             <StatCard
               icon={<Target size={20} />}
-              label="Perfect Days"
-              value={stats.perfectDays.toString()}
+              label="Successful Sessions"
+              value={stats.successfulSessions.toString()}
               color="#10B981"
               colors={colors}
             />
