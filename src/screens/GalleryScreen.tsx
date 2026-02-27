@@ -360,18 +360,20 @@ const TimeNavigator: React.FC<{
       </div>
 
       <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={onNext}
+        whileTap={isCurrentPeriod ? undefined : { scale: 0.95 }}
+        onClick={isCurrentPeriod ? undefined : onNext}
+        disabled={isCurrentPeriod}
         style={{
           background: 'transparent',
           border: 'none',
-          cursor: 'pointer',
+          cursor: isCurrentPeriod ? 'default' : 'pointer',
           padding: '8px',
           borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: getTextColor(theme, 'secondary')
+          color: getTextColor(theme, 'secondary'),
+          opacity: isCurrentPeriod ? 0.3 : 1,
         }}
       >
         <ChevronRight size={20} />
@@ -469,12 +471,22 @@ const GalleryScreen: React.FC<GalleryScreenProps> = ({ collection, theme }) => {
   };
 
   const handleNext = () => {
+    const now = new Date();
     if (viewMode === 'weekly') {
-      setCurrentDate(prev => addWeeks(prev, 1));
+      setCurrentDate(prev => {
+        const next = addWeeks(prev, 1);
+        return isSameWeek(next, now) || next <= now ? next : prev;
+      });
     } else if (viewMode === 'monthly') {
-      setCurrentDate(prev => addMonths(prev, 1));
+      setCurrentDate(prev => {
+        const next = addMonths(prev, 1);
+        return startOfMonth(next) <= startOfMonth(now) ? next : prev;
+      });
     } else {
-      setCurrentDate(prev => addYears(prev, 1));
+      setCurrentDate(prev => {
+        const next = addYears(prev, 1);
+        return next.getFullYear() <= now.getFullYear() ? next : prev;
+      });
     }
   };
 

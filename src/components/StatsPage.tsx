@@ -239,10 +239,17 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   };
 
   const handleNext = () => {
+    const now = new Date();
     if (viewMode === 'monthly') {
-      setCurrentDate(addMonths(currentDate, 1));
+      const next = addMonths(currentDate, 1);
+      if (startOfMonth(next) <= startOfMonth(now)) {
+        setCurrentDate(next);
+      }
     } else if (viewMode === 'yearly') {
-      setCurrentDate(addYears(currentDate, 1));
+      const next = addYears(currentDate, 1);
+      if (next.getFullYear() <= now.getFullYear()) {
+        setCurrentDate(next);
+      }
     }
   };
 
@@ -1489,18 +1496,20 @@ const TimeNavigator: React.FC<{
       </div>
 
       <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={onNext}
+        whileTap={isCurrentPeriod ? undefined : { scale: 0.95 }}
+        onClick={isCurrentPeriod ? undefined : onNext}
+        disabled={isCurrentPeriod}
         style={{
           background: 'transparent',
           border: 'none',
-          cursor: 'pointer',
+          cursor: isCurrentPeriod ? 'default' : 'pointer',
           padding: '8px',
           borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: colors.text.secondary
+          color: isCurrentPeriod ? colors.text.tertiary : colors.text.secondary,
+          opacity: isCurrentPeriod ? 0.3 : 1,
         }}
       >
         <ChevronRight size={20} />
