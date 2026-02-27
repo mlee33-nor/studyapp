@@ -335,6 +335,13 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         </p>
       </motion.div>
 
+      {/* Today's Daily Goal Progress - always visible */}
+      <DailyGoalCard
+        todayMinutes={todayMinutes}
+        dailyGoal={dailyGoal}
+        colors={colors}
+      />
+
       {/* View Mode Toggle */}
       <ViewModeToggle viewMode={viewMode} setViewMode={setViewMode} colors={colors} />
 
@@ -386,15 +393,6 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           colors={colors}
           stats={overallStats}
           onDateClick={handleDateClick}
-        />
-      )}
-
-      {/* Today's Daily Goal Progress */}
-      {viewMode === 'monthly' && (
-        <DailyGoalCard
-          todayMinutes={todayMinutes}
-          dailyGoal={dailyGoal}
-          colors={colors}
         />
       )}
 
