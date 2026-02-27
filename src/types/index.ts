@@ -70,6 +70,7 @@ export interface UserSettings {
   studyDuration: number; // in minutes
   shortBreakDuration: number; // in minutes
   longBreakDuration: number; // in minutes
+  dailyGoalMinutes: number; // daily study goal in minutes
   selectedTheme: ThemeColor;
   devModeEnabled?: boolean;
 }
