@@ -27,7 +27,7 @@ export const useAnalytics = (_viewMode: ViewMode = 'monthly', dailyGoalMinutes: 
 
   // Calculate overall statistics
   const overallStats = useMemo((): OverallStats => {
-    const totalMinutes = sessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalMinutes = sessions.filter(s => s.successStatus).reduce((sum, s) => sum + s.duration, 0);
     const totalSessions = sessions.length;
 
     // Calculate streaks
@@ -132,7 +132,7 @@ export const generateDayData = (
 
   return days.map(date => {
     const daySessions = sessions.filter(s => isSameDay(parseISO(s.date), date));
-    const totalMinutes = daySessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalMinutes = daySessions.filter(s => s.successStatus).reduce((sum, s) => sum + s.duration, 0);
     const categories = [...new Set(daySessions.map(s => s.categoryId))];
 
     return {
@@ -153,9 +153,9 @@ export const calculateStreaks = (sessions: EnhancedFocusSession[], goalMinutes: 
     return { currentStreak: 0, bestStreak: 0 };
   }
 
-  // Group sessions by day
+  // Group successful sessions by day
   const sessionsByDay = new Map<string, number>();
-  sessions.forEach(s => {
+  sessions.filter(s => s.successStatus).forEach(s => {
     const dayKey = parseISO(s.date).toDateString();
     sessionsByDay.set(dayKey, (sessionsByDay.get(dayKey) || 0) + s.duration);
   });
@@ -212,7 +212,7 @@ export const calculateStreaks = (sessions: EnhancedFocusSession[], goalMinutes: 
 // Helper: Calculate perfect days
 export const calculatePerfectDays = (sessions: EnhancedFocusSession[], goalMinutes: number): number => {
   const sessionsByDay = new Map<string, number>();
-  sessions.forEach(s => {
+  sessions.filter(s => s.successStatus).forEach(s => {
     const dayKey = parseISO(s.date).toDateString();
     sessionsByDay.set(dayKey, (sessionsByDay.get(dayKey) || 0) + s.duration);
   });

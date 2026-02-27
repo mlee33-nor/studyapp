@@ -118,7 +118,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   const todayMinutes = useMemo(() => {
     const today = new Date();
     return sessions
-      .filter(s => isSameDay(parseISO(s.date), today))
+      .filter(s => s.successStatus && isSameDay(parseISO(s.date), today))
       .reduce((sum, s) => sum + s.duration, 0);
   }, [sessions]);
 
@@ -166,7 +166,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       };
     }
 
-    const totalMinutes = monthSessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalMinutes = monthSessions.filter(s => s.successStatus).reduce((sum, s) => sum + s.duration, 0);
     const totalSessions = monthSessions.length;
 
     // Success rate: percentage of sessions completed successfully
