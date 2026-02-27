@@ -1193,6 +1193,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     setIsPaused(false);
     setTimeLeft(timerMinutes * 60);
     addFailedSession();
+    saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes, false);
   };
 
   const handleStartFocus = () => {
