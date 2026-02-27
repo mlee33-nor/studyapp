@@ -13,7 +13,7 @@ import AchievementsScreen from './screens/AchievementsScreen';
 import { getNewlyUnlocked } from './utils/achievements';
 import type { Achievement } from './utils/achievements';
 import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
-import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
+import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal, updateSettings as updateStorageSettings } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
 import type { StudyCategory } from './types/stats';
@@ -897,6 +897,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(() => {
     const storageData = getStorageUserData();
     return (storageData.activeBiome as BiomeType) || 'meadow';
+  });
+  const [dailyGoalMinutes, setDailyGoalMinutes] = useState(() => {
+    const storageData = getStorageUserData();
+    return storageData.settings?.dailyGoalMinutes ?? 60;
   });
   const [collectionViewMode, setCollectionViewMode] = useState<'gallery' | 'achievements'>('gallery');
   const [purchaseTarget, setPurchaseTarget] = useState<{ index: number; id: string; name: string; price: number } | null>(null);
@@ -2301,6 +2305,64 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 </motion.div>
               );
             })}
+          </div>
+        </GlassCard>
+
+        <GlassCard theme={selectedTheme} style={{ marginBottom: '20px' }}>
+          <h3 style={{
+            margin: '0 0 20px 0',
+            fontSize: '16px',
+            color: getTextColor(selectedTheme, 'primary'),
+            fontWeight: 600,
+            fontFamily: "'Quicksand', sans-serif"
+          }}>
+            Daily Goal
+          </h3>
+          <div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}>
+              <span style={{
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '14px',
+                fontWeight: 500,
+                fontFamily: "'Quicksand', sans-serif"
+              }}>
+                Study Goal
+              </span>
+              <span style={{
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '14px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif"
+              }}>
+                {dailyGoalMinutes} min
+              </span>
+            </div>
+            <input
+              type="range"
+              min={15}
+              max={300}
+              step={15}
+              value={dailyGoalMinutes}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                setDailyGoalMinutes(value);
+                updateStorageSettings({ dailyGoalMinutes: value });
+              }}
+              style={{
+                width: '100%',
+                height: '6px',
+                borderRadius: '3px',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                cursor: 'pointer',
+                background: `linear-gradient(to right, rgba(167, 139, 250, 0.7) 0%, rgba(167, 139, 250, 0.7) ${((dailyGoalMinutes - 15) / (300 - 15)) * 100}%, rgba(200, 200, 200, 0.3) ${((dailyGoalMinutes - 15) / (300 - 15)) * 100}%, rgba(200, 200, 200, 0.3) 100%)`
+              }}
+            />
           </div>
         </GlassCard>
 
