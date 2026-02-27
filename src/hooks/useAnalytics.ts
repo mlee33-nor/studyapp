@@ -125,7 +125,7 @@ export const useAnalytics = (_viewMode: ViewMode = 'monthly', dailyGoalMinutes: 
 };
 
 // Helper: Generate day data for a date range
-const generateDayData = (
+export const generateDayData = (
   sessions: EnhancedFocusSession[],
   startDate: Date,
   endDate: Date,
@@ -151,7 +151,7 @@ const generateDayData = (
 };
 
 // Helper: Calculate current and best streaks
-const calculateStreaks = (sessions: EnhancedFocusSession[], goalMinutes: number) => {
+export const calculateStreaks = (sessions: EnhancedFocusSession[], goalMinutes: number, referenceDate?: Date) => {
   if (sessions.length === 0) {
     return { currentStreak: 0, bestStreak: 0 };
   }
@@ -170,7 +170,7 @@ const calculateStreaks = (sessions: EnhancedFocusSession[], goalMinutes: number)
 
   // Calculate current streak
   let currentStreak = 0;
-  let today = new Date();
+  let today = referenceDate || new Date();
   let checkDate = today;
 
   while (true) {
@@ -213,7 +213,7 @@ const calculateStreaks = (sessions: EnhancedFocusSession[], goalMinutes: number)
 };
 
 // Helper: Calculate perfect days
-const calculatePerfectDays = (sessions: EnhancedFocusSession[], goalMinutes: number): number => {
+export const calculatePerfectDays = (sessions: EnhancedFocusSession[], goalMinutes: number): number => {
   const sessionsByDay = new Map<string, number>();
   sessions.forEach(s => {
     const dayKey = parseISO(s.date).toDateString();
