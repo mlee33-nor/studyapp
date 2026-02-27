@@ -17,8 +17,7 @@ import {
   subYears,
   isToday,
   parseISO,
-  subDays,
-  differenceInDays
+  subDays
 } from 'date-fns';
 import Lottie from 'lottie-react';
 import { useAnalytics, calculateStreaks, calculatePerfectDays, generateDayData } from '../hooks/useAnalytics';
@@ -162,11 +161,9 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
     const totalMinutes = monthSessions.reduce((sum, s) => sum + s.duration, 0);
     const totalSessions = monthSessions.length;
 
-    // Success rate: days with sessions / days elapsed in month
-    const daysWithSessions = new Set(monthSessions.map(s => parseISO(s.date).toDateString())).size;
-    const lastDayToCount = monthEnd > today ? today : monthEnd;
-    const daysElapsed = differenceInDays(lastDayToCount, monthStart) + 1;
-    const successRate = daysElapsed > 0 ? (daysWithSessions / daysElapsed) * 100 : 0;
+    // Success rate: percentage of sessions completed successfully
+    const successfulSessions = monthSessions.filter(s => s.successStatus).length;
+    const successRate = totalSessions > 0 ? (successfulSessions / totalSessions) * 100 : 0;
 
     // Streaks within this month - use end of month or today as reference
     const streakRef = monthEnd > today ? today : monthEnd;

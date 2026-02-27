@@ -36,12 +36,9 @@ export const useAnalytics = (_viewMode: ViewMode = 'monthly', dailyGoalMinutes: 
     // Calculate perfect days (days where goal was met)
     const perfectDays = calculatePerfectDays(sessions, dailyGoalMinutes);
 
-    // Success rate (percentage of days with at least one session)
-    const daysWithSessions = new Set(sessions.map(s => parseISO(s.date).toDateString())).size;
-    const totalDaysSinceFirstSession = sessions.length > 0
-      ? differenceInDays(new Date(), parseISO(sessions[0].date)) + 1
-      : 1;
-    const successRate = (daysWithSessions / totalDaysSinceFirstSession) * 100;
+    // Success rate (percentage of sessions completed successfully)
+    const successfulSessions = sessions.filter(s => s.successStatus).length;
+    const successRate = totalSessions > 0 ? (successfulSessions / totalSessions) * 100 : 0;
 
     // Generate monthly data
     const monthStart = startOfMonth(new Date());
