@@ -889,6 +889,7 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(timerMinutes * 60);
   const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'midnight'>(getSelectedTheme());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showFailConfirm, setShowFailConfirm] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
 const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
@@ -2088,13 +2089,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               <>
                 <SoftButton text="Pause" icon={Pause} onClick={() => { setIsRunning(false); setIsPaused(true); }} variant="secondary" />
                 <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" />
-                <SoftButton text="Fail Session" icon={X} onClick={handleFailSession} variant="danger" />
+                <SoftButton text="Fail Session" icon={X} onClick={() => setShowFailConfirm(true)} variant="danger" />
               </>
             ) : isPaused ? (
               <>
                 <SoftButton text="Resume" icon={Play} onClick={() => { setIsRunning(true); setIsPaused(false); }} variant="primary" />
                 <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" />
-                <SoftButton text="Fail Session" icon={X} onClick={handleFailSession} variant="danger" />
+                <SoftButton text="Fail Session" icon={X} onClick={() => setShowFailConfirm(true)} variant="danger" />
               </>
             ) : (
               <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
@@ -2440,6 +2441,108 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         onClose={() => setShowCategoryModal(false)}
         onSelectCategory={handleCategorySelected}
       />
+
+      {/* Fail Session Confirmation Modal */}
+      <AnimatePresence>
+        {showFailConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowFailConfirm(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              zIndex: 10000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.85, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? 'rgba(30, 30, 60, 0.95)'
+                  : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                padding: '28px 24px',
+                border: `1px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(200, 200, 220, 0.5)'}`,
+                boxShadow: '0 16px 48px rgba(0,0,0,0.3)',
+                width: '100%',
+                maxWidth: '280px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                color: getTextColor(selectedTheme, 'primary'),
+                fontFamily: "'Quicksand', sans-serif",
+                marginBottom: '20px',
+                lineHeight: 1.4,
+              }}>
+                Are you sure you want to Fail your Pomodoro Session?
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowFailConfirm(false)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    borderRadius: '16px',
+                    border: `1px solid ${BACKGROUND_THEMES[selectedTheme].isDark ? 'rgba(255,255,255,0.15)' : 'rgba(200, 200, 220, 0.4)'}`,
+                    background: 'transparent',
+                    color: getTextColor(selectedTheme, 'secondary'),
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    fontFamily: "'Quicksand', sans-serif",
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setShowFailConfirm(false);
+                    handleFailSession();
+                  }}
+                  style={{
+                    flex: 1.5,
+                    padding: '12px 16px',
+                    borderRadius: '16px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.8) 0%, rgba(220, 38, 38, 0.8) 100%)',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontFamily: "'Quicksand', sans-serif",
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)',
+                  }}
+                >
+                  Fail Session
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div style={{
         maxWidth: '480px',
