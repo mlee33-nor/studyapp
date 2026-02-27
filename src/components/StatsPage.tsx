@@ -2094,13 +2094,19 @@ const ExpandedYearlyHeatmap: React.FC<{
     const scrollY = window.scrollY;
     const body = document.body;
     const html = document.documentElement;
+    const root = document.getElementById('root');
 
+    // Lock body
     body.style.overflow = 'hidden';
     body.style.position = 'fixed';
     body.style.top = `-${scrollY}px`;
     body.style.left = '0';
     body.style.right = '0';
     html.style.overflow = 'hidden';
+
+    // Lock #root which is an independent scroll container
+    const prevRootOverflow = root?.style.overflowY ?? '';
+    if (root) root.style.overflowY = 'hidden';
 
     return () => {
       body.style.overflow = '';
@@ -2109,6 +2115,7 @@ const ExpandedYearlyHeatmap: React.FC<{
       body.style.left = '';
       body.style.right = '';
       html.style.overflow = '';
+      if (root) root.style.overflowY = prevRootOverflow;
       window.scrollTo(0, scrollY);
     };
   }, []);
