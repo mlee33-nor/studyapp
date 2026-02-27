@@ -197,6 +197,39 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
     };
   }, [sessions, currentDate, overallStats]);
 
+  // Compute year-specific stats for the yearly view
+  const yearlyStats = useMemo(() => {
+    const yearStart = startOfYear(currentDate);
+    const yearEnd = endOfYear(currentDate);
+
+    const yearlyData = generateDayData(sessions, yearStart, yearEnd, dailyGoal);
+
+    // Filter sessions to selected year
+    const yearSessions = sessions.filter(s => {
+      const sessionDate = parseISO(s.date);
+      return sessionDate >= yearStart && sessionDate <= yearEnd;
+    });
+
+    const successfulSessions = yearSessions.filter(s => s.successStatus);
+    const totalMinutes = successfulSessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalSessions = yearSessions.length;
+    const { currentStreak, bestStreak } = calculateStreaks(yearSessions, dailyGoal, yearEnd < new Date() ? yearEnd : undefined);
+    const perfectDays = calculatePerfectDays(yearSessions, dailyGoal);
+    const successRate = totalSessions > 0 ? (successfulSessions.length / totalSessions) * 100 : 0;
+
+    return {
+      ...overallStats,
+      totalMinutes,
+      totalSessions,
+      currentStreak,
+      bestStreak,
+      perfectDays,
+      successRate,
+      categoriesCount: new Set(yearSessions.map(s => s.categoryId)).size,
+      yearlyData,
+    };
+  }, [sessions, currentDate, dailyGoal, overallStats]);
+
   const handlePrevious = () => {
     if (viewMode === 'monthly') {
       setCurrentDate(subMonths(currentDate, 1));
@@ -379,7 +412,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         <>
           {/* Overall Yearly Heatmap */}
           <YearlyHeatmap
-            yearlyData={overallStats.yearlyData}
+            yearlyData={yearlyStats.yearlyData}
             currentDate={currentDate}
             colors={colors}
             dailyGoal={dailyGoal}
@@ -390,7 +423,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           <AnimatePresence>
             {showExpandedHeatmap && (
               <ExpandedYearlyHeatmap
-                yearlyData={overallStats.yearlyData}
+                yearlyData={yearlyStats.yearlyData}
                 currentDate={currentDate}
                 colors={colors}
                 onDateClick={(date) => { setShowExpandedHeatmap(false); handleDateClick(date); }}
@@ -402,7 +435,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
 
           {/* Yearly Summary Stats */}
           <YearlySummaryStats
-            overallStats={overallStats}
+            overallStats={yearlyStats}
             colors={colors}
           />
         </>
