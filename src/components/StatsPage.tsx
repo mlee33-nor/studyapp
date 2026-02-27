@@ -1045,9 +1045,16 @@ const TagAnimalBreakdown: React.FC<{
     return { ...cat, percent, offset, length };
   });
 
-  // Top 3 Animal Companions
+  // Top 3 Animal Companions (filtered to date range if provided)
   const userData = getUserData();
-  const collection = userData.permanentCollection || [];
+  const allCollection = userData.permanentCollection || [];
+  const collection = (filterStart && filterEnd)
+    ? allCollection.filter(animal => {
+        if (!animal.collectedAt) return false;
+        const collected = parseISO(animal.collectedAt);
+        return collected >= filterStart && collected <= filterEnd;
+      })
+    : allCollection;
 
   // Count animal frequency from collection - group by species (name+biome), not instance id
   const animalCounts: Record<string, { count: number; name: string; biome: BiomeType; lottieUrl: string }> = {};
