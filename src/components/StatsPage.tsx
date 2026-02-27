@@ -2089,11 +2089,28 @@ const ExpandedYearlyHeatmap: React.FC<{
   dailyGoal: number;
   onClose: () => void;
 }> = ({ yearlyData, currentDate, colors, onDateClick, dailyGoal, onClose }) => {
-  // Lock background scroll while overlay is open
+  // Lock background scroll while overlay is open (iOS-safe)
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const html = document.documentElement;
+
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    html.style.overflow = 'hidden';
+
+    return () => {
+      body.style.overflow = '';
+      body.style.position = '';
+      body.style.top = '';
+      body.style.left = '';
+      body.style.right = '';
+      html.style.overflow = '';
+      window.scrollTo(0, scrollY);
+    };
   }, []);
 
   // Group days by month
