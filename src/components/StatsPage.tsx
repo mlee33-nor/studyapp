@@ -2089,6 +2089,13 @@ const ExpandedYearlyHeatmap: React.FC<{
   dailyGoal: number;
   onClose: () => void;
 }> = ({ yearlyData, currentDate, colors, onDateClick, dailyGoal, onClose }) => {
+  // Lock background scroll while overlay is open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   // Group days by month
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'];
@@ -2149,7 +2156,10 @@ const ExpandedYearlyHeatmap: React.FC<{
         zIndex: 10000,
         display: 'flex',
         flexDirection: 'column',
+        overflowY: 'auto',
+        touchAction: 'pan-y',
       }}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div style={{
