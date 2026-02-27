@@ -1674,27 +1674,39 @@ const MonthlyCalendarHeatmap: React.FC<{
                 aspectRatio: '1',
                 borderRadius: '12px',
                 background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
-                border: isTodayDate
-                  ? `2px solid ${colors.heatmap.currentDayBorder}`
-                  : `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
+                border: `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '0.875rem',
                 fontWeight: isTodayDate ? 700 : 500,
                 color: intensity > 0 ? '#FFFFFF' : colors.text.tertiary,
                 cursor: hasSession ? 'pointer' : 'default',
-                position: 'relative'
+                position: 'relative',
+                gap: '2px'
               }}
             >
               {/* Day number */}
               <span style={{
                 position: 'relative',
                 zIndex: 1,
-                textShadow: intensity > 0 ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none'
+                textShadow: intensity > 0 ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none',
+                lineHeight: 1
               }}>
                 {format(day, 'd')}
               </span>
+
+              {/* Today dot indicator */}
+              {isTodayDate && (
+                <div style={{
+                  width: '4px',
+                  height: '4px',
+                  borderRadius: '50%',
+                  background: intensity > 0 ? '#FFFFFF' : colors.heatmap.currentDayBorder,
+                  zIndex: 1
+                }} />
+              )}
 
               {/* Perfect day indicator */}
               {dayData?.isPerfectDay && (
@@ -1796,13 +1808,24 @@ const YearlyHeatmap: React.FC<{
                     aspectRatio: '1',
                     borderRadius: '2px',
                     background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
-                    border: isTodayDate
-                      ? `1.5px solid ${colors.heatmap.currentDayBorder}`
-                      : `0.5px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
-                    cursor: day.hasSession ? 'pointer' : 'default'
+                    border: `0.5px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
+                    cursor: day.hasSession ? 'pointer' : 'default',
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   title={`${format(day.date, 'MMM d')}: ${day.totalMinutes}min`}
-                />
+                >
+                  {isTodayDate && (
+                    <div style={{
+                      width: '3px',
+                      height: '3px',
+                      borderRadius: '50%',
+                      background: intensity > 0 ? '#FFFFFF' : colors.heatmap.currentDayBorder
+                    }} />
+                  )}
+                </motion.div>
               );
             })}
           </div>
