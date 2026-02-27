@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   studyDuration: 25,
   shortBreakDuration: 5,
   longBreakDuration: 15,
+  dailyGoalMinutes: 60,
   selectedTheme: 'purple',
   devModeEnabled: false,
 };

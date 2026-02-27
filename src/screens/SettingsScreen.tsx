@@ -21,7 +21,7 @@ const SettingsScreen: React.FC = () => {
     updateSettings({ selectedTheme: theme });
   };
 
-  const handleDurationChange = (setting: 'studyDuration' | 'shortBreakDuration' | 'longBreakDuration', value: number) => {
+  const handleDurationChange = (setting: 'studyDuration' | 'shortBreakDuration' | 'longBreakDuration' | 'dailyGoalMinutes', value: number) => {
     updateSettings({ [setting]: value });
   };
 
@@ -143,6 +143,19 @@ const SettingsScreen: React.FC = () => {
         >
           Unlock All Biomes
         </button>
+      </div>
+
+      {/* Daily Goal */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 mb-6 shadow-soft">
+        <h3 className="text-lg font-semibold text-text-primary mb-4">Daily Goal</h3>
+        <DurationItem
+          label="Study Goal"
+          value={userData.settings.dailyGoalMinutes}
+          onChange={(value) => handleDurationChange('dailyGoalMinutes', value)}
+          min={15}
+          max={300}
+          step={15}
+        />
       </div>
 
       {/* Duration Settings */}

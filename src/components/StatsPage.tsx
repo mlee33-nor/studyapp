@@ -92,12 +92,13 @@ const getThemeColors = (theme: Theme) => {
   return themeMap[theme];
 };
 
-const getIntensity = (minutes: number): number => {
+const getIntensity = (minutes: number, goalMinutes: number = 60): number => {
   if (minutes === 0) return 0;
-  if (minutes < 30) return 1;
-  if (minutes < 60) return 2;
-  if (minutes < 120) return 3;
-  if (minutes < 180) return 4;
+  const pct = minutes / goalMinutes;
+  if (pct < 0.25) return 1;
+  if (pct < 0.5) return 2;
+  if (pct < 0.75) return 3;
+  if (pct < 1) return 4;
   return 5;
 };
 
@@ -112,13 +113,20 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   const { overallStats, sessions } = useAnalytics(viewMode, 60);
 
   const colors = getThemeColors(theme);
+  const userData = getUserData();
+  const dailyGoal = userData.settings.dailyGoalMinutes || 60;
+  const todayMinutes = useMemo(() => {
+    const today = new Date();
+    return sessions
+      .filter(s => isSameDay(parseISO(s.date), today))
+      .reduce((sum, s) => sum + s.duration, 0);
+  }, [sessions]);
 
   // Compute month-specific stats for the monthly view
   const monthlyStats = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
     const today = new Date();
-    const dailyGoal = 60;
 
     // Generate monthlyData for the selected month (used by heatmap)
     const monthlyData = generateDayData(sessions, monthStart, monthEnd, dailyGoal);
@@ -360,6 +368,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
             currentDate={currentDate}
             colors={colors}
             onDateClick={handleDateClick}
+            dailyGoal={dailyGoal}
           />
 
           {/* Yearly Summary Stats */}
@@ -380,6 +389,15 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         />
       )}
 
+      {/* Today's Daily Goal Progress */}
+      {viewMode === 'monthly' && (
+        <DailyGoalCard
+          todayMinutes={todayMinutes}
+          dailyGoal={dailyGoal}
+          colors={colors}
+        />
+      )}
+
       {/* Overall Dashboard */}
       {viewMode === 'monthly' && (
         <OverallDashboard
@@ -387,6 +405,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           currentDate={currentDate}
           colors={colors}
           onDateClick={handleDateClick}
+          dailyGoal={dailyGoal}
         />
       )}
 
@@ -1437,13 +1456,117 @@ const TimeNavigator: React.FC<{
   );
 };
 
+// Daily Goal Progress Card
+const DailyGoalCard: React.FC<{
+  todayMinutes: number;
+  dailyGoal: number;
+  colors: ReturnType<typeof getThemeColors>;
+}> = ({ todayMinutes, dailyGoal, colors }) => {
+  const progress = Math.min(todayMinutes / dailyGoal, 1);
+  const r = 44;
+  const circumference = 2 * Math.PI * r;
+  const strokeDashoffset = circumference * (1 - progress);
+  const remaining = Math.max(dailyGoal - todayMinutes, 0);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SOFT_SPRING}
+      style={{
+        background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '24px',
+        border: `1px solid ${colors.border}`,
+        padding: '24px',
+        marginBottom: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '24px'
+      }}
+    >
+      {/* Progress Ring */}
+      <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
+        <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
+          <circle
+            cx="50"
+            cy="50"
+            r={r}
+            fill="none"
+            stroke={colors.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}
+            strokeWidth="8"
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r={r}
+            fill="none"
+            stroke={progress >= 1 ? '#10B981' : (colors.isDark ? '#3B82F6' : '#8B5CF6')}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+          />
+        </svg>
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            lineHeight: 1,
+            color: progress >= 1 ? '#10B981' : colors.text.primary
+          }}>
+            {todayMinutes}
+          </div>
+          <div style={{
+            fontSize: '0.625rem',
+            color: colors.text.tertiary,
+            marginTop: '2px'
+          }}>
+            / {dailyGoal} min
+          </div>
+        </div>
+      </div>
+
+      {/* Text */}
+      <div style={{ flex: 1 }}>
+        <div style={{
+          fontSize: '1rem',
+          fontWeight: 700,
+          color: colors.text.primary,
+          marginBottom: '4px'
+        }}>
+          Daily Goal
+        </div>
+        <div style={{
+          fontSize: '0.8rem',
+          color: colors.text.secondary,
+          lineHeight: 1.4
+        }}>
+          {progress >= 1
+            ? 'Goal reached! Great work today.'
+            : `${remaining} min remaining today`}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 // Overall Dashboard Component
 const OverallDashboard: React.FC<{
   stats: any;
   currentDate: Date;
   colors: ReturnType<typeof getThemeColors>;
   onDateClick: (date: Date) => void;
-}> = ({ stats, currentDate, colors, onDateClick }) => {
+  dailyGoal: number;
+}> = ({ stats, currentDate, colors, onDateClick, dailyGoal }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1552,6 +1675,7 @@ const OverallDashboard: React.FC<{
         currentDate={currentDate}
         colors={colors}
         onDateClick={onDateClick}
+        dailyGoal={dailyGoal}
       />
     </motion.div>
   );
@@ -1597,7 +1721,8 @@ const MonthlyCalendarHeatmap: React.FC<{
   currentDate: Date;
   colors: ReturnType<typeof getThemeColors>;
   onDateClick: (date: Date) => void;
-}> = ({ monthlyData, currentDate, colors, onDateClick }) => {
+  dailyGoal: number;
+}> = ({ monthlyData, currentDate, colors, onDateClick, dailyGoal }) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -1660,8 +1785,12 @@ const MonthlyCalendarHeatmap: React.FC<{
           }
 
           const dayData = monthlyData.find(d => isSameDay(d.date, day));
-          const intensity = getIntensity(dayData?.totalMinutes || 0);
+          const minutes = dayData?.totalMinutes || 0;
           const hasSession = dayData?.hasSession || false;
+          const progress = Math.min(minutes / dailyGoal, 1);
+          const r = 16;
+          const circumference = 2 * Math.PI * r;
+          const strokeDashoffset = circumference * (1 - progress);
 
           return (
             <motion.div
@@ -1672,40 +1801,68 @@ const MonthlyCalendarHeatmap: React.FC<{
               style={{
                 aspectRatio: '1',
                 borderRadius: '12px',
-                background: intensity > 0 ? colors.heatmap.levels[intensity - 1] : colors.heatmap.empty,
-                border: `1px solid ${intensity > 0 ? 'transparent' : colors.heatmap.emptyBorder}`,
+                background: colors.heatmap.empty,
+                border: `1px solid ${colors.heatmap.emptyBorder}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                color: intensity > 0 ? '#FFFFFF' : colors.text.tertiary,
                 cursor: hasSession ? 'pointer' : 'default',
                 position: 'relative'
               }}
             >
+              {/* Progress ring */}
+              {minutes > 0 && (
+                <svg
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%) rotate(-90deg)',
+                    width: '36px',
+                    height: '36px'
+                  }}
+                  viewBox="0 0 36 36"
+                >
+                  {/* Background track */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r={r}
+                    fill="none"
+                    stroke={colors.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}
+                    strokeWidth="3"
+                  />
+                  {/* Progress arc */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r={r}
+                    fill="none"
+                    stroke={progress >= 1
+                      ? '#10B981'
+                      : (colors.isDark ? '#3B82F6' : '#8B5CF6')}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                  />
+                </svg>
+              )}
+
               {/* Day number */}
               <span style={{
                 position: 'relative',
                 zIndex: 1,
-                textShadow: intensity > 0 ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none'
+                fontSize: '0.8rem',
+                fontWeight: progress >= 1 ? 700 : 500,
+                color: progress >= 1
+                  ? '#10B981'
+                  : (minutes > 0
+                    ? (colors.isDark ? '#3B82F6' : '#8B5CF6')
+                    : colors.text.tertiary)
               }}>
                 {format(day, 'd')}
               </span>
-
-              {/* Perfect day indicator */}
-              {dayData?.isPerfectDay && (
-                <div style={{
-                  position: 'absolute',
-                  top: '2px',
-                  right: '2px',
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: '#10B981',
-                  zIndex: 2
-                }} />
-              )}
             </motion.div>
           );
         })}
@@ -1720,7 +1877,8 @@ const YearlyHeatmap: React.FC<{
   currentDate: Date;
   colors: ReturnType<typeof getThemeColors>;
   onDateClick: (date: Date) => void;
-}> = ({ yearlyData, currentDate, colors, onDateClick }) => {
+  dailyGoal: number;
+}> = ({ yearlyData, currentDate, colors, onDateClick, dailyGoal }) => {
   const yearStart = startOfYear(currentDate);
 
   const weeks: DayData[][] = [];
@@ -1779,7 +1937,7 @@ const YearlyHeatmap: React.FC<{
                 return <div key={dayIndex} style={{ width: '100%', aspectRatio: '1' }} />;
               }
 
-              const intensity = getIntensity(day.totalMinutes);
+              const intensity = getIntensity(day.totalMinutes, dailyGoal);
 
               return (
                 <motion.div
