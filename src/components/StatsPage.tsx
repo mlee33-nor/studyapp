@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   format,
@@ -17,10 +17,11 @@ import {
   subYears,
   isToday,
   parseISO,
-  subDays
+  subDays,
+  differenceInDays
 } from 'date-fns';
 import Lottie from 'lottie-react';
-import { useAnalytics } from '../hooks/useAnalytics';
+import { useAnalytics, calculateStreaks, calculatePerfectDays, generateDayData } from '../hooks/useAnalytics';
 import type { ViewMode, DayData, CategoryStats as CategoryStatsType, EnhancedFocusSession } from '../types/stats';
 import { TrendingUp, Award, Flame, Target, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CategoryDetail } from './CategoryDetail';
@@ -112,6 +113,80 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
   const { overallStats, sessions } = useAnalytics(viewMode, 60);
 
   const colors = getThemeColors(theme);
+
+  // Compute month-specific stats for the monthly view
+  const monthlyStats = useMemo(() => {
+    const monthStart = startOfMonth(currentDate);
+    const monthEnd = endOfMonth(currentDate);
+    const today = new Date();
+    const dailyGoal = 60;
+
+    // Generate monthlyData for the selected month (used by heatmap)
+    const monthlyData = generateDayData(sessions, monthStart, monthEnd, dailyGoal);
+
+    // If the entire month is in the future, return zeros
+    if (monthStart > today) {
+      return {
+        ...overallStats,
+        totalMinutes: 0,
+        totalSessions: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        perfectDays: 0,
+        successRate: 0,
+        categoriesCount: 0,
+        monthlyData,
+      };
+    }
+
+    // Filter sessions to selected month
+    const monthSessions = sessions.filter(s => {
+      const sessionDate = parseISO(s.date);
+      return sessionDate >= monthStart && sessionDate <= monthEnd;
+    });
+
+    if (monthSessions.length === 0) {
+      return {
+        ...overallStats,
+        totalMinutes: 0,
+        totalSessions: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+        perfectDays: 0,
+        successRate: 0,
+        categoriesCount: 0,
+        monthlyData,
+      };
+    }
+
+    const totalMinutes = monthSessions.reduce((sum, s) => sum + s.duration, 0);
+    const totalSessions = monthSessions.length;
+
+    // Success rate: days with sessions / days elapsed in month
+    const daysWithSessions = new Set(monthSessions.map(s => parseISO(s.date).toDateString())).size;
+    const lastDayToCount = monthEnd > today ? today : monthEnd;
+    const daysElapsed = differenceInDays(lastDayToCount, monthStart) + 1;
+    const successRate = daysElapsed > 0 ? (daysWithSessions / daysElapsed) * 100 : 0;
+
+    // Streaks within this month - use end of month or today as reference
+    const streakRef = monthEnd > today ? today : monthEnd;
+    const { currentStreak, bestStreak } = calculateStreaks(monthSessions, dailyGoal, streakRef);
+
+    // Perfect days in this month
+    const perfectDays = calculatePerfectDays(monthSessions, dailyGoal);
+
+    return {
+      ...overallStats,
+      totalMinutes,
+      totalSessions,
+      currentStreak,
+      bestStreak,
+      perfectDays,
+      successRate,
+      categoriesCount: new Set(monthSessions.map(s => s.categoryId)).size,
+      monthlyData,
+    };
+  }, [sessions, currentDate, overallStats]);
 
   const handlePrevious = () => {
     if (viewMode === 'monthly') {
@@ -311,7 +386,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       {/* Overall Dashboard */}
       {viewMode === 'monthly' && (
         <OverallDashboard
-          stats={overallStats}
+          stats={monthlyStats}
           currentDate={currentDate}
           colors={colors}
           onDateClick={handleDateClick}
