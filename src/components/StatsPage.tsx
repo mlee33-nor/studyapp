@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   format,
   startOfMonth,
@@ -24,7 +24,7 @@ import { useAnalytics, calculateStreaks, calculatePerfectDays, generateDayData }
 import type { ViewMode, DayData, CategoryStats as CategoryStatsType, EnhancedFocusSession } from '../types/stats';
 import { TrendingUp, Award, Flame, Target, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CategoryDetail } from './CategoryDetail';
-import { getUserData } from '../utils/storage';
+import { getUserData, updateSettings } from '../utils/storage';
 import { BIOME_CONFIG } from '../data/biomes';
 import type { BiomeType } from '../types';
 
@@ -114,7 +114,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
 
   const colors = getThemeColors(theme);
   const userData = getUserData();
-  const dailyGoal = userData.settings.dailyGoalMinutes || 60;
+  const [dailyGoal, setDailyGoal] = useState(() => userData.settings?.dailyGoalMinutes || 60);
   const todayMinutes = useMemo(() => {
     const today = new Date();
     return sessions
@@ -340,6 +340,10 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
         todayMinutes={todayMinutes}
         dailyGoal={dailyGoal}
         colors={colors}
+        onGoalChange={(value) => {
+          setDailyGoal(value);
+          updateSettings({ dailyGoalMinutes: value });
+        }}
       />
 
       {/* View Mode Toggle */}
@@ -1454,105 +1458,121 @@ const TimeNavigator: React.FC<{
   );
 };
 
-// Daily Goal Progress Card
+// Daily Goal Progress Card (compact, tap to edit)
 const DailyGoalCard: React.FC<{
   todayMinutes: number;
   dailyGoal: number;
   colors: ReturnType<typeof getThemeColors>;
-}> = ({ todayMinutes, dailyGoal, colors }) => {
+  onGoalChange: (value: number) => void;
+}> = ({ todayMinutes, dailyGoal, colors, onGoalChange }) => {
+  const [editing, setEditing] = useState(false);
   const progress = Math.min(todayMinutes / dailyGoal, 1);
-  const r = 44;
+  const r = 22;
   const circumference = 2 * Math.PI * r;
   const strokeDashoffset = circumference * (1 - progress);
   const remaining = Math.max(dailyGoal - todayMinutes, 0);
+  const accentColor = progress >= 1 ? '#10B981' : (colors.isDark ? '#3B82F6' : '#8B5CF6');
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={SOFT_SPRING}
+      onClick={() => setEditing(!editing)}
       style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '24px',
+        borderRadius: '18px',
         border: `1px solid ${colors.border}`,
-        padding: '24px',
+        padding: '14px 18px',
         marginBottom: '16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '24px'
+        cursor: 'pointer',
       }}
     >
-      {/* Progress Ring */}
-      <div style={{ position: 'relative', width: '100px', height: '100px', flexShrink: 0 }}>
-        <svg width="100" height="100" style={{ transform: 'rotate(-90deg)' }}>
-          <circle
-            cx="50"
-            cy="50"
-            r={r}
-            fill="none"
-            stroke={colors.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}
-            strokeWidth="8"
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r={r}
-            fill="none"
-            stroke={progress >= 1 ? '#10B981' : (colors.isDark ? '#3B82F6' : '#8B5CF6')}
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
-          />
-        </svg>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Compact Progress Ring */}
+        <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+          <svg width="52" height="52" style={{ transform: 'rotate(-90deg)' }}>
+            <circle cx="26" cy="26" r={r} fill="none"
+              stroke={colors.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}
+              strokeWidth="5" />
+            <circle cx="26" cy="26" r={r} fill="none"
+              stroke={accentColor} strokeWidth="5" strokeLinecap="round"
+              strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
+              style={{ transition: 'stroke-dashoffset 0.5s ease' }} />
+          </svg>
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)', textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, lineHeight: 1, color: accentColor }}>
+              {Math.round(progress * 100)}%
+            </div>
+          </div>
+        </div>
+
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontSize: '0.9rem', fontWeight: 700,
+            color: colors.text.primary, marginBottom: '2px'
+          }}>
+            {todayMinutes} / {dailyGoal} min
+          </div>
+          <div style={{ fontSize: '0.75rem', color: colors.text.secondary }}>
+            {progress >= 1 ? 'Goal reached!' : `${remaining} min remaining`}
+          </div>
+        </div>
+
+        {/* Tap hint */}
         <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          textAlign: 'center'
+          fontSize: '0.7rem', color: colors.text.tertiary,
+          padding: '4px 8px', borderRadius: '8px',
+          background: colors.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
         }}>
-          <div style={{
-            fontSize: '1.5rem',
-            fontWeight: 700,
-            lineHeight: 1,
-            color: progress >= 1 ? '#10B981' : colors.text.primary
-          }}>
-            {todayMinutes}
-          </div>
-          <div style={{
-            fontSize: '0.625rem',
-            color: colors.text.tertiary,
-            marginTop: '2px'
-          }}>
-            / {dailyGoal} min
-          </div>
+          {editing ? 'Done' : 'Edit'}
         </div>
       </div>
 
-      {/* Text */}
-      <div style={{ flex: 1 }}>
-        <div style={{
-          fontSize: '1rem',
-          fontWeight: 700,
-          color: colors.text.primary,
-          marginBottom: '4px'
-        }}>
-          Daily Goal
-        </div>
-        <div style={{
-          fontSize: '0.8rem',
-          color: colors.text.secondary,
-          lineHeight: 1.4
-        }}>
-          {progress >= 1
-            ? 'Goal reached! Great work today.'
-            : `${remaining} min remaining today`}
-        </div>
-      </div>
+      {/* Slider (expands on tap) */}
+      <AnimatePresence>
+        {editing && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ paddingTop: '12px' }}>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', marginBottom: '6px',
+              }}>
+                <span style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>15 min</span>
+                <span style={{
+                  fontSize: '0.8rem', fontWeight: 700, color: accentColor
+                }}>
+                  Goal: {dailyGoal} min
+                </span>
+                <span style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>300 min</span>
+              </div>
+              <input
+                type="range" min={15} max={300} step={15}
+                value={dailyGoal}
+                onChange={(e) => onGoalChange(Number(e.target.value))}
+                style={{
+                  width: '100%', height: '6px', borderRadius: '3px',
+                  appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer',
+                  background: `linear-gradient(to right, ${accentColor} 0%, ${accentColor} ${((dailyGoal - 15) / (300 - 15)) * 100}%, ${colors.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'} ${((dailyGoal - 15) / (300 - 15)) * 100}%, ${colors.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'} 100%)`
+                }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
