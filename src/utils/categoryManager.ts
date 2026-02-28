@@ -39,6 +39,50 @@ export const saveCategories = (categories: StudyCategory[]) => {
   localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
 };
 
+// Color palette for custom categories - each pair is [themeColor, accentColor]
+const CUSTOM_CATEGORY_COLORS: [string, string][] = [
+  ['#F97316', '#FB923C'], // Orange
+  ['#14B8A6', '#2DD4BF'], // Teal
+  ['#E11D48', '#FB7185'], // Rose
+  ['#0EA5E9', '#38BDF8'], // Sky blue
+  ['#84CC16', '#A3E635'], // Lime
+  ['#D946EF', '#E879F9'], // Fuchsia
+  ['#EAB308', '#FACC15'], // Yellow
+  ['#7C3AED', '#A78BFA'], // Violet
+  ['#059669', '#34D399'], // Emerald
+  ['#DC2626', '#F87171'], // Red
+  ['#2563EB', '#60A5FA'], // Blue
+  ['#C026D3', '#E879F9'], // Purple-pink
+];
+
+// Get a unique color for a new custom category based on how many already exist
+const getNextCustomColor = (categories: StudyCategory[]): [string, string] => {
+  const existingColors = new Set(categories.map(c => c.themeColor));
+  // Find the first color not already in use
+  for (const color of CUSTOM_CATEGORY_COLORS) {
+    if (!existingColors.has(color[0])) {
+      return color;
+    }
+  }
+  // If all colors used, cycle based on count
+  const customCount = categories.filter(c => c.id.startsWith('custom-')).length;
+  return CUSTOM_CATEGORY_COLORS[customCount % CUSTOM_CATEGORY_COLORS.length];
+};
+
+// Default emoji palette for custom categories
+const CUSTOM_EMOJIS = ['📖', '📝', '🎯', '🧠', '💡', '📊', '🔬', '🎨', '🏋️', '🌍', '⚡', '🚀'];
+
+const getNextCustomEmoji = (categories: StudyCategory[]): string => {
+  const usedEmojis = new Set(categories.map(c => c.emoji));
+  for (const emoji of CUSTOM_EMOJIS) {
+    if (!usedEmojis.has(emoji)) {
+      return emoji;
+    }
+  }
+  const customCount = categories.filter(c => c.id.startsWith('custom-')).length;
+  return CUSTOM_EMOJIS[customCount % CUSTOM_EMOJIS.length];
+};
+
 // Get or create category
 export const getOrCreateCategory = (title: string): StudyCategory => {
   const categories = getCategories();
@@ -52,13 +96,17 @@ export const getOrCreateCategory = (title: string): StudyCategory => {
     return existing;
   }
 
+  // Assign a unique color and emoji for this custom category
+  const [themeColor, accentColor] = getNextCustomColor(categories);
+  const emoji = getNextCustomEmoji(categories);
+
   // Create new custom category
   const newCategory: StudyCategory = {
     id: `custom-${Date.now()}`,
     title,
-    emoji: '📖', // Default emoji for custom categories
-    themeColor: '#A855F7',
-    accentColor: '#C084FC',
+    emoji,
+    themeColor,
+    accentColor,
     createdAt: new Date().toISOString(),
     lastUsed: new Date().toISOString()
   };

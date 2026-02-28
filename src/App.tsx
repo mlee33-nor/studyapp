@@ -12,7 +12,7 @@ import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getNewlyUnlocked } from './utils/achievements';
 import type { Achievement } from './utils/achievements';
-import { getCategories, getRecentCategories, saveEnhancedSession } from './utils/categoryManager';
+import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSession } from './utils/categoryManager';
 import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
@@ -1202,6 +1202,8 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   };
 
   const handleCategorySelected = (category: string) => {
+    // Eagerly register the category so it appears in recent history
+    getOrCreateCategory(category);
     setCurrentCategory(category);
     setShowCategoryModal(false);
     setIsRunning(true);
