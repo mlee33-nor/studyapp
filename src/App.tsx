@@ -683,10 +683,15 @@ const CategorySelectionModal: React.FC<{
     setCustomInput('');
   };
 
-  // Display recent categories (last 4 used) or first 4 predefined if no history
-  const displayCategories = recentCategories.length > 0
-    ? recentCategories
-    : allCategories.slice(0, 4);
+  // Display recent categories first, fill remaining slots with predefined defaults
+  const displayCategories = (() => {
+    if (recentCategories.length >= 4) return recentCategories.slice(0, 4);
+    if (recentCategories.length === 0) return allCategories.slice(0, 4);
+    // Merge recents with predefined to fill 4 slots
+    const recentIds = new Set(recentCategories.map(c => c.id));
+    const fillers = allCategories.filter(c => !recentIds.has(c.id));
+    return [...recentCategories, ...fillers].slice(0, 4);
+  })();
 
   return (
     <motion.div
@@ -777,7 +782,7 @@ const CategorySelectionModal: React.FC<{
                 gap: '8px'
               }}
             >
-              <span style={{ fontSize: '1.25rem' }}>{category.emoji}</span>
+              {category.emoji && <span style={{ fontSize: '1.25rem' }}>{category.emoji}</span>}
               <span>{category.title}</span>
             </motion.button>
           ))}

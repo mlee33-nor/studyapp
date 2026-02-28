@@ -69,19 +69,6 @@ const getNextCustomColor = (categories: StudyCategory[]): [string, string] => {
   return CUSTOM_CATEGORY_COLORS[customCount % CUSTOM_CATEGORY_COLORS.length];
 };
 
-// Default emoji palette for custom categories
-const CUSTOM_EMOJIS = ['📖', '📝', '🎯', '🧠', '💡', '📊', '🔬', '🎨', '🏋️', '🌍', '⚡', '🚀'];
-
-const getNextCustomEmoji = (categories: StudyCategory[]): string => {
-  const usedEmojis = new Set(categories.map(c => c.emoji));
-  for (const emoji of CUSTOM_EMOJIS) {
-    if (!usedEmojis.has(emoji)) {
-      return emoji;
-    }
-  }
-  const customCount = categories.filter(c => c.id.startsWith('custom-')).length;
-  return CUSTOM_EMOJIS[customCount % CUSTOM_EMOJIS.length];
-};
 
 // Get or create category
 export const getOrCreateCategory = (title: string): StudyCategory => {
@@ -96,15 +83,14 @@ export const getOrCreateCategory = (title: string): StudyCategory => {
     return existing;
   }
 
-  // Assign a unique color and emoji for this custom category
+  // Assign a unique color for this custom category (no emoji for custom)
   const [themeColor, accentColor] = getNextCustomColor(categories);
-  const emoji = getNextCustomEmoji(categories);
 
   // Create new custom category
   const newCategory: StudyCategory = {
     id: `custom-${Date.now()}`,
     title,
-    emoji,
+    emoji: '',
     themeColor,
     accentColor,
     createdAt: new Date().toISOString(),
@@ -116,11 +102,30 @@ export const getOrCreateCategory = (title: string): StudyCategory => {
   return newCategory;
 };
 
-// Get recent categories (last 4 used)
+// Get recent categories (last 4 that have actual sessions)
 export const getRecentCategories = (): StudyCategory[] => {
   const categories = getCategories();
+  const sessions = getEnhancedSessions();
+
+  if (sessions.length === 0) return [];
+
+  // Build map of categoryId -> most recent session date
+  const lastSessionDate = new Map<string, string>();
+  sessions.forEach(s => {
+    const existing = lastSessionDate.get(s.categoryId);
+    if (!existing || s.date > existing) {
+      lastSessionDate.set(s.categoryId, s.date);
+    }
+  });
+
+  // Only return categories that have actual sessions, sorted by most recent session
   return categories
-    .sort((a, b) => new Date(b.lastUsed).getTime() - new Date(a.lastUsed).getTime())
+    .filter(c => lastSessionDate.has(c.id))
+    .sort((a, b) => {
+      const aDate = lastSessionDate.get(a.id) || '';
+      const bDate = lastSessionDate.get(b.id) || '';
+      return bDate.localeCompare(aDate);
+    })
     .slice(0, 4);
 };
 

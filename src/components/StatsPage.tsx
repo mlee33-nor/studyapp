@@ -1284,7 +1284,7 @@ const TagAnimalBreakdown: React.FC<{
                     flexShrink: 0
                   }} />
                   <span style={{ fontSize: '0.9rem', fontWeight: 600, color: colors.text.primary }}>
-                    {seg.emoji} {seg.title}
+                    {seg.emoji ? `${seg.emoji} ` : ''}{seg.title}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
