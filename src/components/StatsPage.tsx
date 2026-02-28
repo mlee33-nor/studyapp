@@ -1817,7 +1817,7 @@ const MonthlyCalendarHeatmap: React.FC<{
   colors: ReturnType<typeof getThemeColors>;
   onDateClick: (date: Date) => void;
   dailyGoal: number;
-}> = ({ monthlyData, currentDate, colors, onDateClick, dailyGoal }) => {
+}> = ({ monthlyData, currentDate, colors, onDateClick }) => {
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -1880,81 +1880,96 @@ const MonthlyCalendarHeatmap: React.FC<{
           }
 
           const dayData = monthlyData.find(d => isSameDay(d.date, day));
-          const minutes = dayData?.totalMinutes || 0;
           const hasSession = dayData?.hasSession || false;
-          const progress = Math.min(minutes / dailyGoal, 1);
-          const r = 16;
-          const circumference = 2 * Math.PI * r;
-          const strokeDashoffset = circumference * (1 - progress);
+          const isTodayDate = isToday(day);
+
+          // Get category colors for this day
+          const categoryColors = dayData && dayData.sessions.length > 0
+            ? Array.from(new Set(dayData.sessions.map((s: any) => s.themeColor)))
+            : [];
 
           return (
             <motion.div
               key={index}
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => hasSession && onDateClick(day)}
               style={{
                 aspectRatio: '1',
                 borderRadius: '12px',
-                background: colors.heatmap.empty,
-                border: `1px solid ${colors.heatmap.emptyBorder}`,
+                background: (categoryColors.length === 0 ? colors.heatmap.empty : 'transparent') as string,
+                border: isTodayDate
+                  ? `3px solid ${colors.headerTextColor}`
+                  : `2px solid ${hasSession ? 'transparent' : colors.heatmap.emptyBorder}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                fontSize: '0.8rem',
+                fontWeight: isTodayDate ? 700 : 500,
+                color: (hasSession ? '#FFFFFF' : colors.text.tertiary) as string,
                 cursor: hasSession ? 'pointer' : 'default',
-                position: 'relative'
+                position: 'relative',
+                overflow: 'hidden'
               }}
             >
-              {/* Progress ring */}
-              {minutes > 0 && (
-                <svg
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%) rotate(-90deg)',
-                    width: '36px',
-                    height: '36px'
-                  }}
-                  viewBox="0 0 36 36"
-                >
-                  {/* Background track */}
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r={r}
-                    fill="none"
-                    stroke={colors.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}
-                    strokeWidth="3"
-                  />
-                  {/* Progress arc */}
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r={r}
-                    fill="none"
-                    stroke={progress >= 1
-                      ? '#10B981'
-                      : (colors.isDark ? '#3B82F6' : '#8B5CF6')}
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                  />
-                </svg>
-              )}
+              {/* Category color fills */}
+              {categoryColors.length === 1 ? (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                  background: categoryColors[0] as string
+                }} />
+              ) : categoryColors.length === 2 ? (
+                <>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '50%', height: '100%',
+                    background: categoryColors[0] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute', top: 0, right: 0, width: '50%', height: '100%',
+                    background: categoryColors[1] as string
+                  }} />
+                </>
+              ) : categoryColors.length === 3 ? (
+                <>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '50%', height: '50%',
+                    background: categoryColors[0] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute', top: 0, right: 0, width: '50%', height: '50%',
+                    background: categoryColors[1] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%',
+                    background: categoryColors[2] as string
+                  }} />
+                </>
+              ) : categoryColors.length >= 4 ? (
+                <>
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, width: '50%', height: '50%',
+                    background: categoryColors[0] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute', top: 0, right: 0, width: '50%', height: '50%',
+                    background: categoryColors[1] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, width: '50%', height: '50%',
+                    background: categoryColors[2] as string
+                  }} />
+                  <div style={{
+                    position: 'absolute', bottom: 0, right: 0, width: '50%', height: '50%',
+                    background: categoryColors[3] as string
+                  }} />
+                </>
+              ) : null}
 
               {/* Day number */}
               <span style={{
                 position: 'relative',
                 zIndex: 1,
-                fontSize: '0.8rem',
-                fontWeight: progress >= 1 ? 700 : 500,
-                color: progress >= 1
-                  ? '#10B981'
-                  : (minutes > 0
-                    ? (colors.isDark ? '#3B82F6' : '#8B5CF6')
-                    : colors.text.tertiary)
+                textShadow: hasSession ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none'
               }}>
                 {format(day, 'd')}
               </span>
