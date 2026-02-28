@@ -37,8 +37,8 @@ const getThemeColors = (theme: Theme) => {
   const themeMap = {
     morning: {
       background: 'transparent',
-      cardBg: 'rgba(255, 255, 255, 0.8)',
-      border: 'rgba(100, 116, 139, 0.15)',
+      cardBg: 'rgba(255, 255, 255, 0.7)',
+      border: 'rgba(255, 255, 255, 0.6)',
       headerTextColor: '#000000',  // Solid black for morning theme
       text: {
         primary: 'rgba(15, 23, 42, 0.95)',
@@ -59,32 +59,34 @@ const getThemeColors = (theme: Theme) => {
         selectedBorder: 'rgba(244, 114, 182, 0.9)'
       },
       gradient: 'linear-gradient(135deg, rgba(167, 139, 250, 0.15) 0%, rgba(244, 114, 182, 0.15) 100%)',
+      shadow: '0 8px 32px rgba(147, 197, 253, 0.15)',
       isDark: false
     },
     midnight: {
-      background: '#0A0A0A',
-      cardBg: 'rgba(26, 26, 26, 0.95)',
-      border: 'rgba(255, 255, 255, 0.1)',
+      background: 'transparent',
+      cardBg: 'rgba(167, 139, 250, 0.25)',
+      border: 'rgba(167, 139, 250, 0.4)',
       headerTextColor: '#FFFFFF',  // White for midnight theme
       text: {
-        primary: 'rgba(255, 255, 255, 0.95)',
+        primary: 'rgba(255, 255, 255, 0.9)',
         secondary: 'rgba(255, 255, 255, 0.7)',
         tertiary: 'rgba(255, 255, 255, 0.5)'
       },
       heatmap: {
-        empty: 'rgba(255, 255, 255, 0.05)',
-        emptyBorder: 'rgba(255, 255, 255, 0.08)',
+        empty: 'rgba(167, 139, 250, 0.1)',
+        emptyBorder: 'rgba(167, 139, 250, 0.2)',
         levels: [
-          'rgba(59, 130, 246, 0.2)',
-          'rgba(59, 130, 246, 0.4)',
-          'rgba(59, 130, 246, 0.6)',
-          'rgba(59, 130, 246, 0.8)',
+          'rgba(167, 139, 250, 0.2)',
+          'rgba(167, 139, 250, 0.4)',
+          'rgba(167, 139, 250, 0.6)',
+          'rgba(167, 139, 250, 0.8)',
           'rgba(16, 185, 129, 1)'         // Level 5 - Goal met (green)
         ],
-        currentDayBorder: '#3B82F6',
+        currentDayBorder: 'rgba(139, 92, 246, 0.8)',
         selectedBorder: '#8B5CF6'
       },
-      gradient: 'linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%)',
+      gradient: 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.3) 100%)',
+      shadow: '0 8px 32px rgba(167, 139, 250, 0.2)',
       isDark: true
     }
   };
@@ -526,6 +528,7 @@ const WeeklyCalendarStrip: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '20px',
         marginBottom: '24px'
       }}
@@ -733,6 +736,7 @@ const ViewModeToggle: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '16px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
       }}
     >
       {modes.map(mode => (
@@ -811,7 +815,7 @@ const FocusedTimeDistribution: React.FC<{
   const chartWidth = 320;
   const chartHeight = 140;
   const barWidth = chartWidth / 24 - 2;
-  const accentColor = colors.isDark ? '#3B82F6' : '#8B5CF6';
+  const accentColor = colors.isDark ? '#A78BFA' : '#8B5CF6';
 
   return (
     <motion.div
@@ -824,6 +828,7 @@ const FocusedTimeDistribution: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '20px',
         marginBottom: '16px'
       }}
@@ -902,7 +907,7 @@ const FocusedTimeDistributionForDate: React.FC<{
   const chartWidth = 320;
   const chartHeight = 140;
   const barWidth = chartWidth / 24 - 2;
-  const accentColor = colors.isDark ? '#3B82F6' : '#8B5CF6';
+  const accentColor = colors.isDark ? '#A78BFA' : '#8B5CF6';
 
   return (
     <motion.div
@@ -915,6 +920,7 @@ const FocusedTimeDistributionForDate: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '20px',
         marginBottom: '16px'
       }}
@@ -1027,6 +1033,7 @@ const FocusTrendCard: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '20px',
         marginBottom: '16px'
       }}
@@ -1176,7 +1183,7 @@ const TagAnimalBreakdown: React.FC<{
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topAnimalsKey]);
 
-  const accentColor = colors.isDark ? '#3B82F6' : '#8B5CF6';
+  const accentColor = colors.isDark ? '#A78BFA' : '#8B5CF6';
 
   return (
     <motion.div
@@ -1189,6 +1196,7 @@ const TagAnimalBreakdown: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '20px',
         marginBottom: '16px'
       }}
@@ -1440,8 +1448,11 @@ const TimeNavigator: React.FC<{
         marginBottom: '20px',
         padding: '12px 16px',
         background: colors.cardBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '16px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
       }}
     >
       <motion.button
@@ -1531,7 +1542,7 @@ const DailyGoalCard: React.FC<{
   const circumference = 2 * Math.PI * r;
   const strokeDashoffset = circumference * (1 - progress);
   const remaining = Math.max(dailyGoal - todayMinutes, 0);
-  const accentColor = progress >= 1 ? '#10B981' : (colors.isDark ? '#3B82F6' : '#8B5CF6');
+  const accentColor = progress >= 1 ? '#10B981' : (colors.isDark ? '#A78BFA' : '#8B5CF6');
 
   return (
     <motion.div
@@ -1545,6 +1556,7 @@ const DailyGoalCard: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '18px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '14px 18px',
         marginBottom: '16px',
         cursor: 'pointer',
@@ -1690,6 +1702,7 @@ const MonthlyCalendarHeatmap: React.FC<{
       WebkitBackdropFilter: 'blur(20px)',
       borderRadius: '24px',
       border: `1px solid ${colors.border}`,
+      boxShadow: colors.shadow,
       padding: '24px'
     }}>
       <div style={{
@@ -1883,6 +1896,7 @@ const YearlyHeatmap: React.FC<{
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '24px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '24px',
         marginBottom: '32px',
         cursor: onExpand ? 'pointer' : 'default',
@@ -2156,6 +2170,7 @@ const ExpandedYearlyHeatmap: React.FC<{
                 background: colors.cardBg,
                 borderRadius: '16px',
                 border: `1px solid ${colors.border}`,
+                boxShadow: colors.shadow,
                 padding: '12px',
               }}
             >
@@ -2271,6 +2286,7 @@ const YearlySummaryStats: React.FC<{
         backdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '24px',
         textAlign: 'center'
       }}>
@@ -2287,6 +2303,7 @@ const YearlySummaryStats: React.FC<{
         backdropFilter: 'blur(20px)',
         borderRadius: '20px',
         border: `1px solid ${colors.border}`,
+        boxShadow: colors.shadow,
         padding: '24px',
         textAlign: 'center'
       }}>
