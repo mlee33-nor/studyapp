@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Home, Settings as SettingsIcon, Play, Pause, Bell, Lock, FileText, Image, X, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,7 +16,6 @@ import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSe
 import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
-import type { StudyCategory } from './types/stats';
 
 // --- STORAGE HELPERS ---
 const getSelectedTheme = (): 'morning' | 'midnight' => {
@@ -664,8 +663,10 @@ const CategorySelectionModal: React.FC<{
   onSelectCategory: (category: string) => void;
 }> = ({ isOpen, onClose, onSelectCategory }) => {
   const [customInput, setCustomInput] = useState('');
-  const [allCategories] = useState<StudyCategory[]>(getCategories());
-  const [recentCategories] = useState<StudyCategory[]>(getRecentCategories());
+
+  // Re-read categories from storage every time the modal opens
+  const allCategories = useMemo(() => getCategories(), [isOpen]);
+  const recentCategories = useMemo(() => getRecentCategories(), [isOpen]);
 
   if (!isOpen) return null;
 
