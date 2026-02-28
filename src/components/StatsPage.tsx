@@ -195,7 +195,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
       categoriesCount: new Set(monthSessions.map(s => s.categoryId)).size,
       monthlyData,
     };
-  }, [sessions, currentDate, overallStats]);
+  }, [sessions, currentDate, overallStats, dailyGoal]);
 
   // Compute year-specific stats for the yearly view
   const yearlyStats = useMemo(() => {
