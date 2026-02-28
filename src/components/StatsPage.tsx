@@ -22,7 +22,7 @@ import {
 import Lottie from 'lottie-react';
 import { useAnalytics, calculateStreaks, calculatePerfectDays, generateDayData } from '../hooks/useAnalytics';
 import type { ViewMode, DayData, CategoryStats as CategoryStatsType, EnhancedFocusSession } from '../types/stats';
-import { TrendingUp, Award, Flame, Target, Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { TrendingUp, Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { CategoryDetail } from './CategoryDetail';
 import { getUserData, updateSettings } from '../utils/storage';
 import { BIOME_CONFIG } from '../data/biomes';
@@ -466,6 +466,7 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           colors={colors}
           onDateClick={handleDateClick}
           dailyGoal={dailyGoal}
+          sessions={sessions}
         />
       )}
 
@@ -1644,7 +1645,43 @@ const OverallDashboard: React.FC<{
   colors: ReturnType<typeof getThemeColors>;
   onDateClick: (date: Date) => void;
   dailyGoal: number;
-}> = ({ stats, currentDate, colors, onDateClick, dailyGoal }) => {
+  sessions: EnhancedFocusSession[];
+}> = ({ stats, currentDate, colors, onDateClick, dailyGoal, sessions }) => {
+  const mStart = startOfMonth(currentDate);
+  const mEnd = endOfMonth(currentDate);
+
+  // Filter sessions to selected month
+  const monthSessions = sessions.filter(s => {
+    const d = parseISO(s.date);
+    return d >= mStart && d <= mEnd;
+  });
+  const totalMinutes = monthSessions.filter(s => s.successStatus).reduce((sum, s) => sum + s.duration, 0);
+
+  // Group by category
+  const categoryMap: Record<string, { emoji: string; title: string; themeColor: string; minutes: number }> = {};
+  monthSessions.filter(s => s.successStatus).forEach(s => {
+    if (!categoryMap[s.categoryId]) {
+      categoryMap[s.categoryId] = { emoji: s.emoji, title: s.category, themeColor: s.themeColor, minutes: 0 };
+    }
+    categoryMap[s.categoryId].minutes += s.duration;
+  });
+  const categories = Object.values(categoryMap).sort((a, b) => b.minutes - a.minutes);
+
+  // Donut chart SVG params
+  const donutSize = 140;
+  const radius = 50;
+  const strokeWidth = 20;
+  const circumference = 2 * Math.PI * radius;
+
+  let cumulativePercent = 0;
+  const segments = categories.map(cat => {
+    const percent = totalMinutes > 0 ? (cat.minutes / totalMinutes) * 100 : 0;
+    const offset = circumference - (circumference * cumulativePercent) / 100;
+    const length = (circumference * percent) / 100;
+    cumulativePercent += percent;
+    return { ...cat, percent, offset, length };
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -1652,99 +1689,112 @@ const OverallDashboard: React.FC<{
       transition={SOFT_SPRING}
       style={{ marginBottom: '32px' }}
     >
-      {/* Central Progress Ring */}
+      {/* Category Breakdown */}
       <div style={{
         background: colors.cardBg,
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',
         borderRadius: '24px',
         border: `1px solid ${colors.border}`,
-        padding: '32px 24px',
+        padding: '20px',
         marginBottom: '16px'
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          {/* Progress Circle */}
-          <div style={{ position: 'relative', width: '160px', height: '160px' }}>
-            <svg width="160" height="160" style={{ transform: 'rotate(-90deg)' }}>
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                stroke={colors.heatmap.empty}
-                strokeWidth="12"
-                fill="none"
-              />
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                stroke="url(#successGradient)"
-                strokeWidth="12"
-                fill="none"
-                strokeDasharray={2 * Math.PI * 70}
-                strokeDashoffset={2 * Math.PI * 70 * (1 - Math.min(stats.successRate / 100, 1))}
-                strokeLinecap="round"
-              />
-              <defs>
-                <linearGradient id="successGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor={colors.isDark ? '#A78BFA' : '#8B5CF6'} />
-                  <stop offset="100%" stopColor={colors.isDark ? '#F472B6' : '#EC4899'} />
-                </linearGradient>
-              </defs>
-            </svg>
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700, lineHeight: 1 }}>
-                {Math.round(stats.successRate)}%
-              </div>
-              <div style={{ fontSize: '0.75rem', color: colors.text.tertiary, marginTop: '4px' }}>
-                Success Rate
-              </div>
+        <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '16px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          {format(currentDate, 'MMMM')} Stats
+        </div>
+
+        {categories.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0', color: colors.text.tertiary, fontSize: '0.9rem' }}>
+            No sessions this month yet.
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Donut Chart */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width={donutSize} height={donutSize} viewBox={`0 0 ${donutSize} ${donutSize}`}>
+                <circle
+                  cx={donutSize / 2}
+                  cy={donutSize / 2}
+                  r={radius}
+                  fill="none"
+                  stroke={colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}
+                  strokeWidth={strokeWidth}
+                />
+                {segments.map((seg, i) => (
+                  <circle
+                    key={i}
+                    cx={donutSize / 2}
+                    cy={donutSize / 2}
+                    r={radius}
+                    fill="none"
+                    stroke={seg.themeColor}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={`${seg.length} ${circumference - seg.length}`}
+                    strokeDashoffset={seg.offset}
+                    strokeLinecap="round"
+                    transform={`rotate(-90 ${donutSize / 2} ${donutSize / 2})`}
+                    style={{ transition: 'all 0.5s ease' }}
+                  />
+                ))}
+                <text
+                  x={donutSize / 2}
+                  y={donutSize / 2 - 6}
+                  textAnchor="middle"
+                  fill={colors.text.primary}
+                  fontSize="16"
+                  fontWeight="700"
+                  fontFamily="'Quicksand', sans-serif"
+                >
+                  {formatTimeCompact(totalMinutes)}
+                </text>
+                <text
+                  x={donutSize / 2}
+                  y={donutSize / 2 + 10}
+                  textAnchor="middle"
+                  fill={colors.text.tertiary}
+                  fontSize="9"
+                  fontFamily="'Quicksand', sans-serif"
+                >
+                  Total
+                </text>
+              </svg>
+            </div>
+
+            {/* Category List */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {segments.map((seg, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '8px 0',
+                  borderBottom: i < segments.length - 1 ? `1px solid ${colors.border}` : 'none'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                    <div style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      background: seg.themeColor,
+                      flexShrink: 0
+                    }} />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: colors.text.primary }}>
+                      {seg.emoji} {seg.title}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.text.tertiary }}>
+                      {Math.round(seg.percent)}%
+                    </span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: colors.text.secondary, minWidth: '60px', textAlign: 'right' }}>
+                      {formatTimeCompact(seg.minutes)}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Core Stats Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '12px',
-            width: '100%'
-          }}>
-            <StatCard
-              icon={<Flame size={20} />}
-              label="Current Streak"
-              value={`${stats.currentStreak}d`}
-              color="#F59E0B"
-              colors={colors}
-            />
-            <StatCard
-              icon={<Award size={20} />}
-              label="Best Streak"
-              value={`${stats.bestStreak}d`}
-              color="#8B5CF6"
-              colors={colors}
-            />
-            <StatCard
-              icon={<Target size={20} />}
-              label="Successful Sessions"
-              value={stats.successfulSessions.toString()}
-              color="#10B981"
-              colors={colors}
-            />
-            <StatCard
-              icon={<TrendingUp size={20} />}
-              label="Total Sessions"
-              value={stats.totalSessions.toString()}
-              color="#3B82F6"
-              colors={colors}
-            />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Monthly Calendar Heatmap */}
@@ -1759,43 +1809,6 @@ const OverallDashboard: React.FC<{
   );
 };
 
-// Stat Card Component
-const StatCard: React.FC<{
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: string;
-  colors: ReturnType<typeof getThemeColors>;
-}> = ({ icon, label, value, color, colors }) => {
-  return (
-    <div style={{
-      background: colors.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-      borderRadius: '16px',
-      padding: '16px',
-      border: `1px solid ${colors.border}`,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      height: '100%',
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        marginBottom: '8px',
-        color
-      }}>
-        {icon}
-        <span style={{ fontSize: '0.75rem', color: colors.text.tertiary }}>
-          {label}
-        </span>
-      </div>
-      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: colors.text.primary, marginTop: 'auto' }}>
-        {value}
-      </div>
-    </div>
-  );
-};
 
 // Monthly Calendar Heatmap
 const MonthlyCalendarHeatmap: React.FC<{
