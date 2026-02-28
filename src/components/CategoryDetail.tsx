@@ -180,7 +180,7 @@ export const CategoryDetail: React.FC<{
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 'clamp(2rem, 8vw, 2.5rem)', flexShrink: 0 }}>{category.emoji}</span>
+          {category.emoji && <span style={{ fontSize: 'clamp(2rem, 8vw, 2.5rem)', flexShrink: 0 }}>{category.emoji}</span>}
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{
               fontSize: 'clamp(1.25rem, 5vw, 1.75rem)',
