@@ -40,7 +40,7 @@ export const saveCategories = (categories: StudyCategory[]) => {
 };
 
 // Color palette for custom categories - each pair is [themeColor, accentColor]
-const CUSTOM_CATEGORY_COLORS: [string, string][] = [
+export const CUSTOM_CATEGORY_COLORS: [string, string][] = [
   ['#F97316', '#FB923C'], // Orange
   ['#14B8A6', '#2DD4BF'], // Teal
   ['#E11D48', '#FB7185'], // Rose
@@ -69,6 +69,29 @@ const getNextCustomColor = (categories: StudyCategory[]): [string, string] => {
   return CUSTOM_CATEGORY_COLORS[customCount % CUSTOM_CATEGORY_COLORS.length];
 };
 
+
+// Check if a category already exists (case-insensitive)
+export const categoryExists = (title: string): boolean => {
+  const categories = getCategories();
+  return categories.some(c => c.title.toLowerCase() === title.toLowerCase());
+};
+
+// Create a new custom category with user-chosen emoji and color
+export const createCustomCategory = (title: string, emoji: string, themeColor: string, accentColor: string): StudyCategory => {
+  const categories = getCategories();
+  const newCategory: StudyCategory = {
+    id: `custom-${Date.now()}`,
+    title,
+    emoji,
+    themeColor,
+    accentColor,
+    createdAt: new Date().toISOString(),
+    lastUsed: new Date().toISOString()
+  };
+  categories.push(newCategory);
+  saveCategories(categories);
+  return newCategory;
+};
 
 // Get or create category
 export const getOrCreateCategory = (title: string): StudyCategory => {
