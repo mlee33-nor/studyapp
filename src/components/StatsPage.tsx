@@ -466,7 +466,6 @@ export const StatsPage: React.FC<{ theme: Theme }> = ({ theme }) => {
           colors={colors}
           onDateClick={handleDateClick}
           dailyGoal={dailyGoal}
-          sessions={sessions}
         />
       )}
 
@@ -1645,158 +1644,14 @@ const OverallDashboard: React.FC<{
   colors: ReturnType<typeof getThemeColors>;
   onDateClick: (date: Date) => void;
   dailyGoal: number;
-  sessions: EnhancedFocusSession[];
-}> = ({ stats, currentDate, colors, onDateClick, dailyGoal, sessions }) => {
-  const mStart = startOfMonth(currentDate);
-  const mEnd = endOfMonth(currentDate);
-
-  // Filter sessions to selected month
-  const monthSessions = sessions.filter(s => {
-    const d = parseISO(s.date);
-    return d >= mStart && d <= mEnd;
-  });
-  const totalMinutes = monthSessions.filter(s => s.successStatus).reduce((sum, s) => sum + s.duration, 0);
-
-  // Group by category
-  const categoryMap: Record<string, { emoji: string; title: string; themeColor: string; minutes: number }> = {};
-  monthSessions.filter(s => s.successStatus).forEach(s => {
-    if (!categoryMap[s.categoryId]) {
-      categoryMap[s.categoryId] = { emoji: s.emoji, title: s.category, themeColor: s.themeColor, minutes: 0 };
-    }
-    categoryMap[s.categoryId].minutes += s.duration;
-  });
-  const categories = Object.values(categoryMap).sort((a, b) => b.minutes - a.minutes);
-
-  // Donut chart SVG params
-  const donutSize = 140;
-  const radius = 50;
-  const strokeWidth = 20;
-  const circumference = 2 * Math.PI * radius;
-
-  let cumulativePercent = 0;
-  const segments = categories.map(cat => {
-    const percent = totalMinutes > 0 ? (cat.minutes / totalMinutes) * 100 : 0;
-    const offset = circumference - (circumference * cumulativePercent) / 100;
-    const length = (circumference * percent) / 100;
-    cumulativePercent += percent;
-    return { ...cat, percent, offset, length };
-  });
-
+}> = ({ stats, currentDate, colors, onDateClick, dailyGoal }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={SOFT_SPRING}
-      style={{ marginBottom: '32px' }}
+      style={{ marginBottom: '16px' }}
     >
-      {/* Category Breakdown */}
-      <div style={{
-        background: colors.cardBg,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderRadius: '24px',
-        border: `1px solid ${colors.border}`,
-        padding: '20px',
-        marginBottom: '16px'
-      }}>
-        <div style={{ fontSize: '0.8rem', color: colors.text.tertiary, marginBottom: '16px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          {format(currentDate, 'MMMM')} Stats
-        </div>
-
-        {categories.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: colors.text.tertiary, fontSize: '0.9rem' }}>
-            No sessions this month yet.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Donut Chart */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width={donutSize} height={donutSize} viewBox={`0 0 ${donutSize} ${donutSize}`}>
-                <circle
-                  cx={donutSize / 2}
-                  cy={donutSize / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={colors.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}
-                  strokeWidth={strokeWidth}
-                />
-                {segments.map((seg, i) => (
-                  <circle
-                    key={i}
-                    cx={donutSize / 2}
-                    cy={donutSize / 2}
-                    r={radius}
-                    fill="none"
-                    stroke={seg.themeColor}
-                    strokeWidth={strokeWidth}
-                    strokeDasharray={`${seg.length} ${circumference - seg.length}`}
-                    strokeDashoffset={seg.offset}
-                    strokeLinecap="round"
-                    transform={`rotate(-90 ${donutSize / 2} ${donutSize / 2})`}
-                    style={{ transition: 'all 0.5s ease' }}
-                  />
-                ))}
-                <text
-                  x={donutSize / 2}
-                  y={donutSize / 2 - 6}
-                  textAnchor="middle"
-                  fill={colors.text.primary}
-                  fontSize="16"
-                  fontWeight="700"
-                  fontFamily="'Quicksand', sans-serif"
-                >
-                  {formatTimeCompact(totalMinutes)}
-                </text>
-                <text
-                  x={donutSize / 2}
-                  y={donutSize / 2 + 10}
-                  textAnchor="middle"
-                  fill={colors.text.tertiary}
-                  fontSize="9"
-                  fontFamily="'Quicksand', sans-serif"
-                >
-                  Total
-                </text>
-              </svg>
-            </div>
-
-            {/* Category List */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {segments.map((seg, i) => (
-                <div key={i} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 0',
-                  borderBottom: i < segments.length - 1 ? `1px solid ${colors.border}` : 'none'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                    <div style={{
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      background: seg.themeColor,
-                      flexShrink: 0
-                    }} />
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: colors.text.primary }}>
-                      {seg.emoji} {seg.title}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: colors.text.tertiary }}>
-                      {Math.round(seg.percent)}%
-                    </span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: colors.text.secondary, minWidth: '60px', textAlign: 'right' }}>
-                      {formatTimeCompact(seg.minutes)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Monthly Calendar Heatmap */}
       <MonthlyCalendarHeatmap
         monthlyData={stats.monthlyData}
