@@ -2276,27 +2276,30 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                     boxShadow: isSelected ? '0 4px 20px rgba(167, 139, 250, 0.3)' : '0 2px 10px rgba(147, 197, 253, 0.1)',
                   }}
                 >
-                  {/* Theme Swatch */}
+                  {/* Theme Swatch - covers entire card */}
                   <div style={{
-                    height: '80px',
+                    height: '100px',
                     background: themeData.gradient,
-                  }} />
-
-                  {/* Theme Label */}
-                  <div style={{
-                    padding: '8px 12px',
-                    background: themeData.isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    textAlign: 'center'
+                    display: 'flex',
+                    alignItems: 'flex-end',
                   }}>
+                    {/* Theme Label overlaid at bottom */}
                     <div style={{
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: getTextColor(themeKey, 'primary'),
-                      fontFamily: "'Quicksand', sans-serif"
+                      width: '100%',
+                      padding: '8px 12px',
+                      background: themeData.isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
+                      backdropFilter: 'blur(10px)',
+                      WebkitBackdropFilter: 'blur(10px)',
+                      textAlign: 'center'
                     }}>
-                      {themeData.emoji} {themeData.name}
+                      <div style={{
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: getTextColor(themeKey, 'primary'),
+                        fontFamily: "'Quicksand', sans-serif"
+                      }}>
+                        {themeData.emoji} {themeData.name}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
