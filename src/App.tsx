@@ -2278,14 +2278,24 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 >
                   {/* Theme Swatch - covers entire card */}
                   <div style={{
+                    position: 'relative',
                     height: '100px',
-                    background: themeData.gradient,
-                    display: 'flex',
-                    alignItems: 'flex-end',
                   }}>
+                    {/* Gradient background - stretched to cover any subpixel gaps */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-1px',
+                      left: '-1px',
+                      right: '-1px',
+                      bottom: '-1px',
+                      background: themeData.gradient,
+                    }} />
                     {/* Theme Label overlaid at bottom */}
                     <div style={{
-                      width: '100%',
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
                       padding: '8px 12px',
                       background: themeData.isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)',
                       backdropFilter: 'blur(10px)',
