@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import Lottie from 'lottie-react';
 import RiveComponent from '@rive-app/react-canvas';
-import { triggerHapticFeedback } from './utils/haptics';
+import { triggerHapticFeedback, triggerSelectionTick } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
 import GalleryScreen from './screens/GalleryScreen';
@@ -445,9 +445,9 @@ const InteractiveTimerRing: React.FC<{
     const newMinutes = Math.round((angle / 360) * (60 - 1) + 1);
     const clampedMinutes = Math.max(1, Math.min(60, newMinutes));
 
-    // Trigger haptic feedback when the value changes
+    // Trigger a picker-style tick each time the value changes
     if (clampedMinutes !== prevMinutesRef.current) {
-      triggerHapticFeedback(10);
+      triggerSelectionTick();
       prevMinutesRef.current = clampedMinutes;
     }
 
