@@ -50,6 +50,34 @@ export const triggerMediumHaptic = (): void => {
 };
 
 /**
+ * Trigger a selection-change tick (the subtle "picker wheel" haptic on iOS).
+ * Uses Haptics.selectionChanged() for the native feel, falls back to a
+ * very short vibration on Android / web.
+ */
+export const triggerSelectionTick = (): void => {
+  try {
+    const capacitor = (globalThis as any).capacitor;
+    if (capacitor?.Plugins?.Haptics) {
+      // selectionChanged gives the precise tick-per-notch feel
+      if (typeof capacitor.Plugins.Haptics.selectionChanged === 'function') {
+        capacitor.Plugins.Haptics.selectionChanged().catch(() => {
+          fallbackVibrate(5);
+        });
+      } else {
+        // Older Capacitor versions — fall back to lightest impact
+        capacitor.Plugins.Haptics.impact({ style: 'Light' }).catch(() => {
+          fallbackVibrate(5);
+        });
+      }
+    } else {
+      fallbackVibrate(5);
+    }
+  } catch {
+    fallbackVibrate(5);
+  }
+};
+
+/**
  * Trigger a strong haptic feedback pulse
  */
 export const triggerStrongHaptic = (): void => {
