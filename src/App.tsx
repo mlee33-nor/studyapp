@@ -666,9 +666,10 @@ const EMOJI_OPTIONS = [
 const CategoryCustomizeModal: React.FC<{
   isOpen: boolean;
   categoryTitle: string;
+  theme: 'morning' | 'midnight';
   onConfirm: (emoji: string, themeColor: string, accentColor: string) => void;
   onCancel: () => void;
-}> = ({ isOpen, categoryTitle, onConfirm, onCancel }) => {
+}> = ({ isOpen, categoryTitle, theme, onConfirm, onCancel }) => {
   const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0]);
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
 
@@ -682,6 +683,7 @@ const CategoryCustomizeModal: React.FC<{
 
   if (!isOpen) return null;
 
+  const isDark = BACKGROUND_THEMES[theme].isDark;
   const selectedColor = CUSTOM_CATEGORY_COLORS[selectedColorIdx];
 
   return (
@@ -696,7 +698,7 @@ const CategoryCustomizeModal: React.FC<{
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0, 0, 0, 0.4)',
+        background: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.4)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
@@ -712,13 +714,19 @@ const CategoryCustomizeModal: React.FC<{
         exit={{ scale: 0.9, y: 20 }}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'rgba(255, 255, 255, 0.85)',
+          background: isDark
+            ? 'rgba(30, 30, 60, 0.95)'
+            : 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderRadius: '32px',
           padding: '28px 24px',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-          boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+          border: isDark
+            ? '1px solid rgba(139, 92, 246, 0.3)'
+            : '1px solid rgba(255, 255, 255, 0.5)',
+          boxShadow: isDark
+            ? '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(139, 92, 246, 0.1)'
+            : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
           maxWidth: '400px',
           width: '100%',
           maxHeight: '85vh',
@@ -751,7 +759,7 @@ const CategoryCustomizeModal: React.FC<{
           display: 'block',
           fontSize: '13px',
           fontWeight: 600,
-          color: 'rgba(51, 65, 85, 0.8)',
+          color: getTextColor(theme, 'secondary'),
           marginBottom: '10px',
           fontFamily: "'Quicksand', sans-serif",
         }}>
@@ -780,8 +788,8 @@ const CategoryCustomizeModal: React.FC<{
                   ? `2px solid ${selectedColor[0]}`
                   : '2px solid transparent',
                 background: selectedEmoji === emoji
-                  ? `${selectedColor[0]}18`
-                  : 'rgba(255, 255, 255, 0.4)',
+                  ? `${selectedColor[0]}25`
+                  : isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.4)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
@@ -796,7 +804,7 @@ const CategoryCustomizeModal: React.FC<{
           display: 'block',
           fontSize: '13px',
           fontWeight: 600,
-          color: 'rgba(51, 65, 85, 0.8)',
+          color: getTextColor(theme, 'secondary'),
           marginBottom: '10px',
           fontFamily: "'Quicksand', sans-serif",
         }}>
@@ -808,23 +816,25 @@ const CategoryCustomizeModal: React.FC<{
           gap: '8px',
           marginBottom: '24px',
         }}>
-          {CUSTOM_CATEGORY_COLORS.map(([theme, accent], idx) => (
+          {CUSTOM_CATEGORY_COLORS.map(([clr, accent], idx) => (
             <motion.button
-              key={theme}
+              key={clr}
               whileTap={{ scale: 0.85 }}
               onClick={() => setSelectedColorIdx(idx)}
               style={{
                 width: '100%',
                 aspectRatio: '1',
                 borderRadius: '50%',
-                background: `linear-gradient(135deg, ${theme} 0%, ${accent} 100%)`,
+                background: `linear-gradient(135deg, ${clr} 0%, ${accent} 100%)`,
                 border: selectedColorIdx === idx
-                  ? '3px solid rgba(15, 23, 42, 0.7)'
+                  ? isDark ? '3px solid rgba(255, 255, 255, 0.8)' : '3px solid rgba(15, 23, 42, 0.7)'
                   : '3px solid transparent',
                 cursor: 'pointer',
                 boxShadow: selectedColorIdx === idx
-                  ? `0 0 0 2px white, 0 4px 12px ${theme}55`
-                  : `0 2px 8px ${theme}33`,
+                  ? isDark
+                    ? `0 0 0 2px rgba(30, 30, 60, 0.95), 0 4px 12px ${clr}55`
+                    : `0 0 0 2px white, 0 4px 12px ${clr}55`
+                  : `0 2px 8px ${clr}33`,
                 transition: 'all 0.2s ease',
               }}
             />
@@ -839,18 +849,20 @@ const CategoryCustomizeModal: React.FC<{
             onClick={onCancel}
             style={{
               flex: 1,
-              background: 'rgba(255, 255, 255, 0.5)',
+              background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(200, 220, 255, 0.3)',
+              border: isDark
+                ? '1px solid rgba(255, 255, 255, 0.15)'
+                : '1px solid rgba(200, 220, 255, 0.3)',
               borderRadius: '20px',
               padding: '14px 24px',
               cursor: 'pointer',
-              color: 'rgba(51, 65, 85, 0.8)',
+              color: getTextColor(theme, 'secondary'),
               fontSize: '15px',
               fontWeight: 600,
               fontFamily: "'Quicksand', sans-serif",
-              boxShadow: '0 4px 15px rgba(147, 197, 253, 0.15)',
+              boxShadow: isDark ? 'none' : '0 4px 15px rgba(147, 197, 253, 0.15)',
             }}
           >
             Cancel
@@ -2717,6 +2729,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       <CategoryCustomizeModal
         isOpen={showCustomizeModal}
         categoryTitle={pendingCategory}
+        theme={selectedTheme}
         onConfirm={handleCustomizeConfirm}
         onCancel={handleCustomizeCancel}
       />
