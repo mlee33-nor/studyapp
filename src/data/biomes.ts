@@ -213,8 +213,8 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
 export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
   {
     id: 'mountain_goat',
-    name: 'Mountain Goat',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/21454c8c-116f-11ee-b8b8-f3543a0944a1/psaUM4k0xd.json',
+    name: 'Sheep',
+    lottieUrl: 'https://lottie.host/0eb3338c-2f86-43ea-be30-0b0db2ae6741/d0jUu44UBf.lottie',
     price: 0,
   },
   {
