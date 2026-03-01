@@ -141,7 +141,7 @@ export const FOREST_ANIMALS: BiomeAnimal[] = [
   {
     id: 'owl',
     name: 'Owl',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/1a7311d2-1165-11ee-bdc1-b7e695e8e5eb/n3r1YeRfcK.json',
+    lottieUrl: 'https://lottie.host/5fb4e584-73fa-4b28-8318-a9c9e7fc8c7c/vozoNTRjeE.json',
     price: 800,
   },
   {
