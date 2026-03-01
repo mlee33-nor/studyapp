@@ -12,7 +12,7 @@ import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getNewlyUnlocked } from './utils/achievements';
 import type { Achievement } from './utils/achievements';
-import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSession } from './utils/categoryManager';
+import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSession, categoryExists, createCustomCategory, CUSTOM_CATEGORY_COLORS } from './utils/categoryManager';
 import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
@@ -656,6 +656,233 @@ const SoftToggle: React.FC<{ enabled: boolean; onToggle: () => void }> = ({ enab
   </motion.div>
 );
 
+// --- CATEGORY CUSTOMIZE MODAL (color + emoji picker for new subjects) ---
+const EMOJI_OPTIONS = [
+  '📚', '📐', '💻', '🧪', '💰', '✍️', '🗣️', '🎵',
+  '🎨', '📊', '🧮', '🔬', '📝', '🏋️', '🧠', '🌍',
+  '⚖️', '🩺', '📷', '🎭', '🔧', '🧬', '📖', '🎓',
+];
+
+const CategoryCustomizeModal: React.FC<{
+  isOpen: boolean;
+  categoryTitle: string;
+  onConfirm: (emoji: string, themeColor: string, accentColor: string) => void;
+  onCancel: () => void;
+}> = ({ isOpen, categoryTitle, onConfirm, onCancel }) => {
+  const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0]);
+  const [selectedColorIdx, setSelectedColorIdx] = useState(0);
+
+  // Reset selections when the modal opens with a new title
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedEmoji(EMOJI_OPTIONS[0]);
+      setSelectedColorIdx(0);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const selectedColor = CUSTOM_CATEGORY_COLORS[selectedColorIdx];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onCancel}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 2100,
+        padding: '20px',
+      }}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderRadius: '32px',
+          padding: '28px 24px',
+          border: '1px solid rgba(255, 255, 255, 0.5)',
+          boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+          maxWidth: '400px',
+          width: '100%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
+        }}
+      >
+        {/* Preview */}
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            background: `linear-gradient(135deg, ${selectedColor[0]}99 0%, ${selectedColor[1]}99 100%)`,
+            borderRadius: '20px',
+            padding: '12px 24px',
+            boxShadow: `0 4px 15px ${selectedColor[0]}33`,
+          }}>
+            <span style={{ fontSize: '1.5rem' }}>{selectedEmoji}</span>
+            <span style={{
+              fontSize: '1.1rem',
+              fontWeight: 700,
+              color: 'white',
+              fontFamily: "'Quicksand', sans-serif",
+            }}>{categoryTitle}</span>
+          </div>
+        </div>
+
+        {/* Emoji Picker */}
+        <label style={{
+          display: 'block',
+          fontSize: '13px',
+          fontWeight: 600,
+          color: 'rgba(51, 65, 85, 0.8)',
+          marginBottom: '10px',
+          fontFamily: "'Quicksand', sans-serif",
+        }}>
+          Choose an emoji
+        </label>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(8, 1fr)',
+          gap: '6px',
+          marginBottom: '20px',
+        }}>
+          {EMOJI_OPTIONS.map((emoji) => (
+            <motion.button
+              key={emoji}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setSelectedEmoji(emoji)}
+              style={{
+                width: '100%',
+                aspectRatio: '1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.3rem',
+                borderRadius: '12px',
+                border: selectedEmoji === emoji
+                  ? `2px solid ${selectedColor[0]}`
+                  : '2px solid transparent',
+                background: selectedEmoji === emoji
+                  ? `${selectedColor[0]}18`
+                  : 'rgba(255, 255, 255, 0.4)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {emoji}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Color Picker */}
+        <label style={{
+          display: 'block',
+          fontSize: '13px',
+          fontWeight: 600,
+          color: 'rgba(51, 65, 85, 0.8)',
+          marginBottom: '10px',
+          fontFamily: "'Quicksand', sans-serif",
+        }}>
+          Choose a color
+        </label>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(6, 1fr)',
+          gap: '8px',
+          marginBottom: '24px',
+        }}>
+          {CUSTOM_CATEGORY_COLORS.map(([theme, accent], idx) => (
+            <motion.button
+              key={theme}
+              whileTap={{ scale: 0.85 }}
+              onClick={() => setSelectedColorIdx(idx)}
+              style={{
+                width: '100%',
+                aspectRatio: '1',
+                borderRadius: '50%',
+                background: `linear-gradient(135deg, ${theme} 0%, ${accent} 100%)`,
+                border: selectedColorIdx === idx
+                  ? '3px solid rgba(15, 23, 42, 0.7)'
+                  : '3px solid transparent',
+                cursor: 'pointer',
+                boxShadow: selectedColorIdx === idx
+                  ? `0 0 0 2px white, 0 4px 12px ${theme}55`
+                  : `0 2px 8px ${theme}33`,
+                transition: 'all 0.2s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              background: 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: '1px solid rgba(200, 220, 255, 0.3)',
+              borderRadius: '20px',
+              padding: '14px 24px',
+              cursor: 'pointer',
+              color: 'rgba(51, 65, 85, 0.8)',
+              fontSize: '15px',
+              fontWeight: 600,
+              fontFamily: "'Quicksand', sans-serif",
+              boxShadow: '0 4px 15px rgba(147, 197, 253, 0.15)',
+            }}
+          >
+            Cancel
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onConfirm(selectedEmoji, selectedColor[0], selectedColor[1])}
+            style={{
+              flex: 2,
+              background: `linear-gradient(135deg, ${selectedColor[0]}cc 0%, ${selectedColor[1]}cc 100%)`,
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              border: 'none',
+              borderRadius: '20px',
+              padding: '14px 24px',
+              cursor: 'pointer',
+              color: 'white',
+              fontSize: '15px',
+              fontWeight: 600,
+              fontFamily: "'Quicksand', sans-serif",
+              boxShadow: `0 4px 20px ${selectedColor[0]}44`,
+            }}
+          >
+            Start Studying
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 // --- CATEGORY SELECTION MODAL ---
 const CategorySelectionModal: React.FC<{
   isOpen: boolean;
@@ -895,6 +1122,8 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(timerMinutes * 60);
   const [selectedTheme, setSelectedThemeState] = useState<'morning' | 'midnight'>(getSelectedTheme());
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
+  const [pendingCategory, setPendingCategory] = useState('');
   const [showFailConfirm, setShowFailConfirm] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
 const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
@@ -1208,11 +1437,33 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   };
 
   const handleCategorySelected = (category: string) => {
-    // Eagerly register the category so it appears in recent history
+    // If this is a brand-new category, show the customization popup first
+    if (!categoryExists(category)) {
+      setPendingCategory(category);
+      setShowCategoryModal(false);
+      setShowCustomizeModal(true);
+      return;
+    }
+    // Existing category — register and start immediately
     getOrCreateCategory(category);
     setCurrentCategory(category);
     setShowCategoryModal(false);
     setIsRunning(true);
+  };
+
+  const handleCustomizeConfirm = (emoji: string, themeColor: string, accentColor: string) => {
+    createCustomCategory(pendingCategory, emoji, themeColor, accentColor);
+    setCurrentCategory(pendingCategory);
+    setShowCustomizeModal(false);
+    setPendingCategory('');
+    setIsRunning(true);
+  };
+
+  const handleCustomizeCancel = () => {
+    setShowCustomizeModal(false);
+    setPendingCategory('');
+    // Re-open the category selection modal so the user can pick again
+    setShowCategoryModal(true);
   };
 
   // Load chest animation data on first purchase
@@ -2461,6 +2712,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
         onSelectCategory={handleCategorySelected}
+      />
+
+      <CategoryCustomizeModal
+        isOpen={showCustomizeModal}
+        categoryTitle={pendingCategory}
+        onConfirm={handleCustomizeConfirm}
+        onCancel={handleCustomizeCancel}
       />
 
       {/* Fail Session Confirmation Modal */}
