@@ -900,7 +900,8 @@ const CategorySelectionModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onSelectCategory: (category: string) => void;
-}> = ({ isOpen, onClose, onSelectCategory }) => {
+  theme: 'morning' | 'midnight';
+}> = ({ isOpen, onClose, onSelectCategory, theme }) => {
   const [customInput, setCustomInput] = useState('');
 
   // Re-read categories from storage every time the modal opens
@@ -908,6 +909,8 @@ const CategorySelectionModal: React.FC<{
   const recentCategories = useMemo(() => getRecentCategories(), [isOpen]);
 
   if (!isOpen) return null;
+
+  const isDark = BACKGROUND_THEMES[theme].isDark;
 
   const handleCategoryClick = (category: string) => {
     onSelectCategory(category);
@@ -945,7 +948,7 @@ const CategorySelectionModal: React.FC<{
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'rgba(0, 0, 0, 0.4)',
+        background: isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.4)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
@@ -961,13 +964,19 @@ const CategorySelectionModal: React.FC<{
         exit={{ scale: 0.9, y: 20 }}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: 'rgba(255, 255, 255, 0.7)',
+          background: isDark
+            ? 'rgba(30, 30, 60, 0.95)'
+            : 'rgba(255, 255, 255, 0.7)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderRadius: '32px',
           padding: '32px 24px',
-          border: '1px solid rgba(255, 255, 255, 0.5)',
-          boxShadow: '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+          border: isDark
+            ? '1px solid rgba(139, 92, 246, 0.3)'
+            : '1px solid rgba(255, 255, 255, 0.5)',
+          boxShadow: isDark
+            ? '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(139, 92, 246, 0.1)'
+            : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
           maxWidth: '420px',
           width: '100%',
           maxHeight: '80vh',
@@ -978,7 +987,7 @@ const CategorySelectionModal: React.FC<{
         <h2 style={{
           fontSize: '1.5rem',
           fontWeight: 600,
-          color: 'rgba(15, 23, 42, 0.95)',
+          color: getTextColor(theme, 'primary'),
           marginBottom: '24px',
           textAlign: 'center',
           fontFamily: "'Quicksand', sans-serif",
@@ -1003,14 +1012,14 @@ const CategorySelectionModal: React.FC<{
               style={{
                 background: customInput === ''
                   ? `linear-gradient(135deg, ${category.themeColor}99 0%, ${category.accentColor}99 100%)`
-                  : 'rgba(255, 255, 255, 0.5)',
+                  : isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
-                border: `1px solid ${customInput === '' ? category.themeColor + '66' : 'rgba(255, 255, 255, 0.3)'}`,
+                border: `1px solid ${customInput === '' ? category.themeColor + '66' : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.3)'}`,
                 borderRadius: '20px',
                 padding: '16px 20px',
                 cursor: 'pointer',
-                color: customInput === '' ? 'white' : 'rgba(100, 100, 150, 0.9)',
+                color: customInput === '' ? 'white' : isDark ? 'rgba(200, 200, 230, 0.7)' : 'rgba(100, 100, 150, 0.9)',
                 fontSize: '15px',
                 fontWeight: 600,
                 fontFamily: "'Quicksand', sans-serif",
@@ -1034,7 +1043,7 @@ const CategorySelectionModal: React.FC<{
             display: 'block',
             fontSize: '13px',
             fontWeight: 600,
-            color: 'rgba(51, 65, 85, 0.8)',
+            color: getTextColor(theme, 'secondary'),
             marginBottom: '8px',
             fontFamily: "'Quicksand', sans-serif",
           }}>
@@ -1054,16 +1063,22 @@ const CategorySelectionModal: React.FC<{
               width: '100%',
               padding: '14px 18px',
               borderRadius: '18px',
-              border: '1px solid rgba(200, 220, 255, 0.4)',
-              background: 'rgba(255, 255, 255, 0.6)',
+              border: isDark
+                ? '1px solid rgba(139, 92, 246, 0.3)'
+                : '1px solid rgba(200, 220, 255, 0.4)',
+              background: isDark
+                ? 'rgba(255, 255, 255, 0.08)'
+                : 'rgba(255, 255, 255, 0.6)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               fontSize: '15px',
-              color: 'rgba(15, 23, 42, 0.95)',
+              color: getTextColor(theme, 'primary'),
               fontFamily: "'Quicksand', sans-serif",
               fontWeight: 500,
               outline: 'none',
-              boxShadow: '0 2px 10px rgba(147, 197, 253, 0.1)',
+              boxShadow: isDark
+                ? '0 2px 10px rgba(0, 0, 0, 0.2)'
+                : '0 2px 10px rgba(147, 197, 253, 0.1)',
               boxSizing: 'border-box',
             }}
           />
@@ -1080,18 +1095,20 @@ const CategorySelectionModal: React.FC<{
             onClick={onClose}
             style={{
               flex: 1,
-              background: 'rgba(255, 255, 255, 0.5)',
+              background: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)',
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
-              border: '1px solid rgba(200, 220, 255, 0.3)',
+              border: isDark
+                ? '1px solid rgba(255, 255, 255, 0.15)'
+                : '1px solid rgba(200, 220, 255, 0.3)',
               borderRadius: '20px',
               padding: '14px 24px',
               cursor: 'pointer',
-              color: 'rgba(51, 65, 85, 0.8)',
+              color: getTextColor(theme, 'secondary'),
               fontSize: '15px',
               fontWeight: 600,
               fontFamily: "'Quicksand', sans-serif",
-              boxShadow: '0 4px 15px rgba(147, 197, 253, 0.15)',
+              boxShadow: isDark ? 'none' : '0 4px 15px rgba(147, 197, 253, 0.15)',
             }}
           >
             Cancel
@@ -2724,6 +2741,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
         onSelectCategory={handleCategorySelected}
+        theme={selectedTheme}
       />
 
       <CategoryCustomizeModal
