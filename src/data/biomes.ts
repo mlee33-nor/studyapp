@@ -197,7 +197,7 @@ export const ARCTIC_ANIMALS: BiomeAnimal[] = [
   },
   {
     id: 'arctic_fox',
-    name: 'Arctic Fox',
+    name: 'Fox',
     lottieUrl: 'https://lottie.host/d3c1b1e1-a463-4a0f-b1df-f272da956d77/lfzKlyXeao.json',
     price: 800,
   },
@@ -219,7 +219,7 @@ export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
   },
   {
     id: 'snow_leopard',
-    name: 'Snow Leopard',
+    name: 'Leopard',
     lottieUrl: 'https://assets-v2.lottiefiles.com/a/bbbf7156-1170-11ee-a909-976822febe92/oGgjhV63HT.json',
     price: 0,
   },
