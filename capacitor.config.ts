@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.studybuddy.app',
   appName: 'StudyBuddy',
   webDir: 'dist',
-  includePlugins: [],
+  includePlugins: ['@capacitor/haptics'],
   server: {
     cleartext: true,
     // Disable caching to ensure latest build always loads

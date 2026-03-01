@@ -5,7 +5,7 @@ import { useUserData } from '../hooks/useUserData';
 import { useTheme } from '../contexts/ThemeContext';
 import type { TimerMode, BiomeType } from '../types';
 import { getWeeklyMinutes } from '../utils/storage';
-import { triggerHapticFeedback } from '../utils/haptics';
+import { triggerSelectionTick } from '../utils/haptics';
 import { getAnimalsForBiome, getAnimalScale, BIOME_CONFIG } from '../data/biomes';
 import Lottie from 'lottie-react';
 
@@ -118,7 +118,7 @@ const TimerScreen: React.FC = () => {
 
     // Trigger haptic feedback when the value changes
     if (clampedMinutes !== previousMinutesRef.current) {
-      triggerHapticFeedback(10);
+      triggerSelectionTick();
       previousMinutesRef.current = clampedMinutes;
     }
 
