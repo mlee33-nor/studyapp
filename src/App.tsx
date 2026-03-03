@@ -8,6 +8,7 @@ import RiveComponent from '@rive-app/react-canvas';
 import { triggerHapticFeedback, triggerSelectionTick } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
+import OnboardingScreen from './screens/OnboardingScreen';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getNewlyUnlocked } from './utils/achievements';
@@ -1173,6 +1174,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [chestAnimData, setChestAnimData] = useState<any>(null);
   const chestLottieRef = useRef<any>(null);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('onboardingCompleted');
+  });
 
   const theme = selectedTheme;
 
@@ -2709,6 +2713,19 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       </motion.div>
     );
   };
+
+  if (showOnboarding) {
+    return (
+      <OnboardingScreen
+        theme={selectedTheme}
+        onComplete={(onboardingData) => {
+          localStorage.setItem('onboardingCompleted', 'true');
+          localStorage.setItem('onboardingData', JSON.stringify(onboardingData));
+          setShowOnboarding(false);
+        }}
+      />
+    );
+  }
 
   return (
     <>
