@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Home, Settings as SettingsIcon, Play, Pause, Bell, Lock, FileText, Image, X, Check } from 'lucide-react';
+import { Home, Settings as SettingsIcon, Play, Pause, Bell, Lock, FileText, Image, X, Check, LogOut } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -10,7 +10,7 @@ import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import LoginScreen from './screens/LoginScreen';
-import { hasAccount, isLoggedIn, setLoggedIn } from './utils/auth';
+import { hasAccount, isLoggedIn, setLoggedIn, logout, getStoredEmail } from './utils/auth';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getNewlyUnlocked } from './utils/achievements';
@@ -2715,6 +2715,52 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
           }}>
             Selected Theme: {BACKGROUND_THEMES[theme].emoji} {BACKGROUND_THEMES[theme].name}
           </div>
+        </GlassCard>
+
+        <GlassCard theme={selectedTheme} style={{ marginTop: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: hasAccount() ? '4px' : '16px' }}>
+            <LogOut size={20} color={getTextColor(selectedTheme, 'secondary')} strokeWidth={2.5} />
+            <h3 style={{
+              margin: 0,
+              fontSize: '16px',
+              color: getTextColor(selectedTheme, 'primary'),
+              fontWeight: 600,
+              fontFamily: "'Quicksand', sans-serif"
+            }}>
+              Account
+            </h3>
+          </div>
+          {hasAccount() && getStoredEmail() && (
+            <p style={{
+              margin: '0 0 16px 0',
+              fontSize: '14px',
+              color: getTextColor(selectedTheme, 'secondary'),
+              fontFamily: "'Quicksand', sans-serif",
+              fontWeight: 500,
+            }}>
+              Signed in as {getStoredEmail()}
+            </p>
+          )}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { logout(); window.location.reload(); }}
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '14px',
+              border: 'none',
+              background: BACKGROUND_THEMES[selectedTheme].isDark
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(0, 0, 0, 0.06)',
+              color: getTextColor(selectedTheme, 'primary'),
+              fontSize: '15px',
+              fontWeight: 600,
+              fontFamily: "'Quicksand', sans-serif",
+              cursor: 'pointer',
+            }}
+          >
+            Log Out
+          </motion.button>
         </GlassCard>
       </motion.div>
     );
