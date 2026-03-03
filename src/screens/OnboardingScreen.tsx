@@ -454,7 +454,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
   const renderBackButton = () => {
     // Hide back button on welcome, calculating, and post-calculating Opal screens
-    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep', 'premium', 'createAccount'];
+    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep', 'premium', 'chestReveal', 'lastChance', 'createAccount'];
     if (currentStep <= 0 || postCalcSteps.includes(stepId)) return null;
     return (
       <button
