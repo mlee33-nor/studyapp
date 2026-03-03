@@ -657,7 +657,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          Study Buddy can help you save
+          You can reclaim
         </p>
 
         <h2
@@ -670,8 +670,21 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          6 years+
+          250+ hours
         </h2>
+
+        <p
+          style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            margin: '0 0 40px 0',
+            lineHeight: 1.4,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          this year.
+        </p>
 
         <p
           style={{
@@ -683,7 +696,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          of your life.
+          That's a full month of focused progress.
         </p>
       </div>
 
