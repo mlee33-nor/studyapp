@@ -1442,7 +1442,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         overflow: 'hidden',
-        position: 'relative',
       }}
     >
       {/* Emoji */}
@@ -1564,7 +1563,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       {/* CTA */}
       <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileTap={lastChanceTapGuard ? {} : { scale: 0.97 }}
+          disabled={lastChanceTapGuard}
           onClick={goNext}
           style={{
             width: '100%',
@@ -1575,15 +1575,18 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             color: 'white',
             fontSize: '16px',
             fontWeight: 700,
-            cursor: 'pointer',
+            cursor: lastChanceTapGuard ? 'default' : 'pointer',
             boxShadow: t.buttonShadow,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
+            opacity: lastChanceTapGuard ? 0.7 : 1,
+            transition: 'opacity 0.3s ease',
           }}
         >
           Claim This Deal
         </motion.button>
 
         <button
+          disabled={lastChanceTapGuard}
           onClick={() => onComplete(data)}
           style={{
             width: '100%',
@@ -1593,30 +1596,16 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             color: t.textTertiary,
             fontSize: '13px',
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: lastChanceTapGuard ? 'default' : 'pointer',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             marginTop: '8px',
+            opacity: lastChanceTapGuard ? 0 : 1,
+            transition: 'opacity 0.3s ease',
           }}
         >
           No thanks
         </button>
       </div>
-
-      {/* Tap guard overlay — blocks all interaction for 2s after chest opens */}
-      {lastChanceTapGuard && (
-        <div
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 9999,
-            cursor: 'default',
-          }}
-        />
-      )}
     </div>
   );
 
