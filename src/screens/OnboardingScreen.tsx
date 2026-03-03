@@ -543,7 +543,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          The average student loses
+          You lose nearly
         </p>
 
         <h2
@@ -556,7 +556,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          114 days
+          300 hours
         </h2>
 
         <p
@@ -569,7 +569,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          to unfocused studying each year.
+          a year to distraction.
         </p>
 
         <p
@@ -595,7 +595,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          22 years
+          7 full workweeks
         </h2>
 
         <p
@@ -608,7 +608,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          of a lifetime.
+          of your life — gone.
         </p>
       </div>
 
