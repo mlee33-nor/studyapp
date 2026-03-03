@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
+import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
 
@@ -85,6 +86,7 @@ const STEPS = [
   { id: 'goodNews' },
   { id: 'firstStep' },
   { id: 'premium' },
+  { id: 'chestReveal' },
   { id: 'lastChance' },
   { id: 'createAccount' },
 ] as const;
@@ -176,6 +178,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [loginLoading, setLoginLoading] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'lifetime' | 'annual' | 'monthly'>('lifetime');
+  const [chestAnimData, setChestAnimData] = useState<any>(null);
+  const [chestStage, setChestStage] = useState(0);
+  const chestLottieRef = useRef<any>(null);
 
   // Pre-fetch bunny Lottie animation
   useEffect(() => {
@@ -184,6 +189,50 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       .then(setBunnyAnimData)
       .catch(() => {});
   }, []);
+
+  // Load chest Lottie when approaching chestReveal step
+  useEffect(() => {
+    if (!chestAnimData) {
+      fetch('/studyapp/treasure-3d.json')
+        .then((r) => r.json())
+        .then(setChestAnimData)
+        .catch(() => {});
+    }
+  }, [chestAnimData]);
+
+  // Control chest Lottie playback per stage
+  useEffect(() => {
+    if (!chestLottieRef.current) return;
+    const lottie = chestLottieRef.current;
+    if (chestStage === 0) {
+      lottie.goToAndStop(0, true);
+    } else if (chestStage === 1) {
+      lottie.playSegments([0, 45], true);
+    } else if (chestStage === 2) {
+      lottie.playSegments([45, 90], true);
+    }
+  }, [chestStage]);
+
+  // Reset chest stage when entering chestReveal step
+  useEffect(() => {
+    if (STEPS[currentStep].id === 'chestReveal') {
+      setChestStage(0);
+    }
+  }, [currentStep]);
+
+  // Fire confetti when lastChance screen appears
+  useEffect(() => {
+    if (STEPS[currentStep].id === 'lastChance') {
+      const gold = ['#FFD700', '#FFC107', '#FFAB00', '#FFE082', '#FFFFFF'];
+      confetti({ particleCount: 60, spread: 120, origin: { y: 0.3, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 35 });
+      setTimeout(() => {
+        confetti({ particleCount: 40, spread: 160, origin: { y: 0.35, x: 0.3 }, colors: gold, shapes: ['circle'], startVelocity: 30 });
+      }, 300);
+      setTimeout(() => {
+        confetti({ particleCount: 40, spread: 160, origin: { y: 0.35, x: 0.7 }, colors: gold, shapes: ['circle'], startVelocity: 30 });
+      }, 600);
+    }
+  }, [currentStep]);
 
   const stepId = STEPS[currentStep].id as StepId;
   const totalQuestionSteps = QUESTION_STEP_IDS.length;
@@ -1108,7 +1157,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => { triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 2, STEPS.length - 1)); }}
+          onClick={() => { triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 3, STEPS.length - 1)); }}
           style={{
             width: '100%',
             padding: '16px',
@@ -1160,6 +1209,209 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           Maybe later
         </button>
       </div>
+    </div>
+  );
+
+  const handleChestTap = useCallback(() => {
+    triggerHapticFeedback();
+    const next = chestStage + 1;
+    if (next >= 3) {
+      // Final tap — fire gold confetti and advance to lastChance
+      const gold = ['#FFD700', '#FFC107', '#FFAB00', '#FFE082', '#FFFFFF'];
+      confetti({ particleCount: 80, spread: 90, origin: { y: 0.45, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 45 });
+      setTimeout(() => {
+        confetti({ particleCount: 50, spread: 140, origin: { y: 0.5, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 30 });
+      }, 200);
+      setTimeout(() => {
+        confetti({ particleCount: 40, spread: 180, origin: { y: 0.4, x: 0.5 }, colors: gold, shapes: ['circle'], gravity: 1.5, scalar: 0.8 });
+      }, 500);
+      setTimeout(() => goNext(), 1200);
+    } else {
+      setChestStage(next);
+    }
+  }, [chestStage, goNext]);
+
+  const renderChestReveal = () => (
+    <div
+      onClick={handleChestTap}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        background: 'rgba(0, 0, 0, 0.85)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {/* Golden light rays behind chest (stage 2) */}
+      {chestStage >= 2 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.3 }}
+          animate={{ opacity: [0, 0.8, 0.5], scale: [0.3, 1.5, 1.2] }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          style={{
+            position: 'absolute',
+            width: '400px',
+            height: '400px',
+            background: 'radial-gradient(circle, rgba(255, 215, 0, 0.5) 0%, rgba(255, 193, 7, 0.2) 40%, transparent 70%)',
+            borderRadius: '50%',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
+      {/* The chest */}
+      <motion.div
+        animate={
+          chestStage === 0 ? { scale: [0, 1.15, 1], rotate: 0 } :
+          chestStage === 1 ? {
+            rotate: [-4, 4, -4, 4, -3, 3, 0],
+            scale: [1, 1.06, 1],
+          } :
+          {
+            rotate: [-7, 7, -9, 9, -7, 7, -5, 5, 0],
+            scale: [1, 1.1, 1.03, 1.1, 1],
+            y: [0, -8, 0, -5, 0],
+          }
+        }
+        transition={
+          chestStage === 0
+            ? { type: 'spring', stiffness: 300, damping: 15, duration: 0.5 }
+            : { duration: chestStage === 1 ? 0.5 : 0.7, ease: 'easeInOut' }
+        }
+        style={{
+          position: 'relative',
+          width: '200px',
+          height: '200px',
+          filter: chestStage >= 2
+            ? 'drop-shadow(0 0 30px rgba(255, 215, 0, 0.6))'
+            : 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))',
+        }}
+      >
+        {chestAnimData && (
+          <Lottie
+            lottieRef={chestLottieRef}
+            animationData={chestAnimData}
+            loop={false}
+            autoplay={false}
+            style={{ width: '100%', height: '100%' }}
+          />
+        )}
+
+        {/* Gift emoji peeking out of chest (stage 1+) */}
+        {chestStage >= 1 && (
+          <div style={{
+            position: 'absolute',
+            top: '8%', left: '15%',
+            width: '70%', height: '50%',
+            overflow: 'hidden',
+            zIndex: 1,
+            pointerEvents: 'none',
+          }}>
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={
+                chestStage === 1
+                  ? { y: [30, 15, 30], opacity: 1, rotate: [-4, 4, -4] }
+                  : { y: [10, -8, 10], opacity: 1, rotate: [-6, 6, -6], scale: [1, 1.1, 1] }
+              }
+              transition={{
+                duration: chestStage === 1 ? 1 : 0.6,
+                repeat: Infinity,
+                repeatType: 'reverse',
+                ease: 'easeInOut',
+              }}
+              style={{
+                width: '90px', height: '90px',
+                margin: '0 auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '60px',
+                filter: 'drop-shadow(0 2px 8px rgba(255, 215, 0, 0.5))',
+              }}
+            >
+              🎁
+            </motion.div>
+          </div>
+        )}
+
+        {/* Sparkles around chest (stage 1+) */}
+        {chestStage >= 1 && (
+          <>
+            {[...Array(chestStage >= 2 ? 10 : 6)].map((_, i) => {
+              const count = chestStage >= 2 ? 10 : 6;
+              const angle = (i / count) * Math.PI * 2;
+              const radius = chestStage >= 2 ? 120 : 90;
+              return (
+                <motion.div
+                  key={`sparkle-${i}`}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{
+                    opacity: [0, 1, 0],
+                    scale: [0, 1.5, 0],
+                    x: Math.cos(angle) * radius,
+                    y: Math.sin(angle) * radius,
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    delay: i * 0.06,
+                    repeat: Infinity,
+                    repeatDelay: 0.2,
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '50%', left: '50%',
+                    width: chestStage >= 2 ? '8px' : '5px',
+                    height: chestStage >= 2 ? '8px' : '5px',
+                    background: i % 3 === 0 ? '#FFD700' : i % 3 === 1 ? '#FFC107' : '#FFFFFF',
+                    borderRadius: '50%',
+                    boxShadow: '0 0 10px rgba(255, 215, 0, 0.8)',
+                    pointerEvents: 'none',
+                  }}
+                />
+              );
+            })}
+          </>
+        )}
+
+        {/* Golden glow pulse on stage 2 */}
+        {chestStage >= 2 && (
+          <motion.div
+            animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.1, 1] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
+            style={{
+              position: 'absolute',
+              top: '-20%', left: '-20%',
+              width: '140%', height: '140%',
+              background: 'radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 60%)',
+              borderRadius: '50%',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+      </motion.div>
+
+      {/* Tap prompt */}
+      <motion.div
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+        style={{
+          marginTop: '32px',
+          fontSize: 18,
+          fontWeight: 700,
+          color: 'rgba(255, 255, 255, 0.85)',
+          fontFamily: "'Quicksand', sans-serif",
+          letterSpacing: '2px',
+          textTransform: 'uppercase',
+          textShadow: '0 0 12px rgba(255, 215, 0, 0.4)',
+        }}
+      >
+        {chestStage === 0 ? 'TAP TO OPEN!' : chestStage === 1 ? 'TAP AGAIN!' : 'ONE MORE TAP!'}
+      </motion.div>
     </div>
   );
 
@@ -1316,7 +1568,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         </motion.button>
 
         <button
-          onClick={goNext}
+          onClick={() => onComplete(data)}
           style={{
             width: '100%',
             padding: '8px',
@@ -2115,6 +2367,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         return renderFirstStep();
       case 'premium':
         return renderPremium();
+      case 'chestReveal':
+        return renderChestReveal();
       case 'lastChance':
         return renderLastChance();
       case 'createAccount':
