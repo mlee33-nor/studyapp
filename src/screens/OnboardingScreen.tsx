@@ -797,9 +797,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         alignItems: 'center',
         height: '100%',
         padding: '0 24px',
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 48px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
-        overflow: 'auto',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+        overflow: 'hidden',
       }}
     >
       {/* Close / Skip button */}
@@ -828,20 +828,20 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       </button>
 
       {/* Header */}
-      <div style={{ textAlign: 'center', marginBottom: '24px', width: '100%', maxWidth: 360 }}>
+      <div style={{ textAlign: 'center', marginBottom: '14px', width: '100%', maxWidth: 360 }}>
         <div
           style={{
             display: 'inline-block',
-            padding: '6px 16px',
+            padding: '4px 14px',
             borderRadius: '20px',
             background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)',
             border: '1px solid rgba(251, 191, 36, 0.3)',
-            marginBottom: '16px',
+            marginBottom: '10px',
           }}
         >
           <span
             style={{
-              fontSize: '13px',
+              fontSize: '12px',
               fontWeight: 700,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
               background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
@@ -856,9 +856,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
         <h2
           style={{
-            fontSize: '30px',
+            fontSize: '26px',
             fontWeight: 800,
-            margin: '0 0 4px 0',
+            margin: '0 0 2px 0',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             letterSpacing: '-0.02em',
             ...GRADIENT_TEXT_STYLE,
@@ -868,10 +868,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         </h2>
         <h2
           style={{
-            fontSize: '30px',
+            fontSize: '26px',
             fontWeight: 800,
             color: t.textPrimary,
-            margin: '0 0 8px 0',
+            margin: '0 0 4px 0',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             letterSpacing: '-0.02em',
           }}
@@ -880,11 +880,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         </h2>
         <p
           style={{
-            fontSize: '15px',
+            fontSize: '14px',
             fontWeight: 500,
             color: t.textSecondary,
             margin: 0,
-            lineHeight: 1.5,
+            lineHeight: 1.4,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
@@ -898,10 +898,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           width: '100%',
           maxWidth: 360,
           background: t.cardBg,
-          borderRadius: '24px',
-          padding: '20px 24px',
+          borderRadius: '20px',
+          padding: '10px 20px',
           border: `1px solid ${t.cardBorder}`,
-          marginBottom: '24px',
+          marginBottom: '14px',
         }}
       >
         {premiumFeatures.map((feature, i) => (
@@ -910,15 +910,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '14px',
-              padding: '12px 0',
+              gap: '12px',
+              padding: '8px 0',
               borderBottom: i < premiumFeatures.length - 1 ? `1px solid ${t.optionBorder}` : 'none',
             }}
           >
-            <span style={{ fontSize: '20px', flexShrink: 0 }}>{feature.icon}</span>
+            <span style={{ fontSize: '17px', flexShrink: 0 }}>{feature.icon}</span>
             <span
               style={{
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: 600,
                 color: t.textPrimary,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -927,8 +927,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
               {feature.label}
             </span>
             <svg
-              width="18"
-              height="18"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#A78BFA"
@@ -944,15 +944,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       </div>
 
       {/* Plan options */}
-      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
         {/* Lifetime */}
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => { setSelectedPlan('lifetime'); triggerSelectionTick(); }}
           style={{
             width: '100%',
-            padding: '18px 20px',
-            borderRadius: '20px',
+            padding: '14px 18px',
+            borderRadius: '16px',
             border: selectedPlan === 'lifetime'
               ? '2px solid rgba(167, 139, 250, 0.6)'
               : `1px solid ${t.optionBorder}`,
@@ -970,12 +970,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           <div
             style={{
               position: 'absolute',
-              top: '-10px',
-              left: '20px',
-              padding: '3px 12px',
-              borderRadius: '10px',
+              top: '-9px',
+              left: '18px',
+              padding: '2px 10px',
+              borderRadius: '8px',
               background: 'linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%)',
-              fontSize: '10px',
+              fontSize: '9px',
               fontWeight: 700,
               color: 'white',
               fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -987,7 +987,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           <div>
             <div
               style={{
-                fontSize: '16px',
+                fontSize: '15px',
                 fontWeight: 700,
                 color: t.textPrimary,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -997,11 +997,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             </div>
             <div
               style={{
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 500,
                 color: t.textTertiary,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
-                marginTop: '2px',
+                marginTop: '1px',
               }}
             >
               Pay once, yours forever
@@ -1009,7 +1009,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           </div>
           <div
             style={{
-              fontSize: '24px',
+              fontSize: '22px',
               fontWeight: 800,
               color: t.textPrimary,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -1025,8 +1025,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           onClick={() => { setSelectedPlan('annual'); triggerSelectionTick(); }}
           style={{
             width: '100%',
-            padding: '18px 20px',
-            borderRadius: '20px',
+            padding: '14px 18px',
+            borderRadius: '16px',
             border: selectedPlan === 'annual'
               ? '2px solid rgba(167, 139, 250, 0.6)'
               : `1px solid ${t.optionBorder}`,
@@ -1041,7 +1041,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           <div>
             <div
               style={{
-                fontSize: '16px',
+                fontSize: '15px',
                 fontWeight: 700,
                 color: t.textPrimary,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -1051,11 +1051,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             </div>
             <div
               style={{
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 500,
                 color: t.textTertiary,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
-                marginTop: '2px',
+                marginTop: '1px',
               }}
             >
               $1.33/month — save 67%
@@ -1063,7 +1063,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           </div>
           <div
             style={{
-              fontSize: '24px',
+              fontSize: '22px',
               fontWeight: 800,
               color: t.textPrimary,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -1079,8 +1079,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           onClick={() => { setSelectedPlan('monthly'); triggerSelectionTick(); }}
           style={{
             width: '100%',
-            padding: '18px 20px',
-            borderRadius: '20px',
+            padding: '14px 18px',
+            borderRadius: '16px',
             border: selectedPlan === 'monthly'
               ? '2px solid rgba(167, 139, 250, 0.6)'
               : `1px solid ${t.optionBorder}`,
@@ -1095,7 +1095,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           <div>
             <div
               style={{
-                fontSize: '16px',
+                fontSize: '15px',
                 fontWeight: 700,
                 color: t.textPrimary,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -1105,11 +1105,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             </div>
             <div
               style={{
-                fontSize: '12px',
+                fontSize: '11px',
                 fontWeight: 500,
                 color: t.textTertiary,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
-                marginTop: '2px',
+                marginTop: '1px',
               }}
             >
               per month
@@ -1117,7 +1117,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           </div>
           <div
             style={{
-              fontSize: '24px',
+              fontSize: '22px',
               fontWeight: 800,
               color: t.textPrimary,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
@@ -1135,12 +1135,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           onClick={goNext}
           style={{
             width: '100%',
-            padding: '18px',
-            borderRadius: '20px',
+            padding: '16px',
+            borderRadius: '18px',
             border: 'none',
             background: t.buttonGradient,
             color: 'white',
-            fontSize: '17px',
+            fontSize: '16px',
             fontWeight: 700,
             cursor: 'pointer',
             boxShadow: t.buttonShadow,
@@ -1152,12 +1152,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
         <p
           style={{
-            fontSize: '12px',
+            fontSize: '11px',
             fontWeight: 500,
             color: t.textTertiary,
             textAlign: 'center',
-            margin: '12px 0 0 0',
-            lineHeight: 1.5,
+            margin: '8px 0 0 0',
+            lineHeight: 1.4,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
@@ -1170,15 +1170,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           onClick={goNext}
           style={{
             width: '100%',
-            padding: '12px',
+            padding: '8px',
             border: 'none',
             background: 'transparent',
             color: t.textTertiary,
-            fontSize: '14px',
+            fontSize: '13px',
             fontWeight: 600,
             cursor: 'pointer',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
-            marginTop: '4px',
+            marginTop: '2px',
           }}
         >
           Maybe later
