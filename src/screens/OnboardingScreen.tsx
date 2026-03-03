@@ -707,19 +707,18 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       }}
     >
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
-        <p
+        <h2
           style={{
-            fontSize: '15px',
-            fontWeight: 600,
-            color: t.textTertiary,
-            textTransform: 'uppercase' as const,
-            letterSpacing: '0.1em',
+            fontSize: '32px',
+            fontWeight: 800,
             margin: '0 0 32px 0',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
+            letterSpacing: '-0.01em',
+            ...GRADIENT_TEXT_STYLE,
           }}
         >
           Good news
-        </p>
+        </h2>
 
         <p
           style={{
