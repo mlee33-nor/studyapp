@@ -106,11 +106,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     (field: keyof OnboardingData, value: string) => {
       triggerSelectionTick();
       setData((d) => ({ ...d, [field]: value }));
-      // Auto-advance after a short delay
-      setTimeout(() => {
-        setDirection(1);
-        setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
-      }, 300);
     },
     []
   );
@@ -149,18 +144,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     return () => clearInterval(interval);
   }, [stepId, data, onComplete]);
 
-  // Slide animation variants
+  // Slide animation variants - using lightweight opacity transitions
   const slideVariants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? '100%' : '-100%',
+    enter: (_dir: number) => ({
       opacity: 0,
     }),
     center: {
-      x: 0,
       opacity: 1,
     },
-    exit: (dir: number) => ({
-      x: dir > 0 ? '-100%' : '100%',
+    exit: (_dir: number) => ({
       opacity: 0,
     }),
   };
@@ -170,18 +162,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     return (
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '32px' }}>
         {Array.from({ length: totalQuestionSteps }).map((_, i) => (
-          <motion.div
+          <div
             key={i}
-            animate={{
-              width: i === questionIndex ? 24 : 8,
-              background: i <= questionIndex ? t.progressFill : t.progressBg,
-              opacity: i <= questionIndex ? 1 : 0.5,
-            }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
             style={{
               height: 8,
+              width: i === questionIndex ? 24 : 8,
               borderRadius: 4,
               background: i <= questionIndex ? '#A78BFA' : t.progressBg,
+              opacity: i <= questionIndex ? 1 : 0.5,
+              transition: 'width 0.3s ease, background 0.3s ease, opacity 0.3s ease',
             }}
           />
         ))}
@@ -197,9 +186,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   ) => {
     const isSelected = data[field] === value;
     return (
-      <motion.button
+      <button
         key={value}
-        whileTap={{ scale: 0.97 }}
         onClick={() => selectOption(field, value)}
         style={{
           width: '100%',
@@ -207,8 +195,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           borderRadius: '16px',
           border: `2px solid ${isSelected ? t.optionSelectedBorder : t.optionBorder}`,
           background: isSelected ? t.optionSelectedBg : t.optionBg,
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -231,9 +217,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           {label}
         </span>
         {isSelected && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+          <div
             style={{
               marginLeft: 'auto',
               width: 24,
@@ -249,9 +233,44 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-          </motion.div>
+          </div>
         )}
-      </motion.button>
+      </button>
+    );
+  };
+
+  const renderConfirmButton = (field: keyof OnboardingData) => {
+    const hasSelection = data[field] !== '';
+    return (
+      <div style={{ marginTop: '16px' }}>
+        <AnimatePresence>
+          {hasSelection && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.2 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={goNext}
+              style={{
+                width: '100%',
+                padding: '18px',
+                borderRadius: '20px',
+                border: 'none',
+                background: t.buttonGradient,
+                color: 'white',
+                fontSize: '17px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: t.buttonShadow,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              Continue
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
     );
   };
 
@@ -270,8 +289,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           borderRadius: '50%',
           border: `1px solid ${t.optionBorder}`,
           background: t.optionBg,
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -386,8 +403,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
                 padding: '8px 14px',
                 borderRadius: '12px',
                 background: t.optionBg,
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
                 border: `1px solid ${t.optionBorder}`,
                 fontSize: '13px',
                 fontWeight: 600,
@@ -482,6 +497,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         {renderOption('studyHours', '4-6', '4 - 6 hours', '🔥')}
         {renderOption('studyHours', '6-plus', '6+ hours', '💪')}
       </div>
+
+      {renderConfirmButton('studyHours')}
     </div>
   );
 
@@ -535,8 +552,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         {renderOption('age', '45-plus', '45+', '🌟')}
       </div>
 
+      {renderConfirmButton('age')}
+
       {/* Skip button */}
-      <div style={{ textAlign: 'center', marginTop: '16px' }}>
+      <div style={{ textAlign: 'center', marginTop: '8px' }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => {
@@ -608,6 +627,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         {renderOption('occupation', 'self-learner', 'Self-Learner', '🧠')}
         {renderOption('occupation', 'other', 'Other', '✨')}
       </div>
+
+      {renderConfirmButton('occupation')}
     </div>
   );
 
@@ -659,6 +680,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         {renderOption('goal', 'productive', 'Be more productive', '⚡')}
         {renderOption('goal', 'exam-prep', 'Prepare for exams', '📝')}
       </div>
+
+      {renderConfirmButton('goal')}
     </div>
   );
 
@@ -787,21 +810,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           zIndex: 0,
         }}
       >
-        {/* Animated orbs */}
+        {/* Static blurred orbs - no animation for performance */}
         {t.orbs.map((orb, index) => (
-          <motion.div
+          <div
             key={index}
-            animate={{
-              x: [0, 60 * (index % 2 ? 1 : -1), -40 * (index % 2 ? 1 : -1), 0],
-              y: [0, -50 * (index % 2 ? -1 : 1), 70 * (index % 2 ? -1 : 1), 0],
-              scale: [1, 1.15, 0.9, 1],
-            }}
-            transition={{
-              duration: 18 + index * 4,
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: index * 2,
-            }}
             style={{
               position: 'absolute',
               left: orb.x,
@@ -811,6 +823,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
               background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
               filter: 'blur(80px)',
               pointerEvents: 'none',
+              willChange: 'auto',
             }}
           />
         ))}
@@ -828,7 +841,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          transition={{ duration: 0.25, ease: 'easeInOut' }}
           style={{
             position: 'absolute',
             inset: 0,
