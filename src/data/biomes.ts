@@ -174,9 +174,9 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
     price: 800,
   },
   {
-    id: 'whale',
-    name: 'Whale',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/432126fa-1151-11ee-81d6-fbec6e0e68cb/yvKkYB9pgL.json',
+    id: 'crab',
+    name: 'Crab',
+    lottieUrl: 'https://lottie.host/7ff67520-fa49-4f49-b25b-b0848519bff3/cJaovJYx2d.json',
     price: 800,
   },
 ];
