@@ -64,9 +64,19 @@ const THEMES = {
   },
 };
 
+const GRADIENT_TEXT_STYLE: React.CSSProperties = {
+  background: 'linear-gradient(135deg, #A78BFA 0%, #818CF8 50%, #6366F1 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+};
+
 // Step definitions
 const STEPS = [
-  { id: 'welcome' },
+  { id: 'intro' },
+  { id: 'badNews' },
+  { id: 'goodNews' },
+  { id: 'firstStep' },
   { id: 'studyHours' },
   { id: 'age' },
   { id: 'occupation' },
@@ -75,6 +85,8 @@ const STEPS = [
 ] as const;
 
 type StepId = (typeof STEPS)[number]['id'];
+
+const QUESTION_STEP_IDS = ['studyHours', 'age', 'occupation', 'goal'] as const;
 
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }) => {
   const t = THEMES[theme];
@@ -99,8 +111,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   }, []);
 
   const stepId = STEPS[currentStep].id as StepId;
-  const totalQuestionSteps = STEPS.length - 2; // exclude welcome + calculating
-  const questionIndex = currentStep - 1; // 0-indexed within question steps
+  const totalQuestionSteps = QUESTION_STEP_IDS.length;
+  const questionIndex = QUESTION_STEP_IDS.indexOf(stepId as any);
 
   const goNext = useCallback(() => {
     triggerSelectionTick();
@@ -156,7 +168,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     return () => clearInterval(interval);
   }, [stepId, data, onComplete]);
 
-  // Slide animation variants - using lightweight opacity transitions
+  // Slide animation variants
   const slideVariants = {
     enter: (_dir: number) => ({
       opacity: 0,
@@ -170,7 +182,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   };
 
   const renderProgressDots = () => {
-    if (stepId === 'welcome' || stepId === 'calculating') return null;
+    if (questionIndex < 0) return null;
     return (
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '32px' }}>
         {Array.from({ length: totalQuestionSteps }).map((_, i) => (
@@ -286,6 +298,28 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     );
   };
 
+  const renderContinueButton = (label = 'Continue') => (
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      onClick={goNext}
+      style={{
+        width: '100%',
+        padding: '18px',
+        borderRadius: '20px',
+        border: 'none',
+        background: t.buttonGradient,
+        color: 'white',
+        fontSize: '17px',
+        fontWeight: 700,
+        cursor: 'pointer',
+        boxShadow: t.buttonShadow,
+        fontFamily: "'Quicksand', -apple-system, sans-serif",
+      }}
+    >
+      {label}
+    </motion.button>
+  );
+
   const renderBackButton = () => {
     if (currentStep <= 1) return null;
     return (
@@ -314,8 +348,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     );
   };
 
-  // --- Welcome Screen ---
-  const renderWelcome = () => (
+  // --- Opal-style Intro Screen ---
+  const renderIntro = () => (
     <div
       style={{
         display: 'flex',
@@ -328,117 +362,291 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
       }}
     >
-      <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        {/* App icon / mascot area */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h1
+          style={{
+            fontSize: '32px',
+            fontWeight: 700,
+            color: t.textPrimary,
+            textAlign: 'center',
+            lineHeight: 1.35,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            letterSpacing: '-0.01em',
+            maxWidth: 320,
+          }}
+        >
+          Some not-so-good news,{' '}
+          <span style={{ display: 'block', marginTop: '4px' }}>
+            and some{' '}
+            <span style={GRADIENT_TEXT_STYLE}>great</span>{' '}
+            news.
+          </span>
+        </h1>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        {renderContinueButton()}
+      </div>
+    </div>
+  );
+
+  // --- Opal-style Bad News Screen ---
+  const renderBadNews = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '0 32px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+      }}
+    >
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
+        <p
+          style={{
+            fontSize: '15px',
+            fontWeight: 600,
+            color: t.textTertiary,
+            textTransform: 'uppercase' as const,
+            letterSpacing: '0.1em',
+            margin: '0 0 32px 0',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Bad news
+        </p>
+
+        <p
+          style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            margin: '0 0 8px 0',
+            lineHeight: 1.4,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          The average student loses
+        </p>
+
+        <h2
+          style={{
+            fontSize: '56px',
+            fontWeight: 800,
+            margin: '0 0 8px 0',
+            lineHeight: 1.1,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            ...GRADIENT_TEXT_STYLE,
+          }}
+        >
+          114 days
+        </h2>
+
+        <p
+          style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            margin: '0 0 40px 0',
+            lineHeight: 1.4,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          to unfocused studying each year.
+        </p>
+
+        <p
+          style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            margin: '0 0 8px 0',
+            lineHeight: 1.4,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          That's
+        </p>
+
+        <h2
+          style={{
+            fontSize: '56px',
+            fontWeight: 800,
+            margin: '0 0 8px 0',
+            lineHeight: 1.1,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            ...GRADIENT_TEXT_STYLE,
+          }}
+        >
+          22 years
+        </h2>
+
+        <p
+          style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            margin: 0,
+            lineHeight: 1.4,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          of a lifetime.
+        </p>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        {renderContinueButton()}
+      </div>
+    </div>
+  );
+
+  // --- Opal-style Good News Screen ---
+  const renderGoodNews = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '0 32px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+      }}
+    >
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
+        <p
+          style={{
+            fontSize: '15px',
+            fontWeight: 600,
+            color: t.textTertiary,
+            textTransform: 'uppercase' as const,
+            letterSpacing: '0.1em',
+            margin: '0 0 32px 0',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Good news
+        </p>
+
+        <p
+          style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            margin: '0 0 8px 0',
+            lineHeight: 1.4,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Study Buddy can help you save
+        </p>
+
+        <h2
+          style={{
+            fontSize: '56px',
+            fontWeight: 800,
+            margin: '0 0 8px 0',
+            lineHeight: 1.1,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            ...GRADIENT_TEXT_STYLE,
+          }}
+        >
+          6 years+
+        </h2>
+
+        <p
+          style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            margin: 0,
+            lineHeight: 1.4,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          of your life.
+        </p>
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        {renderContinueButton()}
+      </div>
+    </div>
+  );
+
+  // --- Opal-style First Step Screen ---
+  const renderFirstStep = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '0 32px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+      }}
+    >
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360 }}>
+        <h2
+          style={{
+            fontSize: '28px',
+            fontWeight: 800,
+            color: t.textPrimary,
+            margin: '0 0 16px 0',
+            textAlign: 'center',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            letterSpacing: '-0.01em',
+          }}
+        >
+          Let's take the first step
+        </h2>
+
+        <p
+          style={{
+            fontSize: '16px',
+            fontWeight: 500,
+            color: t.textSecondary,
+            margin: '0 0 48px 0',
+            textAlign: 'center',
+            lineHeight: 1.6,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            maxWidth: 300,
+          }}
+        >
+          Tell us a bit about yourself so we can build the perfect study plan for you.
+        </p>
+
+        {/* Icon */}
         <div
           style={{
-            width: 140,
-            height: 140,
-            borderRadius: '32px',
+            width: 100,
+            height: 100,
+            borderRadius: '28px',
             background: t.buttonGradient,
             boxShadow: t.buttonShadow,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '32px',
             overflow: 'hidden',
           }}
         >
           {bunnyAnimData ? (
-            <Lottie animationData={bunnyAnimData} loop style={{ width: 120, height: 120 }} />
+            <Lottie animationData={bunnyAnimData} loop style={{ width: 80, height: 80 }} />
           ) : (
-            <span style={{ fontSize: '56px' }}>🐰</span>
+            <span style={{ fontSize: '40px' }}>🐰</span>
           )}
-        </div>
-
-        <h1
-          style={{
-            fontSize: '32px',
-            fontWeight: 800,
-            color: t.textPrimary,
-            margin: '0 0 12px 0',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-            letterSpacing: '-0.02em',
-          }}
-        >
-          Study Buddy
-        </h1>
-
-        <p
-          style={{
-            fontSize: '17px',
-            color: t.textSecondary,
-            margin: '0 0 8px 0',
-            lineHeight: '1.5',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-            maxWidth: 300,
-          }}
-        >
-          Focus better. Study smarter.
-          <br />
-          Collect adorable companions along the way.
-        </p>
-
-        {/* Feature pills */}
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '8px',
-            justifyContent: 'center',
-            marginTop: '24px',
-          }}
-        >
-          {[
-            { emoji: '🎯', label: 'Focus Timer' },
-            { emoji: '🐾', label: 'Collect Animals' },
-            { emoji: '📊', label: 'Track Progress' },
-            { emoji: '🏆', label: 'Earn Rewards' },
-          ].map((pill) => (
-            <div
-              key={pill.label}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                borderRadius: '12px',
-                background: t.optionBg,
-                border: `1px solid ${t.optionBorder}`,
-                fontSize: '13px',
-                fontWeight: 600,
-                color: t.textSecondary,
-                fontFamily: "'Quicksand', -apple-system, sans-serif",
-              }}
-            >
-              <span>{pill.emoji}</span>
-              {pill.label}
-            </div>
-          ))}
         </div>
       </div>
 
-      {/* Bottom buttons */}
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <button
-          onClick={goNext}
-          style={{
-            width: '100%',
-            padding: '18px',
-            borderRadius: '20px',
-            border: 'none',
-            background: t.buttonGradient,
-            color: 'white',
-            fontSize: '17px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: t.buttonShadow,
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-            marginBottom: '16px',
-          }}
-        >
-          Get Started
-        </button>
+        {renderContinueButton("Let's Go")}
       </div>
     </div>
   );
@@ -744,8 +952,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
   const renderStep = () => {
     switch (stepId) {
-      case 'welcome':
-        return renderWelcome();
+      case 'intro':
+        return renderIntro();
+      case 'badNews':
+        return renderBadNews();
+      case 'goodNews':
+        return renderGoodNews();
+      case 'firstStep':
+        return renderFirstStep();
       case 'studyHours':
         return renderStudyHours();
       case 'age':
@@ -777,7 +991,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           zIndex: 0,
         }}
       >
-        {/* Soft orbs - large radial gradients, no blur filter for performance */}
+        {/* Soft orbs */}
         {t.orbs.map((orb, index) => (
           <div
             key={index}
