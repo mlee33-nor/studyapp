@@ -134,7 +134,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       if (progress >= 100) {
         progress = 100;
         clearInterval(interval);
-        triggerHapticFeedback('success');
+        triggerHapticFeedback();
         setTimeout(() => onComplete(data), 600);
       }
       setCalculatingProgress(Math.min(progress, 100));
@@ -254,30 +254,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       </motion.button>
     );
   };
-
-  const renderContinueButton = (disabled: boolean, onClick: () => void) => (
-    <motion.button
-      whileTap={disabled ? {} : { scale: 0.97 }}
-      onClick={disabled ? undefined : onClick}
-      style={{
-        width: '100%',
-        padding: '18px',
-        borderRadius: '20px',
-        border: 'none',
-        background: disabled ? t.progressBg : t.buttonGradient,
-        color: disabled ? t.textTertiary : 'white',
-        fontSize: '17px',
-        fontWeight: 700,
-        cursor: disabled ? 'default' : 'pointer',
-        boxShadow: disabled ? 'none' : t.buttonShadow,
-        transition: 'background 0.3s, box-shadow 0.3s',
-        fontFamily: "'Quicksand', -apple-system, sans-serif",
-        opacity: disabled ? 0.5 : 1,
-      }}
-    >
-      Continue
-    </motion.button>
-  );
 
   const renderBackButton = () => {
     if (currentStep <= 1) return null;
