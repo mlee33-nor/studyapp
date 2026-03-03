@@ -73,15 +73,16 @@ const GRADIENT_TEXT_STYLE: React.CSSProperties = {
 
 // Step definitions
 const STEPS = [
-  { id: 'intro' },
-  { id: 'badNews' },
-  { id: 'goodNews' },
-  { id: 'firstStep' },
+  { id: 'welcome' },
   { id: 'studyHours' },
   { id: 'age' },
   { id: 'occupation' },
   { id: 'goal' },
   { id: 'calculating' },
+  { id: 'intro' },
+  { id: 'badNews' },
+  { id: 'goodNews' },
+  { id: 'firstStep' },
 ] as const;
 
 type StepId = (typeof STEPS)[number]['id'];
@@ -154,7 +155,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         progress = 100;
         clearInterval(interval);
         triggerHapticFeedback();
-        setTimeout(() => onComplete(data), 600);
+        setTimeout(() => goNext(), 600);
       }
       setCalculatingProgress(Math.min(progress, 100));
 
@@ -321,7 +322,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   );
 
   const renderBackButton = () => {
-    if (currentStep <= 1) return null;
+    // Hide back button on welcome, calculating, and post-calculating Opal screens
+    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep'];
+    if (currentStep <= 0 || postCalcSteps.includes(stepId)) return null;
     return (
       <button
         onClick={goBack}
@@ -347,6 +350,117 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       </button>
     );
   };
+
+  // --- Welcome Screen ---
+  const renderWelcome = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '0 32px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+      }}
+    >
+      <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        {/* App icon / mascot area */}
+        <div
+          style={{
+            width: 140,
+            height: 140,
+            borderRadius: '32px',
+            background: t.buttonGradient,
+            boxShadow: t.buttonShadow,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '32px',
+            overflow: 'hidden',
+          }}
+        >
+          {bunnyAnimData ? (
+            <Lottie animationData={bunnyAnimData} loop style={{ width: 120, height: 120 }} />
+          ) : (
+            <span style={{ fontSize: '56px' }}>🐰</span>
+          )}
+        </div>
+
+        <h1
+          style={{
+            fontSize: '32px',
+            fontWeight: 800,
+            color: t.textPrimary,
+            margin: '0 0 12px 0',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Study Buddy
+        </h1>
+
+        <p
+          style={{
+            fontSize: '17px',
+            color: t.textSecondary,
+            margin: '0 0 8px 0',
+            lineHeight: '1.5',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            maxWidth: 300,
+          }}
+        >
+          Focus better. Study smarter.
+          <br />
+          Collect adorable companions along the way.
+        </p>
+
+        {/* Feature pills */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            justifyContent: 'center',
+            marginTop: '24px',
+          }}
+        >
+          {[
+            { emoji: '🎯', label: 'Focus Timer' },
+            { emoji: '🐾', label: 'Collect Animals' },
+            { emoji: '📊', label: 'Track Progress' },
+            { emoji: '🏆', label: 'Earn Rewards' },
+          ].map((pill) => (
+            <div
+              key={pill.label}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '12px',
+                background: t.optionBg,
+                border: `1px solid ${t.optionBorder}`,
+                fontSize: '13px',
+                fontWeight: 600,
+                color: t.textSecondary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              <span>{pill.emoji}</span>
+              {pill.label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom button */}
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        {renderContinueButton('Get Started')}
+      </div>
+    </div>
+  );
 
   // --- Opal-style Intro Screen ---
   const renderIntro = () => (
@@ -646,7 +760,25 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       </div>
 
       <div style={{ width: '100%', maxWidth: 360 }}>
-        {renderContinueButton("Let's Go")}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => onComplete(data)}
+          style={{
+            width: '100%',
+            padding: '18px',
+            borderRadius: '20px',
+            border: 'none',
+            background: t.buttonGradient,
+            color: 'white',
+            fontSize: '17px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: t.buttonShadow,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Let's Go
+        </motion.button>
       </div>
     </div>
   );
@@ -952,14 +1084,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
   const renderStep = () => {
     switch (stepId) {
-      case 'intro':
-        return renderIntro();
-      case 'badNews':
-        return renderBadNews();
-      case 'goodNews':
-        return renderGoodNews();
-      case 'firstStep':
-        return renderFirstStep();
+      case 'welcome':
+        return renderWelcome();
       case 'studyHours':
         return renderStudyHours();
       case 'age':
@@ -970,6 +1096,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         return renderGoal();
       case 'calculating':
         return renderCalculating();
+      case 'intro':
+        return renderIntro();
+      case 'badNews':
+        return renderBadNews();
+      case 'goodNews':
+        return renderGoodNews();
+      case 'firstStep':
+        return renderFirstStep();
     }
   };
 
