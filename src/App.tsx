@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Home, Settings as SettingsIcon, Play, Pause, Bell, Lock, FileText, Image, X, Check, LogOut } from 'lucide-react';
+import { Home, Settings as SettingsIcon, Play, Pause, Bell, Lock, FileText, Image, X, Check, LogOut, LogIn } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -2744,7 +2744,11 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
         <GlassCard theme={selectedTheme} style={{ marginTop: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: hasAccount() ? '4px' : '16px' }}>
-            <LogOut size={20} color={getTextColor(selectedTheme, 'secondary')} strokeWidth={2.5} />
+            {hasAccount() ? (
+              <LogOut size={20} color={getTextColor(selectedTheme, 'secondary')} strokeWidth={2.5} />
+            ) : (
+              <LogIn size={20} color={getTextColor(selectedTheme, 'secondary')} strokeWidth={2.5} />
+            )}
             <h3 style={{
               margin: 0,
               fontSize: '16px',
@@ -2768,7 +2772,14 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
           )}
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => { logout(); window.location.reload(); }}
+            onClick={() => {
+              if (hasAccount()) {
+                logout();
+                window.location.reload();
+              } else {
+                setShowLogin(true);
+              }
+            }}
             style={{
               width: '100%',
               padding: '14px',
@@ -2784,7 +2795,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               cursor: 'pointer',
             }}
           >
-            Log Out
+            {hasAccount() ? 'Log Out' : 'Log In'}
           </motion.button>
         </GlassCard>
       </motion.div>
