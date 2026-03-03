@@ -1442,7 +1442,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         overflow: 'hidden',
-        pointerEvents: lastChanceTapGuard ? 'none' : 'auto',
+        position: 'relative',
       }}
     >
       {/* Emoji */}
@@ -1601,6 +1601,22 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           No thanks
         </button>
       </div>
+
+      {/* Tap guard overlay — blocks all interaction for 2s after chest opens */}
+      {lastChanceTapGuard && (
+        <div
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onTouchStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 9999,
+            cursor: 'default',
+          }}
+        />
+      )}
     </div>
   );
 
