@@ -276,6 +276,7 @@ const MeadowScreen: React.FC = () => {
       ...currentData,
       coins: (currentData.coins ?? 0) - cost,
       unlockedBiomes: newUnlocked,
+      activeBiome: biomeId,
     };
     saveUserData(newData);
     refreshData();
