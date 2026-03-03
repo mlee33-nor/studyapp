@@ -174,7 +174,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'annual'>('annual');
+  const [selectedPlan, setSelectedPlan] = useState<'lifetime' | 'annual' | 'monthly'>('lifetime');
 
   // Pre-fetch bunny Lottie animation
   useEffect(() => {
@@ -943,72 +943,27 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         ))}
       </div>
 
-      {/* Plan toggle */}
-      <div style={{ width: '100%', maxWidth: 360, display: 'flex', gap: '12px', marginBottom: '20px' }}>
+      {/* Plan options */}
+      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+        {/* Lifetime */}
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => { setSelectedPlan('weekly'); triggerSelectionTick(); }}
+          onClick={() => { setSelectedPlan('lifetime'); triggerSelectionTick(); }}
           style={{
-            flex: 1,
-            padding: '16px 12px',
+            width: '100%',
+            padding: '18px 20px',
             borderRadius: '20px',
-            border: selectedPlan === 'weekly'
+            border: selectedPlan === 'lifetime'
               ? '2px solid rgba(167, 139, 250, 0.6)'
               : `1px solid ${t.optionBorder}`,
-            background: selectedPlan === 'weekly' ? t.optionSelectedBg : t.optionBg,
+            background: selectedPlan === 'lifetime' ? t.optionSelectedBg : t.optionBg,
             cursor: 'pointer',
-            textAlign: 'center',
-          }}
-        >
-          <div
-            style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: t.textSecondary,
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-              marginBottom: '4px',
-            }}
-          >
-            Weekly
-          </div>
-          <div
-            style={{
-              fontSize: '22px',
-              fontWeight: 800,
-              color: t.textPrimary,
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-            }}
-          >
-            $1.99
-          </div>
-          <div
-            style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              color: t.textTertiary,
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-              marginTop: '2px',
-            }}
-          >
-            per week
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={() => { setSelectedPlan('annual'); triggerSelectionTick(); }}
-          style={{
-            flex: 1,
-            padding: '16px 12px',
-            borderRadius: '20px',
-            border: selectedPlan === 'annual'
-              ? '2px solid rgba(167, 139, 250, 0.6)'
-              : `1px solid ${t.optionBorder}`,
-            background: selectedPlan === 'annual' ? t.optionSelectedBg : t.optionBg,
-            cursor: 'pointer',
-            textAlign: 'center',
+            textAlign: 'left',
             position: 'relative',
             overflow: 'visible',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
           }}
         >
           {/* Best value badge */}
@@ -1016,8 +971,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             style={{
               position: 'absolute',
               top: '-10px',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              left: '20px',
               padding: '3px 12px',
               borderRadius: '10px',
               background: 'linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%)',
@@ -1030,37 +984,146 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           >
             BEST VALUE
           </div>
-          <div
-            style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: t.textSecondary,
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-              marginBottom: '4px',
-            }}
-          >
-            Annual
+          <div>
+            <div
+              style={{
+                fontSize: '16px',
+                fontWeight: 700,
+                color: t.textPrimary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              Lifetime
+            </div>
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: 500,
+                color: t.textTertiary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+                marginTop: '2px',
+              }}
+            >
+              Pay once, yours forever
+            </div>
           </div>
           <div
             style={{
-              fontSize: '22px',
+              fontSize: '24px',
               fontWeight: 800,
               color: t.textPrimary,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
             }}
           >
-            $29.99
+            $33
+          </div>
+        </motion.button>
+
+        {/* Annual */}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => { setSelectedPlan('annual'); triggerSelectionTick(); }}
+          style={{
+            width: '100%',
+            padding: '18px 20px',
+            borderRadius: '20px',
+            border: selectedPlan === 'annual'
+              ? '2px solid rgba(167, 139, 250, 0.6)'
+              : `1px solid ${t.optionBorder}`,
+            background: selectedPlan === 'annual' ? t.optionSelectedBg : t.optionBg,
+            cursor: 'pointer',
+            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: '16px',
+                fontWeight: 700,
+                color: t.textPrimary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              Annual
+            </div>
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: 500,
+                color: t.textTertiary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+                marginTop: '2px',
+              }}
+            >
+              $1.33/month — save 67%
+            </div>
           </div>
           <div
             style={{
-              fontSize: '12px',
-              fontWeight: 500,
-              color: t.textTertiary,
+              fontSize: '24px',
+              fontWeight: 800,
+              color: t.textPrimary,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
-              marginTop: '2px',
             }}
           >
-            $0.58/week — save 71%
+            $15.99
+          </div>
+        </motion.button>
+
+        {/* Monthly */}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => { setSelectedPlan('monthly'); triggerSelectionTick(); }}
+          style={{
+            width: '100%',
+            padding: '18px 20px',
+            borderRadius: '20px',
+            border: selectedPlan === 'monthly'
+              ? '2px solid rgba(167, 139, 250, 0.6)'
+              : `1px solid ${t.optionBorder}`,
+            background: selectedPlan === 'monthly' ? t.optionSelectedBg : t.optionBg,
+            cursor: 'pointer',
+            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: '16px',
+                fontWeight: 700,
+                color: t.textPrimary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              Monthly
+            </div>
+            <div
+              style={{
+                fontSize: '12px',
+                fontWeight: 500,
+                color: t.textTertiary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+                marginTop: '2px',
+              }}
+            >
+              per month
+            </div>
+          </div>
+          <div
+            style={{
+              fontSize: '24px',
+              fontWeight: 800,
+              color: t.textPrimary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+            }}
+          >
+            $3.99
           </div>
         </motion.button>
       </div>
@@ -1098,7 +1161,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          3-day free trial, then {selectedPlan === 'weekly' ? '$1.99/week' : '$29.99/year'}. Cancel anytime.
+          {selectedPlan === 'lifetime'
+            ? 'One-time payment of $33. No subscription.'
+            : `3-day free trial, then ${selectedPlan === 'annual' ? '$15.99/year' : '$3.99/month'}. Cancel anytime.`}
         </p>
 
         <button
