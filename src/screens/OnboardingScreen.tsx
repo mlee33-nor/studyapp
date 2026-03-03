@@ -224,13 +224,20 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   useEffect(() => {
     if (STEPS[currentStep].id === 'lastChance') {
       const gold = ['#FFD700', '#FFC107', '#FFAB00', '#FFE082', '#FFFFFF'];
-      confetti({ particleCount: 60, spread: 120, origin: { y: 0.3, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 35 });
+      // Immediate big burst
+      confetti({ particleCount: 100, spread: 100, origin: { y: 0.4, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 50, zIndex: 99999 });
+      // Left burst
       setTimeout(() => {
-        confetti({ particleCount: 40, spread: 160, origin: { y: 0.35, x: 0.3 }, colors: gold, shapes: ['circle'], startVelocity: 30 });
+        confetti({ particleCount: 60, spread: 140, origin: { y: 0.45, x: 0.25 }, colors: gold, shapes: ['circle'], startVelocity: 35, zIndex: 99999 });
+      }, 150);
+      // Right burst
+      setTimeout(() => {
+        confetti({ particleCount: 60, spread: 140, origin: { y: 0.45, x: 0.75 }, colors: gold, shapes: ['circle'], startVelocity: 35, zIndex: 99999 });
       }, 300);
+      // Final shower
       setTimeout(() => {
-        confetti({ particleCount: 40, spread: 160, origin: { y: 0.35, x: 0.7 }, colors: gold, shapes: ['circle'], startVelocity: 30 });
-      }, 600);
+        confetti({ particleCount: 50, spread: 180, origin: { y: 0.3, x: 0.5 }, colors: gold, shapes: ['circle'], gravity: 1.2, scalar: 0.9, zIndex: 99999 });
+      }, 500);
     }
   }, [currentStep]);
 
@@ -1216,16 +1223,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     triggerHapticFeedback();
     const next = chestStage + 1;
     if (next >= 3) {
-      // Final tap — fire gold confetti and advance to lastChance
-      const gold = ['#FFD700', '#FFC107', '#FFAB00', '#FFE082', '#FFFFFF'];
-      confetti({ particleCount: 80, spread: 90, origin: { y: 0.45, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 45 });
-      setTimeout(() => {
-        confetti({ particleCount: 50, spread: 140, origin: { y: 0.5, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 30 });
-      }, 200);
-      setTimeout(() => {
-        confetti({ particleCount: 40, spread: 180, origin: { y: 0.4, x: 0.5 }, colors: gold, shapes: ['circle'], gravity: 1.5, scalar: 0.8 });
-      }, 500);
-      setTimeout(() => goNext(), 1200);
+      // Final tap — advance immediately, confetti fires via lastChance useEffect
+      goNext();
     } else {
       setChestStage(next);
     }
@@ -1240,13 +1239,27 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
-        background: 'rgba(0, 0, 0, 0.85)',
         cursor: 'pointer',
         overflow: 'hidden',
         position: 'relative',
       }}
     >
-      {/* Golden light rays behind chest (stage 2) */}
+      {/* Subtle golden ambient glow behind chest (always visible) */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: chestStage >= 2 ? [0.4, 0.8, 0.4] : [0.15, 0.3, 0.15], scale: chestStage >= 2 ? 1.3 : 1 }}
+        transition={{ duration: chestStage >= 2 ? 0.8 : 2, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute',
+          width: '350px',
+          height: '350px',
+          background: 'radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, rgba(255, 193, 7, 0.15) 40%, transparent 70%)',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Intense golden light rays behind chest (stage 2) */}
       {chestStage >= 2 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.3 }}
@@ -1288,7 +1301,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           height: '200px',
           filter: chestStage >= 2
             ? 'drop-shadow(0 0 30px rgba(255, 215, 0, 0.6))'
-            : 'drop-shadow(0 4px 20px rgba(0,0,0,0.5))',
+            : 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.3)) drop-shadow(0 4px 12px rgba(0,0,0,0.3))',
         }}
       >
         {chestAnimData && (
