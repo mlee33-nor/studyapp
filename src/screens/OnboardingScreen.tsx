@@ -85,6 +85,7 @@ const STEPS = [
   { id: 'goodNews' },
   { id: 'firstStep' },
   { id: 'premium' },
+  { id: 'lastChance' },
   { id: 'createAccount' },
 ] as const;
 
@@ -802,31 +803,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         overflow: 'hidden',
       }}
     >
-      {/* Close / Skip button */}
-      <button
-        onClick={goNext}
-        style={{
-          position: 'absolute',
-          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-          right: '16px',
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          border: `1px solid ${t.optionBorder}`,
-          background: t.optionBg,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 10,
-        }}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={t.textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
-
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '14px', width: '100%', maxWidth: 360 }}>
         <div
@@ -1132,7 +1108,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={goNext}
+          onClick={() => { triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 2, STEPS.length - 1)); }}
           style={{
             width: '100%',
             padding: '16px',
@@ -1182,6 +1158,179 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           }}
         >
           Maybe later
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderLastChance = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        padding: '0 24px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Emoji */}
+      <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+        🎁
+      </div>
+
+      {/* Heading */}
+      <h2
+        style={{
+          fontSize: '26px',
+          fontWeight: 800,
+          color: t.textPrimary,
+          margin: '0 0 6px 0',
+          fontFamily: "'Quicksand', -apple-system, sans-serif",
+          letterSpacing: '-0.02em',
+          textAlign: 'center',
+        }}
+      >
+        Wait — one last offer!
+      </h2>
+      <p
+        style={{
+          fontSize: '15px',
+          fontWeight: 500,
+          color: t.textSecondary,
+          margin: '0 0 24px 0',
+          lineHeight: 1.5,
+          fontFamily: "'Quicksand', -apple-system, sans-serif",
+          textAlign: 'center',
+          maxWidth: 300,
+        }}
+      >
+        Get lifetime access at an exclusive discount — just for you.
+      </p>
+
+      {/* Discount card */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 360,
+          background: t.cardBg,
+          borderRadius: '20px',
+          padding: '24px',
+          border: '2px solid rgba(167, 139, 250, 0.5)',
+          marginBottom: '24px',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'visible',
+        }}
+      >
+        {/* 10% off badge */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '-12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            padding: '4px 16px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+            fontSize: '12px',
+            fontWeight: 800,
+            color: 'white',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            whiteSpace: 'nowrap',
+          }}
+        >
+          10% OFF
+        </div>
+
+        <div
+          style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: t.textSecondary,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            marginBottom: '8px',
+          }}
+        >
+          Lifetime Access
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+          <span
+            style={{
+              fontSize: '18px',
+              fontWeight: 600,
+              color: t.textTertiary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              textDecoration: 'line-through',
+            }}
+          >
+            $33
+          </span>
+          <span
+            style={{
+              fontSize: '36px',
+              fontWeight: 800,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              ...GRADIENT_TEXT_STYLE,
+            }}
+          >
+            $29.99
+          </span>
+        </div>
+        <div
+          style={{
+            fontSize: '13px',
+            fontWeight: 500,
+            color: t.textTertiary,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            marginTop: '6px',
+          }}
+        >
+          Pay once, yours forever
+        </div>
+      </div>
+
+      {/* CTA */}
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={goNext}
+          style={{
+            width: '100%',
+            padding: '16px',
+            borderRadius: '18px',
+            border: 'none',
+            background: t.buttonGradient,
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: t.buttonShadow,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Claim This Deal
+        </motion.button>
+
+        <button
+          onClick={goNext}
+          style={{
+            width: '100%',
+            padding: '8px',
+            border: 'none',
+            background: 'transparent',
+            color: t.textTertiary,
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            marginTop: '8px',
+          }}
+        >
+          No thanks
         </button>
       </div>
     </div>
@@ -1966,6 +2115,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         return renderFirstStep();
       case 'premium':
         return renderPremium();
+      case 'lastChance':
+        return renderLastChance();
       case 'createAccount':
         return renderCreateAccount();
     }
