@@ -717,7 +717,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          Good news
+          GOOD NEWS
         </h2>
 
         <p
