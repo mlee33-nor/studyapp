@@ -89,6 +89,64 @@ type StepId = (typeof STEPS)[number]['id'];
 
 const QUESTION_STEP_IDS = ['studyHours', 'age', 'occupation', 'goal'] as const;
 
+// Personalized stats based on user answers
+function getPersonalizedStats(data: OnboardingData) {
+  // Daily study hours → estimated lost hours/year (20-30% distraction rate, 300 study days)
+  const studyHoursMap: Record<string, { lostRange: [number, number]; reclaimHeadline: string; workweeksRange: [number, number] }> = {
+    'less-than-1': { lostRange: [45, 67], reclaimHeadline: 'Save up to 1 week per year.', workweeksRange: [1, 1.5] },
+    '1-2': { lostRange: [90, 135], reclaimHeadline: 'Reclaim 2\u20133 weeks per year.', workweeksRange: [2, 3] },
+    '2-4': { lostRange: [180, 270], reclaimHeadline: 'Gain back 1 full month per year.', workweeksRange: [4.5, 7] },
+    '4-6': { lostRange: [300, 450], reclaimHeadline: 'Recover 1.5\u20132 months per year.', workweeksRange: [7.5, 11] },
+    '6-plus': { lostRange: [420, 630], reclaimHeadline: 'Save 2\u20133 months every year.', workweeksRange: [10, 16] },
+  };
+
+  // Age → compounded impact projection
+  const ageMultiplierMap: Record<string, { years: number; label: string }> = {
+    'under-18': { years: 7, label: '~1 year of workweeks' },
+    '18-24': { years: 5, label: '5\u20138 months of focused time' },
+    '25-34': { years: 10, label: '~1\u20131.5 years of workweeks' },
+    '35-44': { years: 10, label: '~1 year reclaimed' },
+    '45-plus': { years: 15, label: '1.5\u20132 years of workweeks' },
+  };
+
+  // Goal-specific taglines
+  const goalTaglineMap: Record<string, string> = {
+    'focus': 'Increase your deep work by 20\u201330%.',
+    'consistent': 'Turn distracted hours into consistent ones.',
+    'productive': 'Gain 1 extra productive day per week.',
+    'exam-prep': 'Add 25\u201340 extra focused sessions before test day.',
+  };
+
+  const study = studyHoursMap[data.studyHours] || studyHoursMap['2-4'];
+  const age = ageMultiplierMap[data.age] || ageMultiplierMap['25-34'];
+
+  // Use the midpoint for display
+  const lostHoursPerYear = Math.round((study.lostRange[0] + study.lostRange[1]) / 2);
+  const workweeks = Math.round((study.workweeksRange[0] + study.workweeksRange[1]) / 2);
+
+  // Compounded hours over remaining learning years
+  const compoundedHours = lostHoursPerYear * age.years;
+
+  // Reclaimable: ~80% of lost hours (what the app can help save)
+  const reclaimableHours = Math.round(lostHoursPerYear * 0.8);
+
+  // Format workweeks for display
+  const workweeksLabel = workweeks === 1 ? '1 full workweek' : `${workweeks} full workweeks`;
+
+  const goalTagline = goalTaglineMap[data.goal] || goalTaglineMap['productive'];
+
+  return {
+    lostHoursPerYear,
+    reclaimableHours,
+    workweeks,
+    workweeksLabel,
+    compoundedHours,
+    ageProjection: age.label,
+    reclaimHeadline: study.reclaimHeadline,
+    goalTagline,
+  };
+}
+
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }) => {
   const t = THEMES[theme];
   const [currentStep, setCurrentStep] = useState(0);
@@ -114,6 +172,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const stepId = STEPS[currentStep].id as StepId;
   const totalQuestionSteps = QUESTION_STEP_IDS.length;
   const questionIndex = QUESTION_STEP_IDS.indexOf(stepId as any);
+  const stats = getPersonalizedStats(data);
 
   const goNext = useCallback(() => {
     triggerSelectionTick();
@@ -556,7 +615,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          300 hours
+          {stats.lostHoursPerYear} hours
         </h2>
 
         <p
@@ -595,7 +654,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          7 full workweeks
+          {stats.workweeksLabel}
         </h2>
 
         <p
@@ -670,7 +729,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          250+ hours
+          {stats.reclaimableHours}+ hours
         </h2>
 
         <p
@@ -696,7 +755,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          That's a full month of focused progress.
+          {stats.goalTagline}
         </p>
       </div>
 
