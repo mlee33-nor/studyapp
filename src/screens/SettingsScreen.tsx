@@ -143,6 +143,19 @@ const SettingsScreen: React.FC = () => {
         >
           Unlock All Biomes
         </button>
+
+        <div className="my-4 border-t border-purple-200" />
+
+        <button
+          onClick={() => {
+            localStorage.removeItem('onboardingCompleted');
+            localStorage.removeItem('onboardingData');
+            window.location.href = '/studyapp/';
+          }}
+          className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-2xl transition-all duration-200 shadow-soft"
+        >
+          Restart Onboarding
+        </button>
       </div>
 
       {/* Daily Goal */}
