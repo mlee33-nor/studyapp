@@ -9,6 +9,8 @@ import { triggerHapticFeedback, triggerSelectionTick } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import LoginScreen from './screens/LoginScreen';
+import { hasAccount, isLoggedIn, setLoggedIn } from './utils/auth';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import { getNewlyUnlocked } from './utils/achievements';
@@ -1176,6 +1178,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('onboardingCompleted');
+  });
+  const [showLogin, setShowLogin] = useState(() => {
+    // Show login if user has an account but isn't logged in this session
+    return !showOnboarding && hasAccount() && !isLoggedIn();
   });
 
   const theme = selectedTheme;
@@ -2721,8 +2727,21 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         onComplete={(onboardingData) => {
           localStorage.setItem('onboardingCompleted', 'true');
           localStorage.setItem('onboardingData', JSON.stringify(onboardingData));
+          // If they created an account during onboarding, mark as logged in
+          if (hasAccount()) {
+            setLoggedIn();
+          }
           setShowOnboarding(false);
         }}
+      />
+    );
+  }
+
+  if (showLogin) {
+    return (
+      <LoginScreen
+        theme="midnight"
+        onSuccess={() => setShowLogin(false)}
       />
     );
   }

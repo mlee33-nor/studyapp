@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
+import { createAccount } from '../utils/auth';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
@@ -83,6 +84,7 @@ const STEPS = [
   { id: 'badNews' },
   { id: 'goodNews' },
   { id: 'firstStep' },
+  { id: 'createAccount' },
 ] as const;
 
 type StepId = (typeof STEPS)[number]['id'];
@@ -160,6 +162,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [calculatingProgress, setCalculatingProgress] = useState(0);
   const [calculatingLabel, setCalculatingLabel] = useState('Analyzing your study habits...');
   const [bunnyAnimData, setBunnyAnimData] = useState<any>(null);
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupError, setSignupError] = useState('');
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Pre-fetch bunny Lottie animation
   useEffect(() => {
@@ -382,7 +389,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
   const renderBackButton = () => {
     // Hide back button on welcome, calculating, and post-calculating Opal screens
-    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep'];
+    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep', 'createAccount'];
     if (currentStep <= 0 || postCalcSteps.includes(stepId)) return null;
     return (
       <button
@@ -834,7 +841,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => onComplete(data)}
+          onClick={goNext}
           style={{
             width: '100%',
             padding: '18px',
@@ -851,6 +858,184 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         >
           Let's Go
         </motion.button>
+      </div>
+    </div>
+  );
+
+  // --- Create Account Screen ---
+  const handleCreateAccount = async () => {
+    setSignupError('');
+    const email = signupEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setSignupError('Please enter a valid email address.');
+      return;
+    }
+    if (signupPassword.length < 8) {
+      setSignupError('Password must be at least 8 characters.');
+      return;
+    }
+    setSignupLoading(true);
+    try {
+      await createAccount(email, signupPassword);
+      onComplete(data);
+    } catch {
+      setSignupError('Something went wrong. Please try again.');
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '16px 18px',
+    borderRadius: '16px',
+    border: `1px solid ${t.optionBorder}`,
+    background: t.optionBg,
+    color: t.textPrimary,
+    fontSize: '16px',
+    fontWeight: 500,
+    fontFamily: "'Quicksand', -apple-system, sans-serif",
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s',
+  };
+
+  const renderCreateAccount = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '0 32px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+      }}
+    >
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
+        <h2
+          style={{
+            fontSize: '28px',
+            fontWeight: 800,
+            color: t.textPrimary,
+            margin: '0 0 8px 0',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Create your account
+        </h2>
+
+        <p
+          style={{
+            fontSize: '16px',
+            fontWeight: 500,
+            color: t.textSecondary,
+            margin: '0 0 32px 0',
+            lineHeight: 1.5,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Save your progress and pick up where you left off.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+          <input
+            type="email"
+            placeholder="Email address"
+            autoComplete="email"
+            value={signupEmail}
+            onChange={(e) => { setSignupEmail(e.target.value); setSignupError(''); }}
+            style={inputStyle}
+          />
+
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password (8+ characters)"
+              autoComplete="new-password"
+              value={signupPassword}
+              onChange={(e) => { setSignupPassword(e.target.value); setSignupError(''); }}
+              style={inputStyle}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '14px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                color: t.textTertiary,
+                fontSize: '14px',
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              {showPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
+        </div>
+
+        {signupError && (
+          <p
+            style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#EF4444',
+              margin: '12px 0 0 0',
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+            }}
+          >
+            {signupError}
+          </p>
+        )}
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleCreateAccount}
+          disabled={signupLoading}
+          style={{
+            width: '100%',
+            padding: '18px',
+            borderRadius: '20px',
+            border: 'none',
+            background: t.buttonGradient,
+            color: 'white',
+            fontSize: '17px',
+            fontWeight: 700,
+            cursor: signupLoading ? 'default' : 'pointer',
+            boxShadow: t.buttonShadow,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            opacity: signupLoading ? 0.7 : 1,
+          }}
+        >
+          {signupLoading ? 'Creating...' : 'Create Account'}
+        </motion.button>
+
+        <button
+          onClick={() => onComplete(data)}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: '20px',
+            border: 'none',
+            background: 'transparent',
+            color: t.textTertiary,
+            fontSize: '15px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Skip for now
+        </button>
       </div>
     </div>
   );
@@ -1176,6 +1361,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         return renderGoodNews();
       case 'firstStep':
         return renderFirstStep();
+      case 'createAccount':
+        return renderCreateAccount();
     }
   };
 
