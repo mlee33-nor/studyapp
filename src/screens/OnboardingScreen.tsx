@@ -791,7 +791,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             letterSpacing: '-0.01em',
           }}
         >
-          Let's take the first step
+          Your plan is ready
         </h2>
 
         <p
@@ -806,7 +806,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             maxWidth: 300,
           }}
         >
-          Tell us a bit about yourself so we can build the perfect study plan for you.
+          We've built a personalized study plan just for you. Let's start reclaiming your time.
         </p>
 
         {/* Icon */}
