@@ -42,9 +42,29 @@ async function deriveKey(password: string, salt: ArrayBuffer): Promise<string> {
 }
 
 export async function createAccount(email: string, password: string): Promise<void> {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Prevent overwriting an existing account
+  const existing = localStorage.getItem(AUTH_KEY);
+  if (existing) {
+    try {
+      const creds: StoredCredentials = JSON.parse(existing);
+      if (creds.email === normalizedEmail) {
+        throw new Error('EMAIL_IN_USE');
+      }
+      // Different email — still an existing account on this device
+      throw new Error('ACCOUNT_EXISTS');
+    } catch (e) {
+      if (e instanceof Error && (e.message === 'EMAIL_IN_USE' || e.message === 'ACCOUNT_EXISTS')) {
+        throw e;
+      }
+      // JSON parse error — corrupted data, allow overwrite
+    }
+  }
+
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const hash = await deriveKey(password, salt.buffer);
-  const creds: StoredCredentials = { email: email.toLowerCase().trim(), salt: bufToHex(salt.buffer), hash };
+  const creds: StoredCredentials = { email: normalizedEmail, salt: bufToHex(salt.buffer), hash };
   localStorage.setItem(AUTH_KEY, JSON.stringify(creds));
 }
 

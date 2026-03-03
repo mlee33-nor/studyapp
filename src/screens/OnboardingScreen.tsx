@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
-import { createAccount } from '../utils/auth';
+import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
@@ -167,6 +167,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [signupError, setSignupError] = useState('');
   const [signupLoading, setSignupLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginMode, setLoginMode] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Pre-fetch bunny Lottie animation
   useEffect(() => {
@@ -878,8 +884,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     try {
       await createAccount(email, signupPassword);
       onComplete(data);
-    } catch {
-      setSignupError('Something went wrong. Please try again.');
+    } catch (err) {
+      if (err instanceof Error && err.message === 'EMAIL_IN_USE') {
+        setSignupError('This email is already in use. Try logging in instead.');
+      } else if (err instanceof Error && err.message === 'ACCOUNT_EXISTS') {
+        setSignupError('An account already exists on this device. Try logging in instead.');
+      } else {
+        setSignupError('Something went wrong. Please try again.');
+      }
     } finally {
       setSignupLoading(false);
     }
@@ -900,7 +912,173 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     transition: 'border-color 0.2s',
   };
 
-  const renderCreateAccount = () => (
+  const handleLogin = async () => {
+    setLoginError('');
+    const email = loginEmail.trim();
+    if (!email) {
+      setLoginError('Please enter your email.');
+      return;
+    }
+    if (!loginPassword) {
+      setLoginError('Please enter your password.');
+      return;
+    }
+    setLoginLoading(true);
+    try {
+      const valid = await verifyLogin(email, loginPassword);
+      if (valid) {
+        setLoggedIn();
+        onComplete(data);
+      } else {
+        setLoginError('Incorrect email or password.');
+      }
+    } catch {
+      setLoginError('Something went wrong. Please try again.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const renderCreateAccount = () => loginMode ? (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '0 32px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+      }}
+    >
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
+        <h2
+          style={{
+            fontSize: '28px',
+            fontWeight: 800,
+            color: t.textPrimary,
+            margin: '0 0 8px 0',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Welcome back
+        </h2>
+
+        <p
+          style={{
+            fontSize: '16px',
+            fontWeight: 500,
+            color: t.textSecondary,
+            margin: '0 0 32px 0',
+            lineHeight: 1.5,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Sign in to continue your study journey.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+          <input
+            type="email"
+            placeholder="Email address"
+            autoComplete="email"
+            value={loginEmail}
+            onChange={(e) => { setLoginEmail(e.target.value); setLoginError(''); }}
+            style={inputStyle}
+          />
+
+          <div style={{ position: 'relative' }}>
+            <input
+              type={showLoginPassword ? 'text' : 'password'}
+              placeholder="Password"
+              autoComplete="current-password"
+              value={loginPassword}
+              onChange={(e) => { setLoginPassword(e.target.value); setLoginError(''); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }}
+              style={inputStyle}
+            />
+            <button
+              type="button"
+              onClick={() => setShowLoginPassword(!showLoginPassword)}
+              style={{
+                position: 'absolute',
+                right: '14px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                color: t.textTertiary,
+                fontSize: '14px',
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              {showLoginPassword ? 'Hide' : 'Show'}
+            </button>
+          </div>
+        </div>
+
+        {loginError && (
+          <p
+            style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#EF4444',
+              margin: '12px 0 0 0',
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+            }}
+          >
+            {loginError}
+          </p>
+        )}
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleLogin}
+          disabled={loginLoading}
+          style={{
+            width: '100%',
+            padding: '18px',
+            borderRadius: '20px',
+            border: 'none',
+            background: t.buttonGradient,
+            color: 'white',
+            fontSize: '17px',
+            fontWeight: 700,
+            cursor: loginLoading ? 'default' : 'pointer',
+            boxShadow: t.buttonShadow,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            opacity: loginLoading ? 0.7 : 1,
+          }}
+        >
+          {loginLoading ? 'Signing in...' : 'Sign In'}
+        </motion.button>
+
+        <button
+          onClick={() => { setLoginMode(false); setLoginError(''); }}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: '20px',
+            border: 'none',
+            background: 'transparent',
+            color: t.textTertiary,
+            fontSize: '15px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Back to sign up
+        </button>
+      </div>
+    </div>
+  ) : (
     <div
       style={{
         display: 'flex',
@@ -1035,6 +1213,23 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           }}
         >
           Skip for now
+        </button>
+
+        <button
+          onClick={() => { setLoginMode(true); setSignupError(''); }}
+          style={{
+            width: '100%',
+            padding: '8px',
+            border: 'none',
+            background: 'transparent',
+            color: t.textSecondary,
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Already have an account? <span style={{ color: t.textPrimary, fontWeight: 700 }}>Log in</span>
         </button>
       </div>
     </div>
