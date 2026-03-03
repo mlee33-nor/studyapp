@@ -24,7 +24,7 @@ const getSelectedTheme = (): 'morning' | 'midnight' => {
   if (stored && ['morning', 'midnight'].includes(stored)) {
     return stored as 'morning' | 'midnight';
   }
-  return 'morning';
+  return 'midnight';
 };
 
 const setSelectedTheme = (theme: 'morning' | 'midnight') => {
@@ -2717,7 +2717,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   if (showOnboarding) {
     return (
       <OnboardingScreen
-        theme={selectedTheme}
+        theme="midnight"
         onComplete={(onboardingData) => {
           localStorage.setItem('onboardingCompleted', 'true');
           localStorage.setItem('onboardingData', JSON.stringify(onboardingData));
