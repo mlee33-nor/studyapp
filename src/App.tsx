@@ -2706,6 +2706,31 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             </motion.button>
           </div>
 
+          <div style={{ marginTop: '10px' }}>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                localStorage.removeItem('onboardingCompleted');
+                localStorage.removeItem('onboardingData');
+                setShowOnboarding(true);
+              }}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                borderRadius: '14px',
+                border: 'none',
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.6) 0%, rgba(37, 99, 235, 0.6) 100%)',
+                color: 'white',
+                fontSize: '13px',
+                fontWeight: 700,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+              }}
+            >
+              Restart Onboarding
+            </motion.button>
+          </div>
+
           <div style={{
             fontSize: '12px',
             color: getTextColor(selectedTheme, 'tertiary'),
