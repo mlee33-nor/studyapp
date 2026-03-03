@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Lottie from 'lottie-react';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
+
+const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
 interface OnboardingData {
   studyHours: string;
@@ -32,9 +35,9 @@ const THEMES = {
     progressFill: 'linear-gradient(90deg, #A78BFA, #8B5CF6)',
     skipColor: 'rgba(100, 116, 139, 0.6)',
     orbs: [
-      { color: 'rgba(230, 210, 255, 0.5)', size: 400, x: '5%', y: '5%' },
-      { color: 'rgba(200, 255, 230, 0.5)', size: 350, x: '65%', y: '25%' },
-      { color: 'rgba(200, 230, 255, 0.5)', size: 380, x: '35%', y: '65%' },
+      { color: 'rgba(230, 210, 255, 0.35)', size: 600, x: '-5%', y: '-5%' },
+      { color: 'rgba(200, 255, 230, 0.35)', size: 550, x: '55%', y: '20%' },
+      { color: 'rgba(200, 230, 255, 0.35)', size: 580, x: '25%', y: '55%' },
     ],
   },
   midnight: {
@@ -54,9 +57,9 @@ const THEMES = {
     progressFill: 'linear-gradient(90deg, #A78BFA, #8B5CF6)',
     skipColor: 'rgba(255, 255, 255, 0.4)',
     orbs: [
-      { color: 'rgba(59, 130, 246, 0.25)', size: 400, x: '5%', y: '5%' },
-      { color: 'rgba(139, 92, 246, 0.25)', size: 350, x: '65%', y: '25%' },
-      { color: 'rgba(16, 185, 129, 0.25)', size: 380, x: '35%', y: '65%' },
+      { color: 'rgba(59, 130, 246, 0.2)', size: 600, x: '-5%', y: '-5%' },
+      { color: 'rgba(139, 92, 246, 0.2)', size: 550, x: '55%', y: '20%' },
+      { color: 'rgba(16, 185, 129, 0.2)', size: 580, x: '25%', y: '55%' },
     ],
   },
 };
@@ -85,6 +88,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   });
   const [calculatingProgress, setCalculatingProgress] = useState(0);
   const [calculatingLabel, setCalculatingLabel] = useState('Analyzing your study habits...');
+  const [bunnyAnimData, setBunnyAnimData] = useState<any>(null);
+
+  // Pre-fetch bunny Lottie animation
+  useEffect(() => {
+    fetch(BUNNY_LOTTIE_URL)
+      .then((res) => res.json())
+      .then(setBunnyAnimData)
+      .catch(() => {});
+  }, []);
 
   const stepId = STEPS[currentStep].id as StepId;
   const totalQuestionSteps = STEPS.length - 2; // exclude welcome + calculating
@@ -277,8 +289,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const renderBackButton = () => {
     if (currentStep <= 1) return null;
     return (
-      <motion.button
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={goBack}
         style={{
           position: 'absolute',
@@ -299,7 +310,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={t.textPrimary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="15 18 9 12 15 6" />
         </svg>
-      </motion.button>
+      </button>
     );
   };
 
@@ -319,13 +330,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     >
       <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {/* App icon / mascot area */}
-        <motion.div
-          initial={{ scale: 0, rotate: -20 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+        <div
           style={{
-            width: 120,
-            height: 120,
+            width: 140,
+            height: 140,
             borderRadius: '32px',
             background: t.buttonGradient,
             boxShadow: t.buttonShadow,
@@ -333,15 +341,17 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '32px',
+            overflow: 'hidden',
           }}
         >
-          <span style={{ fontSize: '56px' }}>🌱</span>
-        </motion.div>
+          {bunnyAnimData ? (
+            <Lottie animationData={bunnyAnimData} loop style={{ width: 120, height: 120 }} />
+          ) : (
+            <span style={{ fontSize: '56px' }}>🐰</span>
+          )}
+        </div>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+        <h1
           style={{
             fontSize: '32px',
             fontWeight: 800,
@@ -352,12 +362,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           }}
         >
           Study Buddy
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+        <p
           style={{
             fontSize: '17px',
             color: t.textSecondary,
@@ -370,13 +377,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           Focus better. Study smarter.
           <br />
           Collect adorable companions along the way.
-        </motion.p>
+        </p>
 
         {/* Feature pills */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.65 }}
+        <div
           style={{
             display: 'flex',
             flexWrap: 'wrap',
@@ -390,12 +394,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             { emoji: '🐾', label: 'Collect Animals' },
             { emoji: '📊', label: 'Track Progress' },
             { emoji: '🏆', label: 'Earn Rewards' },
-          ].map((pill, i) => (
-            <motion.div
+          ].map((pill) => (
+            <div
               key={pill.label}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.8 + i * 0.1 }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -412,20 +413,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             >
               <span>{pill.emoji}</span>
               {pill.label}
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
 
       {/* Bottom buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
-        style={{ width: '100%', maxWidth: 360 }}
-      >
-        <motion.button
-          whileTap={{ scale: 0.97 }}
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <button
           onClick={goNext}
           style={{
             width: '100%',
@@ -443,8 +438,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           }}
         >
           Get Started
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
     </div>
   );
 
@@ -462,9 +457,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     >
       {renderProgressDots()}
 
-      <motion.h2
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <h2
         style={{
           fontSize: '26px',
           fontWeight: 800,
@@ -475,11 +468,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         How much do you study daily?
-      </motion.h2>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      </h2>
+      <p
         style={{
           fontSize: '15px',
           color: t.textSecondary,
@@ -488,7 +478,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         We'll tailor your experience to your habits
-      </motion.p>
+      </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
         {renderOption('studyHours', 'less-than-1', 'Less than 1 hour', '📖')}
@@ -516,9 +506,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     >
       {renderProgressDots()}
 
-      <motion.h2
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <h2
         style={{
           fontSize: '26px',
           fontWeight: 800,
@@ -529,11 +517,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         How old are you?
-      </motion.h2>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      </h2>
+      <p
         style={{
           fontSize: '15px',
           color: t.textSecondary,
@@ -542,7 +527,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         This helps us personalize your study plan
-      </motion.p>
+      </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
         {renderOption('age', 'under-18', 'Under 18', '🎒')}
@@ -556,8 +541,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
       {/* Skip button */}
       <div style={{ textAlign: 'center', marginTop: '8px' }}>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
+        <button
           onClick={() => {
             setData((d) => ({ ...d, age: 'skipped' }));
             goNext();
@@ -574,7 +558,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           }}
         >
           Skip
-        </motion.button>
+        </button>
       </div>
     </div>
   );
@@ -593,9 +577,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     >
       {renderProgressDots()}
 
-      <motion.h2
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <h2
         style={{
           fontSize: '26px',
           fontWeight: 800,
@@ -606,11 +588,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         What do you do?
-      </motion.h2>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      </h2>
+      <p
         style={{
           fontSize: '15px',
           color: t.textSecondary,
@@ -619,7 +598,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         We'll customize your study categories
-      </motion.p>
+      </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
         {renderOption('occupation', 'student', 'Student', '📚')}
@@ -646,9 +625,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     >
       {renderProgressDots()}
 
-      <motion.h2
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <h2
         style={{
           fontSize: '26px',
           fontWeight: 800,
@@ -659,11 +636,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         What's your main goal?
-      </motion.h2>
-      <motion.p
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      </h2>
+      <p
         style={{
           fontSize: '15px',
           color: t.textSecondary,
@@ -672,7 +646,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         Choose what matters most to you
-      </motion.p>
+      </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
         {renderOption('goal', 'focus', 'Stay focused longer', '🎯')}
@@ -698,20 +672,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         textAlign: 'center',
       }}
     >
-      {/* Animated mascot */}
-      <motion.div
-        animate={{
-          scale: [1, 1.08, 1],
-          rotate: [0, 5, -5, 0],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
+      {/* Mascot */}
+      <div
         style={{
-          width: 100,
-          height: 100,
+          width: 120,
+          height: 120,
           borderRadius: '28px',
           background: t.buttonGradient,
           boxShadow: t.buttonShadow,
@@ -719,15 +684,17 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           alignItems: 'center',
           justifyContent: 'center',
           marginBottom: '40px',
+          overflow: 'hidden',
         }}
       >
-        <span style={{ fontSize: '48px' }}>🌱</span>
-      </motion.div>
+        {bunnyAnimData ? (
+          <Lottie animationData={bunnyAnimData} loop style={{ width: 100, height: 100 }} />
+        ) : (
+          <span style={{ fontSize: '48px' }}>🐰</span>
+        )}
+      </div>
 
-      <motion.h2
-        key={calculatingLabel}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <h2
         style={{
           fontSize: '20px',
           fontWeight: 700,
@@ -737,7 +704,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         }}
       >
         {calculatingLabel}
-      </motion.h2>
+      </h2>
 
       {/* Progress bar */}
       <div
@@ -750,13 +717,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           overflow: 'hidden',
         }}
       >
-        <motion.div
-          animate={{ width: `${calculatingProgress}%` }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+        <div
           style={{
             height: '100%',
             borderRadius: 4,
             background: t.progressFill,
+            width: `${calculatingProgress}%`,
+            transition: 'width 0.3s ease-out',
           }}
         />
       </div>
@@ -810,7 +777,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           zIndex: 0,
         }}
       >
-        {/* Static blurred orbs - no animation for performance */}
+        {/* Soft orbs - large radial gradients, no blur filter for performance */}
         {t.orbs.map((orb, index) => (
           <div
             key={index}
@@ -820,10 +787,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
               top: orb.y,
               width: orb.size,
               height: orb.size,
-              background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
-              filter: 'blur(80px)',
+              background: `radial-gradient(circle, ${orb.color} 0%, transparent 60%)`,
               pointerEvents: 'none',
-              willChange: 'auto',
             }}
           />
         ))}
