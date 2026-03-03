@@ -182,6 +182,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [chestStage, setChestStage] = useState(0);
   const [lastChanceTapGuard, setLastChanceTapGuard] = useState(false);
   const chestLottieRef = useRef<any>(null);
+  const chestDoneRef = useRef(false);
 
   // Pre-fetch bunny Lottie animation
   useEffect(() => {
@@ -218,6 +219,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   useEffect(() => {
     if (STEPS[currentStep].id === 'chestReveal') {
       setChestStage(0);
+      chestDoneRef.current = false;
     }
   }, [currentStep]);
 
@@ -225,7 +227,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   useEffect(() => {
     if (STEPS[currentStep].id === 'lastChance') {
       setLastChanceTapGuard(true);
-      const timer = setTimeout(() => setLastChanceTapGuard(false), 2000);
+      // No cleanup — let the timeout always fire so buttons reliably enable
+      setTimeout(() => setLastChanceTapGuard(false), 2000);
 
       const gold = ['#FFD700', '#FFC107', '#FFAB00', '#FFE082', '#FFFFFF'];
       confetti({ particleCount: 100, spread: 100, origin: { y: 0.4, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 50, zIndex: 99999 });
@@ -238,8 +241,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       setTimeout(() => {
         confetti({ particleCount: 50, spread: 180, origin: { y: 0.3, x: 0.5 }, colors: gold, shapes: ['circle'], gravity: 1.2, scalar: 0.9, zIndex: 99999 });
       }, 500);
-
-      return () => clearTimeout(timer);
     }
   }, [currentStep]);
 
@@ -1222,10 +1223,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   );
 
   const handleChestTap = useCallback(() => {
+    if (chestDoneRef.current) return;
     triggerHapticFeedback();
     const next = chestStage + 1;
     if (next >= 3) {
-      // Final tap — advance immediately, confetti fires via lastChance useEffect
+      chestDoneRef.current = true;
       goNext();
     } else {
       setChestStage(next);
