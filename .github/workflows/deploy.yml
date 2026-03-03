@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - claude/gamified-pomodoro-timer-A265m
+      - claude/opal-style-onboarding-dDZ9K
 
 permissions:
   contents: read
