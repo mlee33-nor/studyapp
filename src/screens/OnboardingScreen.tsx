@@ -180,6 +180,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [selectedPlan, setSelectedPlan] = useState<'lifetime' | 'annual' | 'monthly'>('lifetime');
   const [chestAnimData, setChestAnimData] = useState<any>(null);
   const [chestStage, setChestStage] = useState(0);
+  const [lastChanceTapGuard, setLastChanceTapGuard] = useState(false);
   const chestLottieRef = useRef<any>(null);
 
   // Pre-fetch bunny Lottie animation
@@ -220,24 +221,25 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     }
   }, [currentStep]);
 
-  // Fire confetti when lastChance screen appears
+  // Fire confetti and enable tap guard when lastChance screen appears
   useEffect(() => {
     if (STEPS[currentStep].id === 'lastChance') {
+      setLastChanceTapGuard(true);
+      const timer = setTimeout(() => setLastChanceTapGuard(false), 2000);
+
       const gold = ['#FFD700', '#FFC107', '#FFAB00', '#FFE082', '#FFFFFF'];
-      // Immediate big burst
       confetti({ particleCount: 100, spread: 100, origin: { y: 0.4, x: 0.5 }, colors: gold, shapes: ['circle'], startVelocity: 50, zIndex: 99999 });
-      // Left burst
       setTimeout(() => {
         confetti({ particleCount: 60, spread: 140, origin: { y: 0.45, x: 0.25 }, colors: gold, shapes: ['circle'], startVelocity: 35, zIndex: 99999 });
       }, 150);
-      // Right burst
       setTimeout(() => {
         confetti({ particleCount: 60, spread: 140, origin: { y: 0.45, x: 0.75 }, colors: gold, shapes: ['circle'], startVelocity: 35, zIndex: 99999 });
       }, 300);
-      // Final shower
       setTimeout(() => {
         confetti({ particleCount: 50, spread: 180, origin: { y: 0.3, x: 0.5 }, colors: gold, shapes: ['circle'], gravity: 1.2, scalar: 0.9, zIndex: 99999 });
       }, 500);
+
+      return () => clearTimeout(timer);
     }
   }, [currentStep]);
 
@@ -1440,6 +1442,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         overflow: 'hidden',
+        pointerEvents: lastChanceTapGuard ? 'none' : 'auto',
       }}
     >
       {/* Emoji */}
