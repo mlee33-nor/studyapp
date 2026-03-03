@@ -88,7 +88,7 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
   {
     id: 'giraffe',
     name: 'Giraffe',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/8942ad9c-1189-11ee-8b52-3f0a09f0ff93/IiSumWkAzb.json',
+    lottieUrl: 'https://lottie.host/d51d7735-dc7b-4b46-af53-5270e44c6bac/I99tf6X8vb.json',
     scale: 1.4,
     price: 0,
   },
