@@ -84,6 +84,7 @@ const STEPS = [
   { id: 'badNews' },
   { id: 'goodNews' },
   { id: 'firstStep' },
+  { id: 'premium' },
   { id: 'createAccount' },
 ] as const;
 
@@ -173,6 +174,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'annual'>('annual');
 
   // Pre-fetch bunny Lottie animation
   useEffect(() => {
@@ -395,7 +397,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
   const renderBackButton = () => {
     // Hide back button on welcome, calculating, and post-calculating Opal screens
-    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep', 'createAccount'];
+    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep', 'premium', 'createAccount'];
     if (currentStep <= 0 || postCalcSteps.includes(stepId)) return null;
     return (
       <button
@@ -779,6 +781,348 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   );
 
   // --- Opal-style First Step Screen ---
+  // --- Premium Paywall Screen ---
+  const premiumFeatures = [
+    { icon: '🎯', label: 'Unlimited focus sessions' },
+    { icon: '🐾', label: 'Unlock all companions & biomes' },
+    { icon: '📊', label: 'Advanced analytics & insights' },
+    { icon: '🎨', label: 'Custom themes & sounds' },
+    { icon: '☁️', label: 'Cloud sync across devices' },
+  ];
+
+  const renderPremium = () => (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        height: '100%',
+        padding: '0 24px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 48px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)',
+        overflow: 'auto',
+      }}
+    >
+      {/* Close / Skip button */}
+      <button
+        onClick={goNext}
+        style={{
+          position: 'absolute',
+          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+          right: '16px',
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          border: `1px solid ${t.optionBorder}`,
+          background: t.optionBg,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10,
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={t.textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '24px', width: '100%', maxWidth: 360 }}>
+        <div
+          style={{
+            display: 'inline-block',
+            padding: '6px 16px',
+            borderRadius: '20px',
+            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)',
+            border: '1px solid rgba(251, 191, 36, 0.3)',
+            marginBottom: '16px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: 700,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            LIMITED OFFER
+          </span>
+        </div>
+
+        <h2
+          style={{
+            fontSize: '30px',
+            fontWeight: 800,
+            margin: '0 0 4px 0',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            letterSpacing: '-0.02em',
+            ...GRADIENT_TEXT_STYLE,
+          }}
+        >
+          Study Buddy
+        </h2>
+        <h2
+          style={{
+            fontSize: '30px',
+            fontWeight: 800,
+            color: t.textPrimary,
+            margin: '0 0 8px 0',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            letterSpacing: '-0.02em',
+          }}
+        >
+          PLUS
+        </h2>
+        <p
+          style={{
+            fontSize: '15px',
+            fontWeight: 500,
+            color: t.textSecondary,
+            margin: 0,
+            lineHeight: 1.5,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Unlock your full potential
+        </p>
+      </div>
+
+      {/* Feature list */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 360,
+          background: t.cardBg,
+          borderRadius: '24px',
+          padding: '20px 24px',
+          border: `1px solid ${t.cardBorder}`,
+          marginBottom: '24px',
+        }}
+      >
+        {premiumFeatures.map((feature, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              padding: '12px 0',
+              borderBottom: i < premiumFeatures.length - 1 ? `1px solid ${t.optionBorder}` : 'none',
+            }}
+          >
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>{feature.icon}</span>
+            <span
+              style={{
+                fontSize: '15px',
+                fontWeight: 600,
+                color: t.textPrimary,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              {feature.label}
+            </span>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#A78BFA"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginLeft: 'auto', flexShrink: 0 }}
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+        ))}
+      </div>
+
+      {/* Plan toggle */}
+      <div style={{ width: '100%', maxWidth: 360, display: 'flex', gap: '12px', marginBottom: '20px' }}>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => { setSelectedPlan('weekly'); triggerSelectionTick(); }}
+          style={{
+            flex: 1,
+            padding: '16px 12px',
+            borderRadius: '20px',
+            border: selectedPlan === 'weekly'
+              ? '2px solid rgba(167, 139, 250, 0.6)'
+              : `1px solid ${t.optionBorder}`,
+            background: selectedPlan === 'weekly' ? t.optionSelectedBg : t.optionBg,
+            cursor: 'pointer',
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '13px',
+              fontWeight: 600,
+              color: t.textSecondary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              marginBottom: '4px',
+            }}
+          >
+            Weekly
+          </div>
+          <div
+            style={{
+              fontSize: '22px',
+              fontWeight: 800,
+              color: t.textPrimary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+            }}
+          >
+            $1.99
+          </div>
+          <div
+            style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: t.textTertiary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              marginTop: '2px',
+            }}
+          >
+            per week
+          </div>
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => { setSelectedPlan('annual'); triggerSelectionTick(); }}
+          style={{
+            flex: 1,
+            padding: '16px 12px',
+            borderRadius: '20px',
+            border: selectedPlan === 'annual'
+              ? '2px solid rgba(167, 139, 250, 0.6)'
+              : `1px solid ${t.optionBorder}`,
+            background: selectedPlan === 'annual' ? t.optionSelectedBg : t.optionBg,
+            cursor: 'pointer',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'visible',
+          }}
+        >
+          {/* Best value badge */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '-10px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '3px 12px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #A78BFA 0%, #8B5CF6 100%)',
+              fontSize: '10px',
+              fontWeight: 700,
+              color: 'white',
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              whiteSpace: 'nowrap',
+            }}
+          >
+            BEST VALUE
+          </div>
+          <div
+            style={{
+              fontSize: '13px',
+              fontWeight: 600,
+              color: t.textSecondary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              marginBottom: '4px',
+            }}
+          >
+            Annual
+          </div>
+          <div
+            style={{
+              fontSize: '22px',
+              fontWeight: 800,
+              color: t.textPrimary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+            }}
+          >
+            $29.99
+          </div>
+          <div
+            style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: t.textTertiary,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              marginTop: '2px',
+            }}
+          >
+            $0.58/week — save 71%
+          </div>
+        </motion.button>
+      </div>
+
+      {/* CTA Button */}
+      <div style={{ width: '100%', maxWidth: 360 }}>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={goNext}
+          style={{
+            width: '100%',
+            padding: '18px',
+            borderRadius: '20px',
+            border: 'none',
+            background: t.buttonGradient,
+            color: 'white',
+            fontSize: '17px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: t.buttonShadow,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          Start Free Trial
+        </motion.button>
+
+        <p
+          style={{
+            fontSize: '12px',
+            fontWeight: 500,
+            color: t.textTertiary,
+            textAlign: 'center',
+            margin: '12px 0 0 0',
+            lineHeight: 1.5,
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+          }}
+        >
+          3-day free trial, then {selectedPlan === 'weekly' ? '$1.99/week' : '$29.99/year'}. Cancel anytime.
+        </p>
+
+        <button
+          onClick={goNext}
+          style={{
+            width: '100%',
+            padding: '12px',
+            border: 'none',
+            background: 'transparent',
+            color: t.textTertiary,
+            fontSize: '14px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: "'Quicksand', -apple-system, sans-serif",
+            marginTop: '4px',
+          }}
+        >
+          Maybe later
+        </button>
+      </div>
+    </div>
+  );
+
   const renderFirstStep = () => (
     <div
       style={{
@@ -1556,6 +1900,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         return renderGoodNews();
       case 'firstStep':
         return renderFirstStep();
+      case 'premium':
+        return renderPremium();
       case 'createAccount':
         return renderCreateAccount();
     }
