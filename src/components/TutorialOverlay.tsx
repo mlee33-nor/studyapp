@@ -5,7 +5,7 @@ export interface TutorialStep {
   id: string;
   message: string;
   // Where to show the tooltip relative to viewport
-  tooltipPosition: 'top' | 'center' | 'bottom';
+  tooltipPosition: 'top' | 'center' | 'bottom' | 'bottom-flush';
   // Optional arrow pointing direction
   arrow?: 'up' | 'down' | 'none';
   // Button label
@@ -27,12 +27,13 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
 
   const getTooltipTop = (): string => {
     if (step.tooltipPosition === 'top') return 'calc(env(safe-area-inset-top, 0px) + 80px)';
-    if (step.tooltipPosition === 'bottom') return 'auto';
+    if (step.tooltipPosition === 'bottom' || step.tooltipPosition === 'bottom-flush') return 'auto';
     return '50%';
   };
 
   const getTooltipBottom = (): string => {
     if (step.tooltipPosition === 'bottom') return 'calc(env(safe-area-inset-bottom, 0px) + 100px)';
+    if (step.tooltipPosition === 'bottom-flush') return 'calc(env(safe-area-inset-bottom, 0px) + 64px)';
     return 'auto';
   };
 

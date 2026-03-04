@@ -1201,14 +1201,14 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'press-start',
       message: 'Now press "Start Focus" to begin a session!',
-      tooltipPosition: 'center',
+      tooltipPosition: 'bottom',
       arrow: 'down',
       waitForInteraction: true,
     },
     {
       id: 'press-complete',
       message: 'Press "Complete" to end early.',
-      tooltipPosition: 'center',
+      tooltipPosition: 'bottom',
       arrow: 'down',
       waitForInteraction: true,
       noOverlay: true,
@@ -1231,7 +1231,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'go-to-sanctuary',
       message: 'Now let\'s visit your Sanctuary! Tap the star icon below.',
-      tooltipPosition: 'bottom',
+      tooltipPosition: 'bottom-flush',
       arrow: 'down',
       waitForInteraction: true,
     },
@@ -1247,7 +1247,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       message: 'Double-tap an animal to flip the direction it\'s facing!',
       tooltipPosition: 'top',
       arrow: 'none',
-      buttonLabel: 'Got it!',
+      waitForInteraction: true,
     },
   ];
 
@@ -1306,6 +1306,18 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     };
     window.addEventListener('meadow-animal-dragged', handler);
     return () => window.removeEventListener('meadow-animal-dragged', handler);
+  }, [showTutorial, currentTutorialStep, advanceTutorial]);
+
+  // Advance tutorial when user double-taps to flip an animal
+  useEffect(() => {
+    if (!showTutorial) return;
+    const handler = () => {
+      if (currentTutorialStep?.id === 'double-tap') {
+        advanceTutorial();
+      }
+    };
+    window.addEventListener('meadow-animal-flipped', handler);
+    return () => window.removeEventListener('meadow-animal-flipped', handler);
   }, [showTutorial, currentTutorialStep, advanceTutorial]);
 
   const theme = selectedTheme;

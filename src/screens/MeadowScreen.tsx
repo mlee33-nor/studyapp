@@ -515,6 +515,7 @@ const MeadowScreen: React.FC = () => {
       );
       saveUserData({ ...currentData, meadowAnimals: updatedAnimals });
       refreshData();
+      window.dispatchEvent(new CustomEvent('meadow-animal-flipped'));
       lastTapRef.current[animalId] = 0;
     } else {
       lastTapRef.current[animalId] = now;
