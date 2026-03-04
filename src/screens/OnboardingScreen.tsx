@@ -84,7 +84,8 @@ const STEPS = [
   { id: 'intro' },
   { id: 'badNews' },
   { id: 'goodNews' },
-  { id: 'firstStep' },
+  { id: 'sanctuary' },
+  { id: 'stats' },
   { id: 'premium' },
   { id: 'chestReveal' },
   { id: 'lastChance' },
@@ -457,7 +458,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
   const renderBackButton = () => {
     // Hide back button on welcome, calculating, and post-calculating Opal screens
-    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'firstStep', 'premium', 'chestReveal', 'lastChance', 'createAccount'];
+    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'sanctuary', 'stats', 'premium', 'chestReveal', 'lastChance', 'createAccount'];
     if (currentStep <= 0 || postCalcSteps.includes(stepId)) return null;
     return (
       <button
@@ -1611,7 +1612,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     </div>
   );
 
-  const renderFirstStep = () => (
+  const renderSanctuary = () => (
     <div
       style={{
         display: 'flex',
@@ -1629,14 +1630,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           style={{
             fontSize: '28px',
             fontWeight: 800,
-            color: t.textPrimary,
-            margin: '0 0 16px 0',
+            margin: '0 0 12px 0',
             textAlign: 'center',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             letterSpacing: '-0.01em',
+            ...GRADIENT_TEXT_STYLE,
           }}
         >
-          Your plan is ready
+          Your Sanctuary
         </h2>
 
         <p
@@ -1644,61 +1645,185 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             fontSize: '16px',
             fontWeight: 500,
             color: t.textSecondary,
-            margin: '0 0 48px 0',
+            margin: '0 0 32px 0',
             textAlign: 'center',
             lineHeight: 1.6,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             maxWidth: 300,
           }}
         >
-          We've built a personalized study plan just for you. Let's start reclaiming your time.
+          Every session earns you a new companion. Watch your sanctuary come alive as you study!
         </p>
 
-        {/* Icon */}
+        {/* Sanctuary Preview Card */}
         <div
           style={{
-            width: 100,
-            height: 100,
-            borderRadius: '28px',
-            background: t.buttonGradient,
-            boxShadow: t.buttonShadow,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            width: '100%',
+            borderRadius: '24px',
+            background: t.cardBg,
+            border: `1px solid ${t.cardBorder}`,
+            padding: '20px',
+            position: 'relative',
             overflow: 'hidden',
           }}
         >
-          {bunnyAnimData ? (
-            <Lottie animationData={bunnyAnimData} loop style={{ width: 80, height: 80 }} />
-          ) : (
-            <span style={{ fontSize: '40px' }}>🐰</span>
-          )}
+          {/* Meadow mockup */}
+          <div
+            style={{
+              width: '100%',
+              height: 180,
+              borderRadius: '16px',
+              background: 'linear-gradient(180deg, #87CEEB 0%, #87CEEB 35%, #90EE90 35%, #228B22 100%)',
+              position: 'relative',
+              overflow: 'hidden',
+              marginBottom: '16px',
+            }}
+          >
+            {/* Sun */}
+            <div style={{ position: 'absolute', top: 16, right: 24, fontSize: '28px' }}>☀️</div>
+            {/* Animals */}
+            <div style={{ position: 'absolute', bottom: 30, left: '20%', fontSize: '32px' }}>🐰</div>
+            <div style={{ position: 'absolute', bottom: 45, left: '50%', fontSize: '32px' }}>🐱</div>
+            <div style={{ position: 'absolute', bottom: 25, left: '72%', fontSize: '32px' }}>🐶</div>
+          </div>
+
+          {/* Label row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
+                Meadow
+              </p>
+              <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: t.textPrimary, fontFamily: "'Quicksand', sans-serif" }}>
+                3 Animals
+              </p>
+            </div>
+            <div style={{ fontSize: '32px' }}>🌿</div>
+          </div>
         </div>
       </div>
 
       <div style={{ width: '100%', maxWidth: 360 }}>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={goNext}
-          style={{
-            width: '100%',
-            padding: '18px',
-            borderRadius: '20px',
-            border: 'none',
-            background: t.buttonGradient,
-            color: 'white',
-            fontSize: '17px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            boxShadow: t.buttonShadow,
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Let's Go
-        </motion.button>
+        {renderContinueButton()}
       </div>
     </div>
   );
+
+  const renderStats = () => {
+    // Fake focus trend bars for preview
+    const bars = [
+      { day: 'M', value: 0.4 },
+      { day: 'T', value: 0.7 },
+      { day: 'W', value: 0.5 },
+      { day: 'T', value: 0.9 },
+      { day: 'F', value: 0.6 },
+      { day: 'S', value: 0.3 },
+      { day: 'S', value: 0.8 },
+    ];
+
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '100%',
+          padding: '0 32px',
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+        }}
+      >
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360 }}>
+          <h2
+            style={{
+              fontSize: '28px',
+              fontWeight: 800,
+              margin: '0 0 12px 0',
+              textAlign: 'center',
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              letterSpacing: '-0.01em',
+              ...GRADIENT_TEXT_STYLE,
+            }}
+          >
+            Focus Trends
+          </h2>
+
+          <p
+            style={{
+              fontSize: '16px',
+              fontWeight: 500,
+              color: t.textSecondary,
+              margin: '0 0 32px 0',
+              textAlign: 'center',
+              lineHeight: 1.6,
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              maxWidth: 300,
+            }}
+          >
+            Track your study habits and watch your focus grow over time.
+          </p>
+
+          {/* Stats Preview Card */}
+          <div
+            style={{
+              width: '100%',
+              borderRadius: '24px',
+              background: t.cardBg,
+              border: `1px solid ${t.cardBorder}`,
+              padding: '20px',
+            }}
+          >
+            {/* Weekly summary row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <div>
+                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
+                  This Week
+                </p>
+                <p style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: t.textPrimary, fontFamily: "'Quicksand', sans-serif" }}>
+                  4h 30m
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
+                  Streak
+                </p>
+                <p style={{ margin: 0, fontSize: '24px', fontWeight: 800, fontFamily: "'Quicksand', sans-serif", ...GRADIENT_TEXT_STYLE }}>
+                  7 days
+                </p>
+              </div>
+            </div>
+
+            {/* Bar chart */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, gap: '8px' }}>
+              {bars.map((bar, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '6px' }}>
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${bar.value * 90}px` }}
+                    transition={{ duration: 0.6, delay: i * 0.08, ease: 'easeOut' }}
+                    style={{
+                      width: '100%',
+                      maxWidth: 32,
+                      borderRadius: '8px',
+                      background: 'linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%)',
+                      opacity: 0.85,
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
+                    {bar.day}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ width: '100%', maxWidth: 360 }}>
+          {renderContinueButton()}
+        </div>
+      </div>
+    );
+  };
 
   // --- Create Account Screen ---
   const handleCreateAccount = async () => {
@@ -2386,8 +2511,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         return renderBadNews();
       case 'goodNews':
         return renderGoodNews();
-      case 'firstStep':
-        return renderFirstStep();
+      case 'sanctuary':
+        return renderSanctuary();
+      case 'stats':
+        return renderStats();
       case 'premium':
         return renderPremium();
       case 'chestReveal':
