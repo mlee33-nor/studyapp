@@ -1207,7 +1207,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'drag-ring',
       message: 'Drag the ring to set how long you want to study.',
-      tooltipPosition: 'top',
+      tooltipPosition: 'top-fixed',
       arrow: 'down',
       waitForInteraction: true,
       highlightTarget: 'timer-ring',
@@ -1227,7 +1227,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'type-subject',
       message: 'Pick a subject to start your first session!',
-      tooltipPosition: 'top',
+      tooltipPosition: 'top-fixed',
       arrow: 'down',
       waitForInteraction: true,
       highlightTarget: 'category-modal',
@@ -1237,7 +1237,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'customize-category',
       message: 'Pick an emoji and color for your subject, then press "Start Studying"!',
-      tooltipPosition: 'top',
+      tooltipPosition: 'top-fixed',
       arrow: 'down',
       waitForInteraction: true,
       highlightTarget: 'customize-modal',
