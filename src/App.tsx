@@ -13,6 +13,8 @@ import LoginScreen from './screens/LoginScreen';
 import { hasAccount, isLoggedIn, setLoggedIn, logout, getStoredEmail } from './utils/auth';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
+import TutorialOverlay from './components/TutorialOverlay';
+import type { TutorialStep } from './components/TutorialOverlay';
 import { getNewlyUnlocked } from './utils/achievements';
 import type { Achievement } from './utils/achievements';
 import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSession, categoryExists, createCustomCategory, CUSTOM_CATEGORY_COLORS } from './utils/categoryManager';
@@ -1183,6 +1185,76 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     // Show login if user has an account but isn't logged in this session
     return !showOnboarding && hasAccount() && !isLoggedIn();
   });
+
+  // Tutorial state
+  const [tutorialStep, setTutorialStep] = useState<number>(-1);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  const TUTORIAL_STEPS: TutorialStep[] = [
+    {
+      id: 'drag-ring',
+      message: 'Drag the ring to set how long you want to study.',
+      tooltipPosition: 'top',
+      arrow: 'down',
+      buttonLabel: 'Next',
+    },
+    {
+      id: 'press-start',
+      message: 'When you\'re ready, press Start to begin your focus session!',
+      tooltipPosition: 'bottom',
+      arrow: 'up',
+      buttonLabel: 'Next',
+    },
+    {
+      id: 'earn-coins',
+      message: 'Complete sessions to earn coins. Use coins to unlock new animals and biomes!',
+      tooltipPosition: 'center',
+      arrow: 'none',
+      buttonLabel: 'Next',
+    },
+    {
+      id: 'go-to-sanctuary',
+      message: 'Now let\'s visit your Sanctuary! Tap the paw icon below.',
+      tooltipPosition: 'center',
+      arrow: 'down',
+      waitForInteraction: true,
+    },
+    {
+      id: 'drag-animal',
+      message: 'This is your Sanctuary! Drag your animal to move it around.',
+      tooltipPosition: 'top',
+      arrow: 'none',
+      buttonLabel: 'Next',
+    },
+    {
+      id: 'double-tap',
+      message: 'Double-tap an animal to flip the direction it\'s facing!',
+      tooltipPosition: 'top',
+      arrow: 'none',
+      buttonLabel: 'Got it!',
+    },
+  ];
+
+  const currentTutorialStep = tutorialStep >= 0 && tutorialStep < TUTORIAL_STEPS.length
+    ? TUTORIAL_STEPS[tutorialStep]
+    : null;
+
+  const advanceTutorial = useCallback(() => {
+    setTutorialStep((s) => {
+      const next = s + 1;
+      if (next >= TUTORIAL_STEPS.length) {
+        setShowTutorial(false);
+        localStorage.setItem('tutorialCompleted', 'true');
+        return -1;
+      }
+      // When reaching "go-to-sanctuary" step, we wait for the user to tap
+      // When reaching sanctuary steps, switch to Meadow tab
+      if (TUTORIAL_STEPS[next].id === 'drag-animal') {
+        setActiveTab('Meadow');
+      }
+      return next;
+    });
+  }, [TUTORIAL_STEPS.length]);
 
   const theme = selectedTheme;
 
@@ -2814,6 +2886,11 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             setLoggedIn();
           }
           setShowOnboarding(false);
+          // Start tutorial if not already completed
+          if (!localStorage.getItem('tutorialCompleted')) {
+            setTutorialStep(0);
+            setShowTutorial(true);
+          }
         }}
       />
     );
@@ -2991,7 +3068,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         bottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 1000,
+        zIndex: showTutorial && currentTutorialStep?.id === 'go-to-sanctuary' ? 100003 : 1000,
         display: 'flex',
         justifyContent: 'center',
         pointerEvents: 'none',
@@ -3017,7 +3094,12 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               return (
                 <div
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (showTutorial && currentTutorialStep?.id === 'go-to-sanctuary' && tab.id === 'Meadow') {
+                      advanceTutorial();
+                    }
+                  }}
                   style={{
                     cursor: 'pointer',
                     padding: '8px',
@@ -3137,6 +3219,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Tutorial Overlay */}
+      <TutorialOverlay
+        step={currentTutorialStep}
+        onNext={advanceTutorial}
+        visible={showTutorial}
+      />
     </>
   );
 }
