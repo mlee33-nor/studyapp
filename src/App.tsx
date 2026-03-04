@@ -1200,10 +1200,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     },
     {
       id: 'press-start',
-      message: 'When you\'re ready, press "Start Focus" to begin a session!',
-      tooltipPosition: 'top',
+      message: 'Now press "Start Focus" to begin a session!',
+      tooltipPosition: 'center',
       arrow: 'down',
-      buttonLabel: 'Next',
+      waitForInteraction: true,
     },
     {
       id: 'earn-coins',
@@ -1256,12 +1256,30 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     });
   }, [TUTORIAL_STEPS.length]);
 
-  // Advance tutorial when user drags the timer ring
+  // Advance tutorial when user finishes dragging the timer ring (on pointer release)
+  const timerMinutesChangedRef = useRef(false);
+
   useEffect(() => {
     if (showTutorial && currentTutorialStep?.id === 'drag-ring') {
-      advanceTutorial();
+      timerMinutesChangedRef.current = true;
     }
   }, [timerMinutes]);
+
+  useEffect(() => {
+    if (!showTutorial || currentTutorialStep?.id !== 'drag-ring') return;
+    const handler = () => {
+      if (timerMinutesChangedRef.current) {
+        timerMinutesChangedRef.current = false;
+        advanceTutorial();
+      }
+    };
+    window.addEventListener('pointerup', handler);
+    window.addEventListener('touchend', handler);
+    return () => {
+      window.removeEventListener('pointerup', handler);
+      window.removeEventListener('touchend', handler);
+    };
+  }, [showTutorial, currentTutorialStep, advanceTutorial]);
 
   // Advance tutorial when user drags an animal in the sanctuary
   useEffect(() => {
@@ -1563,6 +1581,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   };
 
   const handleStartFocus = () => {
+    if (showTutorial && currentTutorialStep?.id === 'press-start') {
+      advanceTutorial();
+      return;
+    }
     setShowCategoryModal(true);
   };
 
