@@ -80,30 +80,46 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
   const borderRadius = step.highlightBorderRadius ?? 16;
   const hasSpotlight = !!spotlightRect;
 
-  // Spotlight area bounds (with padding)
-  const spotLeft = hasSpotlight ? spotlightRect.x - pad : 0;
-  const spotTop = hasSpotlight ? spotlightRect.y - pad : 0;
-  const spotWidth = hasSpotlight ? spotlightRect.width + pad * 2 : 0;
-  const spotHeight = hasSpotlight ? spotlightRect.height + pad * 2 : 0;
+  // Raw spotlight area bounds (with padding) — may extend above/left of viewport
+  const rawSpotLeft = hasSpotlight ? spotlightRect.x - pad : 0;
+  const rawSpotTop = hasSpotlight ? spotlightRect.y - pad : 0;
+  const rawSpotWidth = hasSpotlight ? spotlightRect.width + pad * 2 : 0;
+  const rawSpotHeight = hasSpotlight ? spotlightRect.height + pad * 2 : 0;
+
+  // Clamp spotlight to visible viewport so the glow border and darkening look correct
+  // when the element is partially scrolled off-screen (e.g. keyboard pushing modal up)
+  const spotLeft = Math.max(0, rawSpotLeft);
+  const spotTop = Math.max(0, rawSpotTop);
+  const spotWidth = rawSpotWidth - (spotLeft - rawSpotLeft);
+  const spotHeight = rawSpotHeight - (spotTop - rawSpotTop);
 
   // --- Tooltip positioning ---
-  // Use fixed viewport positions — these are hand-tuned per tooltipPosition value.
-  const getTooltipTop = (): string => {
-    if (step.tooltipPosition === 'top') return 'calc(env(safe-area-inset-top, 0px) + 80px)';
-    if (step.tooltipPosition === 'bottom' || step.tooltipPosition === 'bottom-flush') return 'auto';
-    return '50%';
+  const getTooltipStyle = (): React.CSSProperties => {
+    // For 'top' tooltips with an active spotlight: position just above the spotlight
+    if (hasSpotlight && (step.tooltipPosition === 'top' || step.tooltipPosition === 'center')) {
+      const gap = 12;
+      return {
+        top: `${spotTop - gap}px`,
+        bottom: 'auto',
+        transform: 'translateY(-100%)',
+      };
+    }
+
+    // Fixed viewport positions for all other cases
+    if (step.tooltipPosition === 'top') {
+      return { top: 'calc(env(safe-area-inset-top, 0px) + 80px)', bottom: 'auto', transform: 'none' };
+    }
+    if (step.tooltipPosition === 'bottom') {
+      return { top: 'auto', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 170px)', transform: 'none' };
+    }
+    if (step.tooltipPosition === 'bottom-flush') {
+      return { top: 'auto', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 64px)', transform: 'none' };
+    }
+    // center
+    return { top: '50%', bottom: 'auto', transform: 'translateY(-50%)' };
   };
 
-  const getTooltipBottom = (): string => {
-    if (step.tooltipPosition === 'bottom') return 'calc(env(safe-area-inset-bottom, 0px) + 170px)';
-    if (step.tooltipPosition === 'bottom-flush') return 'calc(env(safe-area-inset-bottom, 0px) + 64px)';
-    return 'auto';
-  };
-
-  const getTooltipTransform = (): string => {
-    if (step.tooltipPosition === 'center') return 'translateY(-50%)';
-    return 'none';
-  };
+  const tooltipStyle = getTooltipStyle();
 
   return (
     <AnimatePresence>
@@ -208,16 +224,14 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
           transition={{ delay: 0.1, duration: 0.25, ease: 'easeOut' }}
           style={{
             position: 'absolute',
-            top: getTooltipTop(),
-            bottom: getTooltipBottom(),
             left: 24,
             right: 24,
-            transform: getTooltipTransform(),
             zIndex: 100002,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             pointerEvents: 'auto',
+            ...tooltipStyle,
           }}
         >
           {/* Arrow pointing up */}
