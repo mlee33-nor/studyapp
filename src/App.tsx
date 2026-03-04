@@ -713,7 +713,7 @@ const CategoryCustomizeModal: React.FC<{
         alignItems: 'flex-start',
         justifyContent: 'center',
         zIndex: 2100,
-        padding: 'calc(env(safe-area-inset-top, 0px) + 130px) 20px 20px',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 100px) 20px 20px',
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch' as any,
       }}
@@ -965,7 +965,7 @@ const CategorySelectionModal: React.FC<{
         alignItems: 'flex-start',
         justifyContent: 'center',
         zIndex: 2000,
-        padding: 'calc(env(safe-area-inset-top, 0px) + 130px) 20px 20px',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 100px) 20px 20px',
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch' as any,
       }}

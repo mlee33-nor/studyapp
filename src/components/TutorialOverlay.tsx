@@ -95,13 +95,21 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
 
   // --- Tooltip positioning ---
   const getTooltipStyle = (): React.CSSProperties => {
-    // For 'top' tooltips with an active spotlight: position just above the spotlight
+    // For 'top' tooltips with an active spotlight: position above or below the spotlight
     if (hasSpotlight && (step.tooltipPosition === 'top' || step.tooltipPosition === 'center')) {
       const gap = 12;
+      // Need ~90px for tooltip card; if not enough room above, place below
+      if (spotTop >= 90) {
+        return {
+          top: `${spotTop - gap}px`,
+          bottom: 'auto',
+          transform: 'translateY(-100%)',
+        };
+      }
       return {
-        top: `${spotTop - gap}px`,
+        top: `${spotTop + spotHeight + gap}px`,
         bottom: 'auto',
-        transform: 'translateY(-100%)',
+        transform: 'none',
       };
     }
 
