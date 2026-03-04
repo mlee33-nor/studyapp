@@ -1213,6 +1213,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       buttonLabel: 'Next',
     },
     {
+      id: 'achievement-explain',
+      message: 'You just earned your first achievement! Complete milestones to unlock more achievements as you study.',
+      tooltipPosition: 'center',
+      arrow: 'none',
+      buttonLabel: 'Cool!',
+    },
+    {
       id: 'go-to-sanctuary',
       message: 'Now let\'s visit your Sanctuary! Tap the paw icon below.',
       tooltipPosition: 'center',
@@ -3271,7 +3278,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       <TutorialOverlay
         step={currentTutorialStep}
         onNext={advanceTutorial}
-        visible={showTutorial && !isRunning && !isPaused}
+        visible={showTutorial && !isRunning && !isPaused && !unlockedAchievement}
       />
     </>
   );
