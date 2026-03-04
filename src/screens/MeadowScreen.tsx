@@ -919,6 +919,7 @@ const MeadowScreen: React.FC = () => {
                         return (
                         <motion.div
                           key={animal.id}
+                          data-tutorial-target="meadow-animal"
                           drag
                           dragMomentum={false}
                           dragElastic={0}

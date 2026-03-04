@@ -334,7 +334,8 @@ const SoftButton: React.FC<{
   icon?: LucideIcon;
   onClick: () => void;
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
-}> = ({ text, icon: Icon, onClick, variant = 'primary' }) => {
+  'data-tutorial-target'?: string;
+}> = ({ text, icon: Icon, onClick, variant = 'primary', 'data-tutorial-target': tutorialTarget }) => {
   const colors = {
     primary: {
       bg: 'linear-gradient(135deg, rgba(244, 114, 182, 0.7) 0%, rgba(168, 85, 247, 0.7) 100%)',
@@ -366,6 +367,7 @@ const SoftButton: React.FC<{
       whileTap={GENTLE_PRESS}
       onClick={onClick}
       transition={SOFT_SPRING}
+      data-tutorial-target={tutorialTarget}
       style={{
         background: style.bg,
         backdropFilter: 'blur(10px)',
@@ -508,6 +510,7 @@ const InteractiveTimerRing: React.FC<{
 
   return (
     <div
+      data-tutorial-target="timer-ring"
       style={{ position: 'relative', width: displaySize, height: displaySize, margin: '0 auto' }}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -1197,6 +1200,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       tooltipPosition: 'top',
       arrow: 'down',
       waitForInteraction: true,
+      highlightTarget: 'timer-ring',
+      highlightPadding: 12,
+      highlightBorderRadius: 999,
     },
     {
       id: 'press-start',
@@ -1204,6 +1210,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       tooltipPosition: 'bottom',
       arrow: 'down',
       waitForInteraction: true,
+      highlightTarget: 'start-focus',
+      highlightPadding: 6,
+      highlightBorderRadius: 24,
     },
     {
       id: 'press-complete',
@@ -1211,7 +1220,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       tooltipPosition: 'bottom',
       arrow: 'down',
       waitForInteraction: true,
-      noOverlay: true,
+      highlightTarget: 'complete-btn',
+      highlightPadding: 6,
+      highlightBorderRadius: 24,
     },
     {
       id: 'achievement-explain',
@@ -1234,6 +1245,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       tooltipPosition: 'bottom-flush',
       arrow: 'down',
       waitForInteraction: true,
+      highlightTarget: 'nav-meadow',
+      highlightPadding: 6,
+      highlightBorderRadius: 18,
     },
     {
       id: 'drag-animal',
@@ -1241,6 +1255,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       tooltipPosition: 'top',
       arrow: 'none',
       waitForInteraction: true,
+      highlightTarget: 'meadow-animal',
+      highlightPadding: 10,
+      highlightBorderRadius: 20,
     },
     {
       id: 'double-tap',
@@ -1248,6 +1265,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       tooltipPosition: 'top',
       arrow: 'none',
       waitForInteraction: true,
+      highlightTarget: 'meadow-animal',
+      highlightPadding: 10,
+      highlightBorderRadius: 20,
     },
   ];
 
@@ -2535,17 +2555,17 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             {isRunning ? (
               <>
                 <SoftButton text="Pause" icon={Pause} onClick={() => { setIsRunning(false); setIsPaused(true); }} variant="secondary" />
-                <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" />
+                <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" data-tutorial-target="complete-btn" />
                 <SoftButton text="Fail Session" icon={X} onClick={() => setShowFailConfirm(true)} variant="danger" />
               </>
             ) : isPaused ? (
               <>
                 <SoftButton text="Resume" icon={Play} onClick={() => { setIsRunning(true); setIsPaused(false); }} variant="primary" />
-                <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" />
+                <SoftButton text="Complete" icon={Check} onClick={handleCompleteSession} variant="primary" data-tutorial-target="complete-btn" />
                 <SoftButton text="Fail Session" icon={X} onClick={() => setShowFailConfirm(true)} variant="danger" />
               </>
             ) : (
-              <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" />
+              <SoftButton text="Start Focus" icon={Play} onClick={handleStartFocus} variant="primary" data-tutorial-target="start-focus" />
             )}
           </div>
 
@@ -3145,7 +3165,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         bottom: 'max(12px, env(safe-area-inset-bottom, 12px))',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: showTutorial && currentTutorialStep?.id === 'go-to-sanctuary' ? 100003 : 1000,
+        zIndex: 1000,
         display: 'flex',
         justifyContent: 'center',
         pointerEvents: 'none',
@@ -3171,6 +3191,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               return (
                 <div
                   key={tab.id}
+                  data-tutorial-target={tab.id === 'Meadow' ? 'nav-meadow' : undefined}
                   onClick={() => {
                     setActiveTab(tab.id);
                     if (showTutorial && currentTutorialStep?.id === 'go-to-sanctuary' && tab.id === 'Meadow') {

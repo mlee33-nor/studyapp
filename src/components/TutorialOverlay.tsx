@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface TutorialStep {
@@ -14,6 +14,12 @@ export interface TutorialStep {
   waitForInteraction?: boolean;
   // If true, skip the dark background overlay (e.g. when shown over another modal)
   noOverlay?: boolean;
+  // CSS selector value for data-tutorial-target to spotlight (e.g. "timer-ring")
+  highlightTarget?: string;
+  // Padding around the spotlight hole (default 8)
+  highlightPadding?: number;
+  // Border radius of the spotlight hole (default 16)
+  highlightBorderRadius?: number;
 }
 
 interface TutorialOverlayProps {
@@ -22,8 +28,63 @@ interface TutorialOverlayProps {
   visible: boolean;
 }
 
+interface SpotlightRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible }) => {
+  const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
+  const rafRef = useRef<number>(0);
+
+  // Track the target element's position
+  const updateSpotlight = useCallback(() => {
+    if (!step?.highlightTarget) {
+      setSpotlightRect(null);
+      return;
+    }
+    const el = document.querySelector(`[data-tutorial-target="${step.highlightTarget}"]`);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setSpotlightRect({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+    }
+  }, [step?.highlightTarget]);
+
+  useEffect(() => {
+    if (!visible || !step?.highlightTarget) {
+      setSpotlightRect(null);
+      return;
+    }
+
+    // Poll position to handle layout shifts, scrolling, drag movements
+    const poll = () => {
+      updateSpotlight();
+      rafRef.current = requestAnimationFrame(poll);
+    };
+    // Small delay to let the DOM settle after step transitions
+    const timeout = setTimeout(() => {
+      poll();
+    }, 50);
+
+    return () => {
+      clearTimeout(timeout);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [visible, step?.highlightTarget, updateSpotlight]);
+
   if (!visible || !step) return null;
+
+  const pad = step.highlightPadding ?? 8;
+  const borderRadius = step.highlightBorderRadius ?? 16;
+  const hasSpotlight = !!spotlightRect;
+
+  // Spotlight area bounds (with padding)
+  const spotLeft = hasSpotlight ? spotlightRect.x - pad : 0;
+  const spotTop = hasSpotlight ? spotlightRect.y - pad : 0;
+  const spotWidth = hasSpotlight ? spotlightRect.width + pad * 2 : 0;
+  const spotHeight = hasSpotlight ? spotlightRect.height + pad * 2 : 0;
 
   const getTooltipTop = (): string => {
     if (step.tooltipPosition === 'top') return 'calc(env(safe-area-inset-top, 0px) + 80px)';
@@ -54,24 +115,91 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
           position: 'fixed',
           inset: 0,
           zIndex: 100000,
-          // When waiting for interaction, let touches pass through the overlay
-          // but keep the tooltip itself interactive
-          pointerEvents: step.waitForInteraction ? 'none' : 'auto',
+          pointerEvents: 'none',
         }}
       >
-        {/* Dark overlay background */}
-        {!step.waitForInteraction && !step.noOverlay && (
+        {/* === SPOTLIGHT MODE: dark surround + glow + click blocking === */}
+        {hasSpotlight && (
+          <>
+            {/* Dark surround via box-shadow on a transparent div positioned over the target */}
+            <div
+              style={{
+                position: 'fixed',
+                left: spotLeft,
+                top: spotTop,
+                width: spotWidth,
+                height: spotHeight,
+                borderRadius: borderRadius,
+                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.65)',
+                zIndex: 100000,
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Glow ring around the spotlight area */}
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              style={{
+                position: 'fixed',
+                left: spotLeft - 2,
+                top: spotTop - 2,
+                width: spotWidth + 4,
+                height: spotHeight + 4,
+                borderRadius: borderRadius + 2,
+                border: '2px solid rgba(167, 139, 250, 0.6)',
+                boxShadow: '0 0 24px 6px rgba(167, 139, 250, 0.35), inset 0 0 24px 6px rgba(167, 139, 250, 0.08)',
+                zIndex: 100000,
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* 4 invisible click-blocking divs — cover everything EXCEPT the spotlight hole */}
+            {/* TOP */}
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0,
+              height: Math.max(0, spotTop),
+              zIndex: 100001, pointerEvents: 'auto',
+            }} />
+            {/* BOTTOM */}
+            <div style={{
+              position: 'fixed', left: 0, right: 0, bottom: 0,
+              top: Math.max(0, spotTop + spotHeight),
+              zIndex: 100001, pointerEvents: 'auto',
+            }} />
+            {/* LEFT */}
+            <div style={{
+              position: 'fixed', left: 0,
+              top: Math.max(0, spotTop),
+              width: Math.max(0, spotLeft),
+              height: spotHeight,
+              zIndex: 100001, pointerEvents: 'auto',
+            }} />
+            {/* RIGHT */}
+            <div style={{
+              position: 'fixed', right: 0,
+              top: Math.max(0, spotTop),
+              left: Math.max(0, spotLeft + spotWidth),
+              height: spotHeight,
+              zIndex: 100001, pointerEvents: 'auto',
+            }} />
+          </>
+        )}
+
+        {/* === FALLBACK: full dark overlay (no spotlight) === */}
+        {!hasSpotlight && !step.noOverlay && !step.waitForInteraction && (
           <div
             style={{
               position: 'absolute',
               inset: 0,
               background: 'rgba(0, 0, 0, 0.55)',
               zIndex: 100001,
+              pointerEvents: 'auto',
             }}
           />
         )}
 
-        {/* Tooltip card — centered with padding */}
+        {/* Tooltip card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
