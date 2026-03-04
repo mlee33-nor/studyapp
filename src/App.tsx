@@ -1256,14 +1256,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       highlightBorderRadius: 24,
     },
     {
-      id: 'achievement-explain',
-      message: 'You just earned your first achievement! Complete milestones to unlock more achievements as you study.',
-      tooltipPosition: 'top',
-      arrow: 'none',
-      buttonLabel: 'Cool!',
-      noOverlay: true,
-    },
-    {
       id: 'earn-coins',
       message: 'Complete sessions to earn coins. Use coins to unlock new animals and biomes!',
       tooltipPosition: 'center',
@@ -3440,7 +3432,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       <TutorialOverlay
         step={currentTutorialStep}
         onNext={advanceTutorial}
-        visible={showTutorial && (!isRunning || currentTutorialStep?.id === 'press-complete') && !isPaused && (!unlockedAchievement || currentTutorialStep?.id === 'achievement-explain')}
+        visible={showTutorial && (!isRunning || currentTutorialStep?.id === 'press-complete') && !isPaused && !unlockedAchievement}
       />
 
       {/* Tutorial Completion Popup */}
