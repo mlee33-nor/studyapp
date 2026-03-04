@@ -111,13 +111,16 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
   // Use visual viewport dimensions (accounts for keyboard on iOS)
   const vvTop = viewportOffset.top;
   const vvHeight = viewportOffset.height;
+  const keyboardOpen = vvHeight < window.innerHeight * 0.75;
 
   // Clamp spotlight to visible visual viewport so the glow border and darkening look correct
   // when the element is partially scrolled off-screen (e.g. keyboard pushing modal up)
   const spotLeft = Math.max(0, rawSpotLeft);
   const spotTop = Math.max(vvTop, rawSpotTop);
   const spotWidth = Math.min(rawSpotWidth - (spotLeft - rawSpotLeft), window.innerWidth - spotLeft);
-  const spotHeight = Math.min(rawSpotHeight - (spotTop - rawSpotTop), vvTop + vvHeight - spotTop);
+  // When keyboard is open, extend spotlight down to fill the gap between card and keyboard
+  const clampedHeight = Math.min(rawSpotHeight - (spotTop - rawSpotTop), vvTop + vvHeight - spotTop);
+  const spotHeight = (keyboardOpen && hasSpotlight) ? (vvTop + vvHeight - spotTop) : clampedHeight;
 
   // --- Tooltip positioning ---
   const getTooltipStyle = (): React.CSSProperties => {
