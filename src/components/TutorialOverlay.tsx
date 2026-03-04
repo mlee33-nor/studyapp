@@ -37,7 +37,24 @@ interface SpotlightRect {
 
 const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible }) => {
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
+  const [viewportOffset, setViewportOffset] = useState({ top: 0, height: window.innerHeight });
   const rafRef = useRef<number>(0);
+
+  // Track visual viewport changes (keyboard open/close on iOS)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      setViewportOffset({ top: vv.offsetTop, height: vv.height });
+    };
+    update();
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+    };
+  }, []);
 
   // Track the target element's position
   const updateSpotlight = useCallback(() => {
@@ -49,6 +66,11 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
     if (el) {
       const rect = el.getBoundingClientRect();
       setSpotlightRect({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+    }
+    // Also refresh viewport offset each frame
+    const vv = window.visualViewport;
+    if (vv) {
+      setViewportOffset({ top: vv.offsetTop, height: vv.height });
     }
   }, [step?.highlightTarget]);
 
@@ -86,13 +108,16 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
   const rawSpotWidth = hasSpotlight ? spotlightRect.width + pad * 2 : 0;
   const rawSpotHeight = hasSpotlight ? spotlightRect.height + pad * 2 : 0;
 
-  // Clamp spotlight to visible viewport so the glow border and darkening look correct
+  // Use visual viewport dimensions (accounts for keyboard on iOS)
+  const vvTop = viewportOffset.top;
+  const vvHeight = viewportOffset.height;
+
+  // Clamp spotlight to visible visual viewport so the glow border and darkening look correct
   // when the element is partially scrolled off-screen (e.g. keyboard pushing modal up)
-  const vh = window.innerHeight;
   const spotLeft = Math.max(0, rawSpotLeft);
-  const spotTop = Math.max(0, rawSpotTop);
+  const spotTop = Math.max(vvTop, rawSpotTop);
   const spotWidth = Math.min(rawSpotWidth - (spotLeft - rawSpotLeft), window.innerWidth - spotLeft);
-  const spotHeight = Math.min(rawSpotHeight - (spotTop - rawSpotTop), vh - spotTop);
+  const spotHeight = Math.min(rawSpotHeight - (spotTop - rawSpotTop), vvTop + vvHeight - spotTop);
 
   // --- Tooltip positioning ---
   const getTooltipStyle = (): React.CSSProperties => {
