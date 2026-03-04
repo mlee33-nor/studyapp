@@ -721,6 +721,7 @@ const CategoryCustomizeModal: React.FC<{
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
         onClick={(e) => e.stopPropagation()}
+        data-tutorial-target="customize-modal"
         style={{
           background: isDark
             ? 'rgba(30, 30, 60, 0.95)'
@@ -971,6 +972,7 @@ const CategorySelectionModal: React.FC<{
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
         onClick={(e) => e.stopPropagation()}
+        data-tutorial-target="category-modal"
         style={{
           background: isDark
             ? 'rgba(30, 30, 60, 0.95)'
@@ -1213,6 +1215,26 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       highlightTarget: 'start-focus',
       highlightPadding: 6,
       highlightBorderRadius: 24,
+    },
+    {
+      id: 'type-subject',
+      message: 'Type in a subject and press "Begin Session" to start!',
+      tooltipPosition: 'top',
+      arrow: 'down',
+      waitForInteraction: true,
+      highlightTarget: 'category-modal',
+      highlightPadding: 8,
+      highlightBorderRadius: 32,
+    },
+    {
+      id: 'customize-category',
+      message: 'Pick an emoji and color for your subject, then press "Start Studying"!',
+      tooltipPosition: 'top',
+      arrow: 'down',
+      waitForInteraction: true,
+      highlightTarget: 'customize-modal',
+      highlightPadding: 8,
+      highlightBorderRadius: 32,
     },
     {
       id: 'press-complete',
@@ -1632,19 +1654,25 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
   const handleStartFocus = () => {
     if (showTutorial && currentTutorialStep?.id === 'press-start') {
-      // During tutorial: start a real session with a short timer, skip category modal
-      advanceTutorial(); // advance to 'earn-coins' (hidden while running)
-      setCurrentCategory('Study');
-      getOrCreateCategory('Study');
+      // During tutorial: open category modal so user can pick a subject
+      advanceTutorial(); // advance to 'type-subject'
       setTimerMinutes(1);
       setTimeLeft(60);
-      setIsRunning(true);
+      setShowCategoryModal(true);
       return;
     }
     setShowCategoryModal(true);
   };
 
   const handleCategorySelected = (category: string) => {
+    if (showTutorial && currentTutorialStep?.id === 'type-subject') {
+      // During tutorial: always show customize modal regardless of whether category exists
+      setPendingCategory(category);
+      setShowCategoryModal(false);
+      setShowCustomizeModal(true);
+      advanceTutorial(); // advance to 'customize-category'
+      return;
+    }
     // If this is a brand-new category, show the customization popup first
     if (!categoryExists(category)) {
       setPendingCategory(category);
@@ -1664,10 +1692,14 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     setCurrentCategory(pendingCategory);
     setShowCustomizeModal(false);
     setPendingCategory('');
+    if (showTutorial && currentTutorialStep?.id === 'customize-category') {
+      advanceTutorial(); // advance to 'press-complete'
+    }
     setIsRunning(true);
   };
 
   const handleCustomizeCancel = () => {
+    if (showTutorial) return; // prevent canceling during tutorial
     setShowCustomizeModal(false);
     setPendingCategory('');
     // Re-open the category selection modal so the user can pick again
@@ -3031,7 +3063,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       {/* Category Selection Modal */}
       <CategorySelectionModal
         isOpen={showCategoryModal}
-        onClose={() => setShowCategoryModal(false)}
+        onClose={() => { if (!showTutorial) setShowCategoryModal(false); }}
         onSelectCategory={handleCategorySelected}
         theme={selectedTheme}
       />
