@@ -1582,7 +1582,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
   const handleStartFocus = () => {
     if (showTutorial && currentTutorialStep?.id === 'press-start') {
-      advanceTutorial();
+      // During tutorial: start a real session with a short timer, skip category modal
+      advanceTutorial(); // advance to 'earn-coins' (hidden while running)
+      setCurrentCategory('Study');
+      getOrCreateCategory('Study');
+      setTimerMinutes(1);
+      setTimeLeft(60);
+      setIsRunning(true);
       return;
     }
     setShowCategoryModal(true);
@@ -3261,11 +3267,11 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         )}
       </AnimatePresence>
 
-      {/* Tutorial Overlay */}
+      {/* Tutorial Overlay — hide while timer is running/paused */}
       <TutorialOverlay
         step={currentTutorialStep}
         onNext={advanceTutorial}
-        visible={showTutorial}
+        visible={showTutorial && !isRunning && !isPaused}
       />
     </>
   );
