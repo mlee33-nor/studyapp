@@ -1196,13 +1196,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       message: 'Drag the ring to set how long you want to study.',
       tooltipPosition: 'top',
       arrow: 'down',
-      buttonLabel: 'Next',
+      waitForInteraction: true,
     },
     {
       id: 'press-start',
-      message: 'When you\'re ready, press Start to begin your focus session!',
-      tooltipPosition: 'bottom',
-      arrow: 'up',
+      message: 'When you\'re ready, press "Start Focus" to begin a session!',
+      tooltipPosition: 'top',
+      arrow: 'down',
       buttonLabel: 'Next',
     },
     {
@@ -1221,10 +1221,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     },
     {
       id: 'drag-animal',
-      message: 'This is your Sanctuary! Drag your animal to move it around.',
+      message: 'This is your Sanctuary! Try dragging your animal to move it around.',
       tooltipPosition: 'top',
       arrow: 'none',
-      buttonLabel: 'Next',
+      waitForInteraction: true,
     },
     {
       id: 'double-tap',
@@ -1255,6 +1255,25 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       return next;
     });
   }, [TUTORIAL_STEPS.length]);
+
+  // Advance tutorial when user drags the timer ring
+  useEffect(() => {
+    if (showTutorial && currentTutorialStep?.id === 'drag-ring') {
+      advanceTutorial();
+    }
+  }, [timerMinutes]);
+
+  // Advance tutorial when user drags an animal in the sanctuary
+  useEffect(() => {
+    if (!showTutorial) return;
+    const handler = () => {
+      if (currentTutorialStep?.id === 'drag-animal') {
+        advanceTutorial();
+      }
+    };
+    window.addEventListener('meadow-animal-dragged', handler);
+    return () => window.removeEventListener('meadow-animal-dragged', handler);
+  }, [showTutorial, currentTutorialStep, advanceTutorial]);
 
   const theme = selectedTheme;
 

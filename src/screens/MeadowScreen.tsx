@@ -461,6 +461,7 @@ const MeadowScreen: React.FC = () => {
 
     updateAnimalPosition(animalId, constrained.x, constrained.y);
     refreshData();
+    window.dispatchEvent(new CustomEvent('meadow-animal-dragged'));
   };
 
   // Walking animal drag handlers — pause movement during drag, resume after drop
