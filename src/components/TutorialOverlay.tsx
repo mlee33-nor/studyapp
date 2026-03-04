@@ -32,7 +32,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
   };
 
   const getTooltipBottom = (): string => {
-    if (step.tooltipPosition === 'bottom') return 'calc(env(safe-area-inset-bottom, 0px) + 100px)';
+    if (step.tooltipPosition === 'bottom') return 'calc(env(safe-area-inset-bottom, 0px) + 140px)';
     if (step.tooltipPosition === 'bottom-flush') return 'calc(env(safe-area-inset-bottom, 0px) + 64px)';
     return 'auto';
   };
