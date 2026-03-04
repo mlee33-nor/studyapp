@@ -88,10 +88,11 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
 
   // Clamp spotlight to visible viewport so the glow border and darkening look correct
   // when the element is partially scrolled off-screen (e.g. keyboard pushing modal up)
+  const vh = window.innerHeight;
   const spotLeft = Math.max(0, rawSpotLeft);
   const spotTop = Math.max(0, rawSpotTop);
-  const spotWidth = rawSpotWidth - (spotLeft - rawSpotLeft);
-  const spotHeight = rawSpotHeight - (spotTop - rawSpotTop);
+  const spotWidth = Math.min(rawSpotWidth - (spotLeft - rawSpotLeft), window.innerWidth - spotLeft);
+  const spotHeight = Math.min(rawSpotHeight - (spotTop - rawSpotTop), vh - spotTop);
 
   // --- Tooltip positioning ---
   const getTooltipStyle = (): React.CSSProperties => {
