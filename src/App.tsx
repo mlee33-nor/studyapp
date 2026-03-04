@@ -17,7 +17,7 @@ import TutorialOverlay from './components/TutorialOverlay';
 import type { TutorialStep } from './components/TutorialOverlay';
 import { getNewlyUnlocked } from './utils/achievements';
 import type { Achievement } from './utils/achievements';
-import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSession, categoryExists, createCustomCategory, CUSTOM_CATEGORY_COLORS } from './utils/categoryManager';
+import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSession, categoryExists, createCustomCategory, updateCategoryAppearance, CUSTOM_CATEGORY_COLORS } from './utils/categoryManager';
 import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
@@ -710,10 +710,12 @@ const CategoryCustomizeModal: React.FC<{
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
         zIndex: 2100,
-        padding: '20px',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 40px) 20px 20px',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch' as any,
       }}
     >
       <motion.div
@@ -738,8 +740,7 @@ const CategoryCustomizeModal: React.FC<{
             : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
           maxWidth: '400px',
           width: '100%',
-          maxHeight: '85vh',
-          overflowY: 'auto',
+          flexShrink: 0,
         }}
       >
         {/* Preview */}
@@ -961,10 +962,12 @@ const CategorySelectionModal: React.FC<{
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
         zIndex: 2000,
-        padding: '20px',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 60px) 20px 20px',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch' as any,
       }}
     >
       <motion.div
@@ -989,8 +992,7 @@ const CategorySelectionModal: React.FC<{
             : '0 8px 32px rgba(147, 197, 253, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
           maxWidth: '420px',
           width: '100%',
-          maxHeight: '80vh',
-          overflowY: 'auto',
+          flexShrink: 0,
         }}
       >
         {/* Title */}
@@ -1666,21 +1668,24 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
   const handleCategorySelected = (category: string) => {
     if (showTutorial && currentTutorialStep?.id === 'type-subject') {
-      // During tutorial: always show customize modal regardless of whether category exists
+      // During tutorial: always show customize modal
       setPendingCategory(category);
       setShowCategoryModal(false);
       setShowCustomizeModal(true);
       advanceTutorial(); // advance to 'customize-category'
       return;
     }
-    // If this is a brand-new category, show the customization popup first
-    if (!categoryExists(category)) {
+    // Check if this category has been personalized by the user before
+    const personalized: string[] = JSON.parse(localStorage.getItem('personalizedCategories') || '[]');
+    const isPersonalized = personalized.includes(category.toLowerCase());
+    if (!isPersonalized) {
+      // First time using this category — show customize modal (presets and custom alike)
       setPendingCategory(category);
       setShowCategoryModal(false);
       setShowCustomizeModal(true);
       return;
     }
-    // Existing category — register and start immediately
+    // Previously personalized — register and start immediately
     getOrCreateCategory(category);
     setCurrentCategory(category);
     setShowCategoryModal(false);
@@ -1688,7 +1693,18 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   };
 
   const handleCustomizeConfirm = (emoji: string, themeColor: string, accentColor: string) => {
-    createCustomCategory(pendingCategory, emoji, themeColor, accentColor);
+    // Update existing category or create new one
+    if (categoryExists(pendingCategory)) {
+      updateCategoryAppearance(pendingCategory, emoji, themeColor, accentColor);
+    } else {
+      createCustomCategory(pendingCategory, emoji, themeColor, accentColor);
+    }
+    // Mark as personalized so we don't show the customize modal again
+    const personalized: string[] = JSON.parse(localStorage.getItem('personalizedCategories') || '[]');
+    if (!personalized.includes(pendingCategory.toLowerCase())) {
+      personalized.push(pendingCategory.toLowerCase());
+      localStorage.setItem('personalizedCategories', JSON.stringify(personalized));
+    }
     setCurrentCategory(pendingCategory);
     setShowCustomizeModal(false);
     setPendingCategory('');

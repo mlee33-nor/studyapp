@@ -93,6 +93,19 @@ export const createCustomCategory = (title: string, emoji: string, themeColor: s
   return newCategory;
 };
 
+// Update an existing category's emoji and colors
+export const updateCategoryAppearance = (title: string, emoji: string, themeColor: string, accentColor: string): StudyCategory | null => {
+  const categories = getCategories();
+  const existing = categories.find(c => c.title.toLowerCase() === title.toLowerCase());
+  if (!existing) return null;
+  existing.emoji = emoji;
+  existing.themeColor = themeColor;
+  existing.accentColor = accentColor;
+  existing.lastUsed = new Date().toISOString();
+  saveCategories(categories);
+  return existing;
+};
+
 // Get or create category
 export const getOrCreateCategory = (title: string): StudyCategory => {
   const categories = getCategories();
