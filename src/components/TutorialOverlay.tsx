@@ -5,7 +5,7 @@ export interface TutorialStep {
   id: string;
   message: string;
   // Where to show the tooltip relative to viewport
-  tooltipPosition: 'top' | 'center' | 'bottom' | 'bottom-flush';
+  tooltipPosition: 'top' | 'top-fixed' | 'center' | 'bottom' | 'bottom-flush';
   // Optional arrow pointing direction
   arrow?: 'up' | 'down' | 'none';
   // Button label
@@ -140,6 +140,11 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
         bottom: 'auto',
         transform: 'none',
       };
+    }
+
+    // Fixed top position (ignores spotlight)
+    if (step.tooltipPosition === 'top-fixed') {
+      return { top: 'calc(env(safe-area-inset-top, 0px) + 80px)', bottom: 'auto', transform: 'none' };
     }
 
     // Fixed viewport positions for all other cases
