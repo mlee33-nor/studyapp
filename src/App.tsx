@@ -1202,6 +1202,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   // Tutorial state
   const [tutorialStep, setTutorialStep] = useState<number>(-1);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showTutorialComplete, setShowTutorialComplete] = useState(false);
 
   const TUTORIAL_STEPS: TutorialStep[] = [
     {
@@ -1255,14 +1256,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       highlightBorderRadius: 24,
     },
     {
-      id: 'achievement-explain',
-      message: 'You just earned your first achievement! Complete milestones to unlock more achievements as you study.',
-      tooltipPosition: 'top',
-      arrow: 'none',
-      buttonLabel: 'Cool!',
-      noOverlay: true,
-    },
-    {
       id: 'earn-coins',
       message: 'Complete sessions to earn coins. Use coins to unlock new animals and biomes!',
       tooltipPosition: 'center',
@@ -1305,12 +1298,15 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     ? TUTORIAL_STEPS[tutorialStep]
     : null;
 
+  const tutorialJustFinishedRef = useRef(false);
   const advanceTutorial = useCallback(() => {
     setTutorialStep((s) => {
       const next = s + 1;
       if (next >= TUTORIAL_STEPS.length) {
         setShowTutorial(false);
         localStorage.setItem('tutorialCompleted', 'true');
+        setShowTutorialComplete(true);
+        tutorialJustFinishedRef.current = true;
         return -1;
       }
       // When reaching sanctuary steps, switch to Meadow tab
@@ -1320,6 +1316,14 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       return next;
     });
   }, [TUTORIAL_STEPS.length]);
+
+  // Fire confetti when tutorial completes
+  useEffect(() => {
+    if (showTutorialComplete && tutorialJustFinishedRef.current) {
+      tutorialJustFinishedRef.current = false;
+      triggerCelebration();
+    }
+  }, [showTutorialComplete]);
 
   // Advance tutorial when user finishes dragging the timer ring (on pointer release)
   const timerMinutesChangedRef = useRef(false);
@@ -3428,8 +3432,97 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       <TutorialOverlay
         step={currentTutorialStep}
         onNext={advanceTutorial}
-        visible={showTutorial && (!isRunning || currentTutorialStep?.id === 'press-complete') && !isPaused && (!unlockedAchievement || currentTutorialStep?.id === 'achievement-explain')}
+        visible={showTutorial && (!isRunning || currentTutorialStep?.id === 'press-complete') && !isPaused && !unlockedAchievement}
       />
+
+      {/* Tutorial Completion Popup */}
+      <AnimatePresence>
+        {showTutorialComplete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.6)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 200000,
+              padding: '20px',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, y: 30 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 30 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              style={{
+                background: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? 'rgba(30, 30, 60, 0.95)'
+                  : 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '32px',
+                padding: '40px 32px',
+                border: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? '1px solid rgba(139, 92, 246, 0.3)'
+                  : '1px solid rgba(255, 255, 255, 0.5)',
+                boxShadow: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? '0 8px 32px rgba(0, 0, 0, 0.5)'
+                  : '0 8px 32px rgba(147, 197, 253, 0.3)',
+                maxWidth: '360px',
+                width: '100%',
+                textAlign: 'center' as const,
+              }}
+            >
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+                🎉🐾
+              </div>
+              <h2 style={{
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                color: getTextColor(selectedTheme, 'primary'),
+                marginBottom: '12px',
+                fontFamily: "'Quicksand', sans-serif",
+              }}>
+                You're all set!
+              </h2>
+              <p style={{
+                fontSize: '1rem',
+                color: getTextColor(selectedTheme, 'secondary'),
+                marginBottom: '28px',
+                fontFamily: "'Quicksand', sans-serif",
+                lineHeight: 1.5,
+              }}>
+                Have fun studying and collecting adorable animals for your Sanctuary!
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowTutorialComplete(false)}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%)',
+                  border: 'none',
+                  borderRadius: '20px',
+                  padding: '14px 40px',
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  fontFamily: "'Quicksand', sans-serif",
+                  boxShadow: '0 4px 20px rgba(167, 139, 250, 0.4)',
+                }}
+              >
+                Let's Go!
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
