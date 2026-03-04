@@ -1282,7 +1282,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'drag-animal',
       message: 'This is your Sanctuary! Try dragging your animal to move it around.',
-      tooltipPosition: 'top',
+      tooltipPosition: 'bottom',
       arrow: 'none',
       waitForInteraction: true,
       highlightTarget: 'meadow-animal',
@@ -1292,7 +1292,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'double-tap',
       message: 'Double-tap an animal to flip the direction it\'s facing!',
-      tooltipPosition: 'top',
+      tooltipPosition: 'bottom',
       arrow: 'none',
       waitForInteraction: true,
       highlightTarget: 'meadow-animal',
