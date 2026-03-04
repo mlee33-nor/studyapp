@@ -911,7 +911,8 @@ const CategorySelectionModal: React.FC<{
   onClose: () => void;
   onSelectCategory: (category: string) => void;
   theme: 'morning' | 'midnight';
-}> = ({ isOpen, onClose, onSelectCategory, theme }) => {
+  isTutorial?: boolean;
+}> = ({ isOpen, onClose, onSelectCategory, theme, isTutorial }) => {
   const [customInput, setCustomInput] = useState('');
 
   // Re-read categories from storage every time the modal opens
@@ -938,12 +939,17 @@ const CategorySelectionModal: React.FC<{
 
   // Display recent categories first, fill remaining slots with predefined defaults
   const displayCategories = (() => {
-    if (recentCategories.length >= 4) return recentCategories.slice(0, 4);
-    if (recentCategories.length === 0) return allCategories.slice(0, 4);
-    // Merge recents with predefined to fill 4 slots
-    const recentIds = new Set(recentCategories.map(c => c.id));
-    const fillers = allCategories.filter(c => !recentIds.has(c.id));
-    return [...recentCategories, ...fillers].slice(0, 4);
+    const cats = (() => {
+      if (recentCategories.length >= 4) return recentCategories.slice(0, 4);
+      if (recentCategories.length === 0) return allCategories.slice(0, 4);
+      // Merge recents with predefined to fill 4 slots
+      const recentIds = new Set(recentCategories.map(c => c.id));
+      const fillers = allCategories.filter(c => !recentIds.has(c.id));
+      return [...recentCategories, ...fillers].slice(0, 4);
+    })();
+    // During tutorial, override titles to "Tutorial"
+    if (isTutorial) return cats.map(c => ({ ...c, title: 'Tutorial' }));
+    return cats;
   })();
 
   return (
@@ -1005,7 +1011,7 @@ const CategorySelectionModal: React.FC<{
           fontFamily: "'Quicksand', sans-serif",
           letterSpacing: '0.02em',
         }}>
-          What are we focusing on?
+          {isTutorial ? 'Pick a subject to start!' : 'What are we focusing on?'}
         </h2>
 
         {/* Quick Select Chips with Emojis */}
@@ -1050,7 +1056,7 @@ const CategorySelectionModal: React.FC<{
         </div>
 
         {/* Custom Input Section */}
-        <div style={{ marginBottom: '24px' }}>
+        {!isTutorial && <div style={{ marginBottom: '24px' }}>
           <label style={{
             display: 'block',
             fontSize: '13px',
@@ -1094,10 +1100,10 @@ const CategorySelectionModal: React.FC<{
               boxSizing: 'border-box',
             }}
           />
-        </div>
+        </div>}
 
         {/* Action Buttons */}
-        <div style={{
+        {!isTutorial && <div style={{
           display: 'flex',
           gap: '12px',
         }}>
@@ -1147,7 +1153,7 @@ const CategorySelectionModal: React.FC<{
           >
             Begin Session
           </motion.button>
-        </div>
+        </div>}
       </motion.div>
     </motion.div>
   );
@@ -1220,7 +1226,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     },
     {
       id: 'type-subject',
-      message: 'Type in a subject and press "Begin Session" to start!',
+      message: 'Pick a subject to start your first session!',
       tooltipPosition: 'top',
       arrow: 'down',
       waitForInteraction: true,
@@ -1583,12 +1589,63 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   };
 
   const handleCompleteSession = () => {
-    if (showTutorial && currentTutorialStep?.id === 'press-complete') {
+    const isTutorialSession = showTutorial;
+    if (isTutorialSession && currentTutorialStep?.id === 'press-complete') {
       advanceTutorial();
     }
-    updateStreak();
     setIsRunning(false);
     setIsPaused(false);
+
+    if (isTutorialSession) {
+      // Tutorial session: spawn the animal but don't count stats
+      const currentAnimal = ANIMALS[selectedAnimal];
+      const storageNow = getStorageUserData();
+      // Save stats we want to preserve
+      const savedStats = {
+        totalCompletedSessions: storageNow.totalCompletedSessions,
+        dailyStats: { ...storageNow.dailyStats },
+        weeklyStats: { ...storageNow.weeklyStats },
+        studyStreak: storageNow.studyStreak,
+        lastStudyDate: storageNow.lastStudyDate,
+        coins: storageNow.coins || 0,
+      };
+
+      updateStorageUserData({
+        ...storageNow,
+        selectedAnimal: {
+          id: biomeAnimals[selectedAnimal]?.id || 'bunny',
+          name: currentAnimal.name,
+          biome: activeBiome,
+          lottieUrl: currentAnimal.url,
+        },
+      });
+
+      // addCompletedSession spawns the animal + adds to permanentCollection
+      addCompletedSession(0, currentAnimal.url);
+
+      // Restore stats that addCompletedSession changed
+      const afterStorage = getStorageUserData();
+      updateStorageUserData({
+        ...afterStorage,
+        ...savedStats,
+      });
+
+      const finalStorage = getStorageUserData();
+      const newData = {
+        sessionsCompleted: userData.sessionsCompleted || 0,
+        meadowAnimals: finalStorage.meadowAnimals || [],
+        permanentCollection: finalStorage.permanentCollection || [],
+        lastMeadowReset: userData.lastMeadowReset,
+        coins: savedStats.coins,
+      };
+
+      setUserData({ ...userData, ...newData });
+      saveUserData({ ...userData, ...newData });
+      triggerCelebration();
+      return;
+    }
+
+    updateStreak();
 
     // Snapshot canonical storage data BEFORE the session update (for achievement comparison)
     const storageBefore = getStorageUserData();
@@ -3082,6 +3139,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         onClose={() => { if (!showTutorial) setShowCategoryModal(false); }}
         onSelectCategory={handleCategorySelected}
         theme={selectedTheme}
+        isTutorial={showTutorial}
       />
 
       <CategoryCustomizeModal
