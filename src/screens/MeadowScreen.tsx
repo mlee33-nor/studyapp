@@ -582,24 +582,25 @@ const MeadowScreen: React.FC = () => {
 
   return (
     <div style={{
-      minHeight: '100dvh',
+      height: '100dvh',
       display: 'flex',
       flexDirection: 'column',
       paddingTop: '1rem',
       paddingBottom: 'calc(68px + max(12px, env(safe-area-inset-bottom, 12px)))',
       paddingLeft: '1.5rem',
       paddingRight: '1.5rem',
+      overflow: 'hidden',
     }}>
       <div style={{ maxWidth: '32rem', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <h1 className="text-3xl font-bold text-text-primary mb-2">Your Sanctuary</h1>
+        <h1 className="text-2xl font-bold text-text-primary mb-1">Your Sanctuary</h1>
 
         {/* Biome Carousel — shows all 6 biomes, locked ones show cost */}
         <div style={{
           display: 'flex',
           gap: '12px',
           overflowX: 'auto',
-          marginBottom: '16px',
-          paddingBottom: '8px',
+          marginBottom: '8px',
+          paddingBottom: '4px',
           scrollBehavior: 'smooth'
         }}>
           {(() => {
@@ -694,8 +695,8 @@ const MeadowScreen: React.FC = () => {
         <div style={{
           display: 'flex',
           gap: '6px',
-          marginBottom: '16px',
-          padding: '5px',
+          marginBottom: '8px',
+          padding: '4px',
           background: 'rgba(255, 255, 255, 0.6)',
           backdropFilter: 'blur(20px)',
           borderRadius: '16px',
@@ -708,7 +709,7 @@ const MeadowScreen: React.FC = () => {
               whileTap={{ scale: 0.95 }}
               style={{
                 flex: 1,
-                padding: '10px 4px',
+                padding: '8px 4px',
                 borderRadius: '12px',
                 border: 'none',
                 background: viewMode === mode
@@ -816,7 +817,7 @@ const MeadowScreen: React.FC = () => {
         )}
 
         {/* Stats Card — context-aware */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-4 mb-4 shadow-soft">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-3 mb-2 shadow-soft">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-text-secondary">
@@ -867,7 +868,6 @@ const MeadowScreen: React.FC = () => {
                     style={{
                       position: 'relative',
                       flex: 1,
-                      minHeight: `${MEADOW_HEIGHT}px`,
                       borderRadius: '28px',
                       overflow: 'hidden',
                       boxShadow: 'inset 0 -10px 40px rgba(0,0,0,0.1)'
