@@ -1206,18 +1206,18 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       waitForInteraction: true,
     },
     {
-      id: 'earn-coins',
-      message: 'Complete sessions to earn coins. Use coins to unlock new animals and biomes!',
-      tooltipPosition: 'center',
-      arrow: 'none',
-      buttonLabel: 'Next',
-    },
-    {
       id: 'achievement-explain',
       message: 'You just earned your first achievement! Complete milestones to unlock more achievements as you study.',
       tooltipPosition: 'center',
       arrow: 'none',
       buttonLabel: 'Cool!',
+    },
+    {
+      id: 'earn-coins',
+      message: 'Complete sessions to earn coins. Use coins to unlock new animals and biomes!',
+      tooltipPosition: 'center',
+      arrow: 'none',
+      buttonLabel: 'Next',
     },
     {
       id: 'go-to-sanctuary',
