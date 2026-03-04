@@ -1223,7 +1223,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     {
       id: 'go-to-sanctuary',
       message: 'Now let\'s visit your Sanctuary! Tap the star icon below.',
-      tooltipPosition: 'center',
+      tooltipPosition: 'bottom',
       arrow: 'down',
       waitForInteraction: true,
     },
