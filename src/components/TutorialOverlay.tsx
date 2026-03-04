@@ -4,21 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 export interface TutorialStep {
   id: string;
   message: string;
-  // Position of the spotlight cutout (if any)
-  spotlightTarget?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    borderRadius?: number;
-  };
   // Where to show the tooltip relative to viewport
   tooltipPosition: 'top' | 'center' | 'bottom';
   // Optional arrow pointing direction
   arrow?: 'up' | 'down' | 'none';
   // Button label
   buttonLabel?: string;
-  // If true, the user must interact with the highlighted element instead of pressing the button
+  // If true, the overlay lets touches through and waits for external advance
   waitForInteraction?: boolean;
 }
 
@@ -31,22 +23,20 @@ interface TutorialOverlayProps {
 const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible }) => {
   if (!visible || !step) return null;
 
-  const getTooltipStyle = (): React.CSSProperties => {
-    const base: React.CSSProperties = {
-      position: 'absolute',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 100002,
-      maxWidth: 320,
-      width: 'calc(100% - 48px)',
-    };
+  const getTooltipTop = (): string => {
+    if (step.tooltipPosition === 'top') return 'calc(env(safe-area-inset-top, 0px) + 80px)';
+    if (step.tooltipPosition === 'bottom') return 'auto';
+    return '50%';
+  };
 
-    if (step.tooltipPosition === 'top') {
-      return { ...base, top: 'calc(env(safe-area-inset-top, 0px) + 80px)' };
-    } else if (step.tooltipPosition === 'bottom') {
-      return { ...base, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' };
-    }
-    return { ...base, top: '50%', transform: 'translate(-50%, -50%)' };
+  const getTooltipBottom = (): string => {
+    if (step.tooltipPosition === 'bottom') return 'calc(env(safe-area-inset-bottom, 0px) + 100px)';
+    return 'auto';
+  };
+
+  const getTooltipTransform = (): string => {
+    if (step.tooltipPosition === 'center') return 'translateY(-50%)';
+    return 'none';
   };
 
   return (
@@ -61,43 +51,41 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
           position: 'fixed',
           inset: 0,
           zIndex: 100000,
-          pointerEvents: 'auto',
+          // When waiting for interaction, let touches pass through the overlay
+          // but keep the tooltip itself interactive
+          pointerEvents: step.waitForInteraction ? 'none' : 'auto',
         }}
       >
-        {/* Dark overlay with optional spotlight cutout */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.6)',
-            zIndex: 100001,
-          }}
-          onClick={step.waitForInteraction ? undefined : onNext}
-        />
-
-        {/* Spotlight cutout */}
-        {step.spotlightTarget && (
+        {/* Dark overlay background */}
+        {!step.waitForInteraction && (
           <div
             style={{
               position: 'absolute',
-              left: step.spotlightTarget.x,
-              top: step.spotlightTarget.y,
-              width: step.spotlightTarget.width,
-              height: step.spotlightTarget.height,
-              borderRadius: step.spotlightTarget.borderRadius ?? 20,
-              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.55)',
               zIndex: 100001,
-              pointerEvents: 'none',
             }}
           />
         )}
 
-        {/* Tooltip card */}
+        {/* Tooltip card — centered with padding */}
         <motion.div
-          initial={{ opacity: 0, y: step.tooltipPosition === 'bottom' ? 20 : -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.3, ease: 'easeOut' }}
-          style={getTooltipStyle()}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1, duration: 0.25, ease: 'easeOut' }}
+          style={{
+            position: 'absolute',
+            top: getTooltipTop(),
+            bottom: getTooltipBottom(),
+            left: 24,
+            right: 24,
+            transform: getTooltipTransform(),
+            zIndex: 100002,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            pointerEvents: 'auto',
+          }}
         >
           {/* Arrow pointing up */}
           {step.arrow === 'up' && (
@@ -105,7 +93,6 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
               style={{
-                textAlign: 'center',
                 fontSize: '28px',
                 marginBottom: '8px',
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
@@ -122,7 +109,9 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
               borderRadius: '20px',
               padding: '20px 24px',
               textAlign: 'center',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+              width: '100%',
+              maxWidth: 320,
             }}
           >
             <p
@@ -167,7 +156,6 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
               animate={{ y: [0, 6, 0] }}
               transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
               style={{
-                textAlign: 'center',
                 fontSize: '28px',
                 marginTop: '8px',
                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
