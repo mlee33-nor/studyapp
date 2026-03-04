@@ -12,6 +12,8 @@ export interface TutorialStep {
   buttonLabel?: string;
   // If true, the overlay lets touches through and waits for external advance
   waitForInteraction?: boolean;
+  // If true, skip the dark background overlay (e.g. when shown over another modal)
+  noOverlay?: boolean;
 }
 
 interface TutorialOverlayProps {
@@ -57,7 +59,7 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
         }}
       >
         {/* Dark overlay background */}
-        {!step.waitForInteraction && (
+        {!step.waitForInteraction && !step.noOverlay && (
           <div
             style={{
               position: 'absolute',
