@@ -1206,6 +1206,14 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       waitForInteraction: true,
     },
     {
+      id: 'press-complete',
+      message: 'Press "Complete" to end early.',
+      tooltipPosition: 'center',
+      arrow: 'down',
+      waitForInteraction: true,
+      noOverlay: true,
+    },
+    {
       id: 'achievement-explain',
       message: 'You just earned your first achievement! Complete milestones to unlock more achievements as you study.',
       tooltipPosition: 'top',
@@ -1254,10 +1262,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         setShowTutorial(false);
         localStorage.setItem('tutorialCompleted', 'true');
         return -1;
-      }
-      // Dismiss achievement popup when leaving achievement-explain step
-      if (TUTORIAL_STEPS[s]?.id === 'achievement-explain') {
-        setUnlockedAchievement(null);
       }
       // When reaching sanctuary steps, switch to Meadow tab
       if (TUTORIAL_STEPS[next].id === 'drag-animal') {
@@ -1523,6 +1527,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   };
 
   const handleCompleteSession = () => {
+    if (showTutorial && currentTutorialStep?.id === 'press-complete') {
+      advanceTutorial();
+    }
     updateStreak();
     setIsRunning(false);
     setIsPaused(false);
@@ -3282,7 +3289,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       <TutorialOverlay
         step={currentTutorialStep}
         onNext={advanceTutorial}
-        visible={showTutorial && !isRunning && !isPaused && (!unlockedAchievement || currentTutorialStep?.id === 'achievement-explain')}
+        visible={showTutorial && (!isRunning || currentTutorialStep?.id === 'press-complete') && !isPaused && (!unlockedAchievement || currentTutorialStep?.id === 'achievement-explain')}
       />
     </>
   );
