@@ -37,7 +37,6 @@ interface SpotlightRect {
 
 const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible }) => {
   const [spotlightRect, setSpotlightRect] = useState<SpotlightRect | null>(null);
-  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   const rafRef = useRef<number>(0);
 
   // Track the target element's position
@@ -51,9 +50,6 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
       const rect = el.getBoundingClientRect();
       setSpotlightRect({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
     }
-    // Track viewport height changes (keyboard open/close)
-    const vh = window.visualViewport?.height ?? window.innerHeight;
-    setViewportHeight(vh);
   }, [step?.highlightTarget]);
 
   useEffect(() => {
@@ -91,32 +87,24 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ step, onNext, visible
   const spotHeight = hasSpotlight ? spotlightRect.height + pad * 2 : 0;
 
   // --- Tooltip positioning ---
-  // When a spotlight is active, position the tooltip relative to the spotlight area
-  // so it stays visible even when the keyboard opens and shifts content.
+  // When a spotlight is active, position the tooltip relative to the spotlight area.
+  // Prefer placing above the spotlight; fall back to below if not enough room.
   const getTooltipStyle = (): React.CSSProperties => {
     if (hasSpotlight) {
       const gap = 12;
-      if (step.tooltipPosition === 'top' || step.tooltipPosition === 'center') {
-        // Place tooltip above the spotlight area
-        const tooltipBottom = viewportHeight - spotTop + gap;
-        // If spotlight is near the top and there's no room above, place below instead
-        if (spotTop < 100) {
-          return {
-            top: `${Math.min(spotTop + spotHeight + gap, viewportHeight - 80)}px`,
-            bottom: 'auto',
-            transform: 'none',
-          };
-        }
+      const spaceAbove = spotTop;
+
+      if (spaceAbove >= 80) {
+        // Place above: anchor top at spotlight edge, then shift up by tooltip's own height
         return {
-          top: 'auto',
-          bottom: `${tooltipBottom}px`,
-          transform: 'none',
+          top: `${spotTop - gap}px`,
+          bottom: 'auto',
+          transform: 'translateY(-100%)',
         };
-      }
-      if (step.tooltipPosition === 'bottom' || step.tooltipPosition === 'bottom-flush') {
-        // Place tooltip below the spotlight area
+      } else {
+        // Not enough room above — place below the spotlight
         return {
-          top: `${Math.min(spotTop + spotHeight + gap, viewportHeight - 80)}px`,
+          top: `${spotTop + spotHeight + gap}px`,
           bottom: 'auto',
           transform: 'none',
         };
