@@ -11,7 +11,7 @@ const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee
 
 interface OnboardingData {
   studyHours: string;
-  age: string;
+  age?: string;
   occupation: string;
   goal: string;
 }
@@ -79,7 +79,6 @@ const GRADIENT_TEXT_STYLE: React.CSSProperties = {
 const STEPS = [
   { id: 'welcome' },
   { id: 'studyHours' },
-  { id: 'age' },
   { id: 'occupation' },
   { id: 'goal' },
   { id: 'calculating' },
@@ -96,7 +95,7 @@ const STEPS = [
 
 type StepId = (typeof STEPS)[number]['id'];
 
-const QUESTION_STEP_IDS = ['studyHours', 'age', 'occupation', 'goal'] as const;
+const QUESTION_STEP_IDS = ['studyHours', 'occupation', 'goal'] as const;
 
 // Personalized stats based on user answers
 function getPersonalizedStats(data: OnboardingData) {
@@ -162,7 +161,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<OnboardingData>({
     studyHours: '',
-    age: '',
     occupation: '',
     goal: '',
   });
@@ -2158,76 +2156,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     </div>
   );
 
-  // --- Age Question ---
-  const renderAge = () => (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        padding: '0 24px',
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 72px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
-      }}
-    >
-      {renderProgressDots()}
-
-      <h2
-        style={{
-          fontSize: '26px',
-          fontWeight: 800,
-          color: t.textPrimary,
-          margin: '0 0 8px 0',
-          fontFamily: "'Quicksand', -apple-system, sans-serif",
-          letterSpacing: '-0.01em',
-        }}
-      >
-        How old are you?
-      </h2>
-      <p
-        style={{
-          fontSize: '15px',
-          color: t.textSecondary,
-          margin: '0 0 28px 0',
-          fontFamily: "'Quicksand', -apple-system, sans-serif",
-        }}
-      >
-        This helps us personalize your study plan
-      </p>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
-        {renderOption('age', 'under-18', 'Under 18', '🎒')}
-        {renderOption('age', '18-24', '18 - 24', '🎓')}
-        {renderOption('age', '25-34', '25 - 34', '💼')}
-        {renderOption('age', '35-44', '35 - 44', '🏠')}
-        {renderOption('age', '45-plus', '45+', '🌟')}
-      </div>
-
-      {renderConfirmButton('age')}
-
-      {/* Skip button */}
-      <div style={{ textAlign: 'center', marginTop: '8px' }}>
-        <button
-          onClick={() => {
-            setData((d) => ({ ...d, age: 'skipped' }));
-            goNext();
-          }}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: t.skipColor,
-            fontSize: '15px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            padding: '12px 24px',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Skip
-        </button>
-      </div>
-    </div>
-  );
 
   // --- Occupation Question ---
   const renderOccupation = () => (
@@ -2414,8 +2342,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         return renderWelcome();
       case 'studyHours':
         return renderStudyHours();
-      case 'age':
-        return renderAge();
       case 'occupation':
         return renderOccupation();
       case 'goal':
