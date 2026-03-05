@@ -9,6 +9,12 @@ import statsImg from '../assets/Stats.jpg';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
+// Start fetching bunny Lottie immediately at module load (not on component mount)
+// so it's ready by the time the welcome screen renders
+const bunnyLottiePromise = fetch(BUNNY_LOTTIE_URL)
+  .then((res) => res.json())
+  .catch(() => null);
+
 interface OnboardingData {
   studyHours: string;
   age?: string;
@@ -195,12 +201,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
     preload(statsImg);
   }, []);
 
-  // Pre-fetch bunny Lottie animation
+  // Use the module-level pre-fetched bunny Lottie animation
   useEffect(() => {
-    fetch(BUNNY_LOTTIE_URL)
-      .then((res) => res.json())
-      .then(setBunnyAnimData)
-      .catch(() => {});
+    bunnyLottiePromise.then((data) => {
+      if (data) setBunnyAnimData(data);
+    });
   }, []);
 
   // Load chest Lottie when approaching chestReveal step
