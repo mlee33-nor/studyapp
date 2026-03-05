@@ -1620,15 +1620,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       width: '100%',
       maxWidth: 240,
       aspectRatio: '9 / 18',
-      borderRadius: '38px',
-      border: '7px solid #2A2A2E',
+      borderRadius: '32px',
+      border: '3px solid #2A2A2E',
       overflow: 'hidden',
       position: 'relative',
       boxShadow: `
-        0 0 0 2px #1a1a1d,
-        0 0 0 3px rgba(255, 255, 255, 0.1),
-        0 20px 60px rgba(0, 0, 0, 0.5),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.05)
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 20px 60px rgba(0, 0, 0, 0.5)
       `,
       background: '#2A2A2E',
     }}>
@@ -1636,7 +1634,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{
         width: '100%',
         height: '100%',
-        borderRadius: '36px',
+        borderRadius: '30px',
         overflow: 'hidden',
         position: 'relative',
       }}>
