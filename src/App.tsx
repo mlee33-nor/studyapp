@@ -3095,6 +3095,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             setLoggedIn();
           }
           setShowOnboarding(false);
+          // Sync premium status in case user purchased during onboarding
+          if (localStorage.getItem('isPremium') === 'true') {
+            setIsPremium(true);
+          }
           // Start tutorial if not already completed
           if (!localStorage.getItem('tutorialCompleted')) {
             setTutorialStep(0);
