@@ -3824,6 +3824,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => {
+                  // Grant premium, then send to sign-up
+                  localStorage.setItem('isPremium', 'true');
+                  setIsPremium(true);
                   setShowPaywall(false);
                   if (hasAccount()) {
                     setShowLogin(true);
