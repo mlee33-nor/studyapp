@@ -3821,9 +3821,12 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => {
-                  localStorage.setItem('isPremium', 'true');
-                  setIsPremium(true);
                   setShowPaywall(false);
+                  if (hasAccount()) {
+                    setShowLogin(true);
+                  } else {
+                    setShowOnboarding(true);
+                  }
                 }}
                 style={{
                   width: '100%',
