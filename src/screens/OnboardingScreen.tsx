@@ -4,6 +4,8 @@ import Lottie from 'lottie-react';
 import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
+import sanctuaryImg from '../assets/Sanctuary.jpg';
+import statsImg from '../assets/Stats.PNG';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
@@ -1656,79 +1658,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '24px' }}>
         {/* Phone mockup showing sanctuary */}
         <PhoneFrame>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            background: 'linear-gradient(180deg, #0a0a1a 0%, #111133 100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '28px 10px 8px',
-            overflow: 'hidden',
-          }}>
-            {/* View tabs */}
-            <div style={{
-              display: 'flex',
-              gap: '2px',
-              padding: '3px',
-              background: 'rgba(255,255,255,0.08)',
-              borderRadius: '10px',
-              marginBottom: '6px',
-            }}>
-              {['Today', 'Weekly', 'Monthly', 'Yearly'].map((tab, i) => (
-                <div key={tab} style={{
-                  flex: 1,
-                  padding: '4px 2px',
-                  borderRadius: '8px',
-                  background: i === 0 ? 'rgba(167,139,250,0.2)' : 'transparent',
-                  color: i === 0 ? 'white' : 'rgba(255,255,255,0.4)',
-                  fontSize: '7px',
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  fontFamily: "'Quicksand', sans-serif",
-                }}>{tab}</div>
-              ))}
-            </div>
-
-            {/* Stats card */}
-            <div style={{
-              background: 'rgba(255,255,255,0.08)',
-              borderRadius: '12px',
-              padding: '6px 10px',
-              marginBottom: '6px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-              <div>
-                <p style={{ margin: 0, fontSize: '6px', color: 'rgba(255,255,255,0.5)', fontFamily: "'Quicksand', sans-serif" }}>Today in Meadow</p>
-                <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>11 Animals</p>
-              </div>
-              <span style={{ fontSize: '16px' }}>🌿</span>
-            </div>
-
-            {/* Meadow scene */}
-            <div style={{
-              flex: 1,
-              borderRadius: '14px',
-              overflow: 'hidden',
-              position: 'relative',
-              background: 'linear-gradient(180deg, #87CEEB 0%, #B0E0E6 30%, #90EE90 55%, #6BBF59 70%, #4A8C3F 85%, #3D7A35 100%)',
-            }}>
-              {/* Clouds */}
-              <div style={{ position: 'absolute', top: '12%', left: '8%', width: 40, height: 14, background: 'rgba(255,255,255,0.8)', borderRadius: '10px' }} />
-              <div style={{ position: 'absolute', top: '18%', right: '10%', width: 32, height: 11, background: 'rgba(255,255,255,0.7)', borderRadius: '8px' }} />
-              {/* Animals */}
-              <div style={{ position: 'absolute', bottom: '35%', left: '15%', fontSize: '18px' }}>🦋</div>
-              <div style={{ position: 'absolute', bottom: '38%', left: '30%', fontSize: '18px' }}>🦋</div>
-              <div style={{ position: 'absolute', bottom: '34%', right: '25%', fontSize: '18px' }}>🦋</div>
-              <div style={{ position: 'absolute', bottom: '37%', right: '12%', fontSize: '18px' }}>🦋</div>
-              <div style={{ position: 'absolute', bottom: '8%', left: '12%', fontSize: '16px' }}>🐱</div>
-              <div style={{ position: 'absolute', bottom: '8%', left: '28%', fontSize: '16px' }}>🐶</div>
-              <div style={{ position: 'absolute', bottom: '6%', right: '20%', fontSize: '16px' }}>🐰</div>
-              <div style={{ position: 'absolute', bottom: '10%', right: '10%', fontSize: '16px' }}>🐰</div>
-              <div style={{ position: 'absolute', bottom: '6%', right: '32%', fontSize: '16px' }}>🐰</div>
-            </div>
-          </div>
+          <img src={sanctuaryImg} alt="Your Sanctuary" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </PhoneFrame>
 
         {/* Title & description below phone */}
@@ -1763,23 +1693,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   );
 
   const renderStats = () => {
-    const subjects = [
-      { emoji: '📚', name: 'Coding', pct: '30%', time: '3 M', color: '#4ADE80' },
-      { emoji: '💰', name: 'Accounting', pct: '30%', time: '3 M', color: '#A78BFA' },
-      { emoji: '📐', name: 'Algebra', pct: '20%', time: '2 M', color: '#FB923C' },
-      { emoji: '📊', name: 'Science', pct: '10%', time: '1 M', color: '#2DD4BF' },
-      { emoji: '🏋️', name: 'Gym', pct: '10%', time: '1 M', color: '#FBBF24' },
-    ];
-
-    // Donut chart segments
-    const donutSegments = [
-      { pct: 30, color: '#4ADE80', offset: 0 },
-      { pct: 30, color: '#A78BFA', offset: 30 },
-      { pct: 20, color: '#FB923C', offset: 60 },
-      { pct: 10, color: '#2DD4BF', offset: 80 },
-      { pct: 10, color: '#FBBF24', offset: 90 },
-    ];
-
     return (
       <div
         style={{
@@ -1796,125 +1709,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '24px' }}>
           {/* Phone mockup showing stats */}
           <PhoneFrame>
-            <div style={{
-              width: '100%',
-              height: '100%',
-              background: 'linear-gradient(180deg, #0f0f2e 0%, #1a1a3e 100%)',
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '28px 10px 8px',
-              overflow: 'hidden',
-            }}>
-              {/* Monthly breakdown card */}
-              <div style={{
-                background: 'rgba(255,255,255,0.06)',
-                borderRadius: '14px',
-                padding: '10px',
-                border: '1px solid rgba(139,92,246,0.2)',
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-              }}>
-                <p style={{ margin: '0 0 8px 0', fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em', fontFamily: "'Quicksand', sans-serif" }}>
-                  MARCH BREAKDOWN
-                </p>
-
-                {/* Donut chart */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-                  <div style={{ position: 'relative', width: 70, height: 70 }}>
-                    <svg viewBox="0 0 36 36" style={{ width: 70, height: 70, transform: 'rotate(-90deg)' }}>
-                      {donutSegments.map((seg, i) => (
-                        <circle
-                          key={i}
-                          cx="18" cy="18" r="14"
-                          fill="none"
-                          stroke={seg.color}
-                          strokeWidth="4"
-                          strokeDasharray={`${seg.pct * 0.88} ${88 - seg.pct * 0.88}`}
-                          strokeDashoffset={`${-seg.offset * 0.88}`}
-                        />
-                      ))}
-                    </svg>
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>10 M</span>
-                      <span style={{ fontSize: '5px', color: 'rgba(255,255,255,0.4)', fontFamily: "'Quicksand', sans-serif" }}>Total</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Subject rows */}
-                {subjects.map((s, i) => (
-                  <div key={i} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '4px 0',
-                    borderBottom: i < subjects.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
-                  }}>
-                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: s.color, marginRight: 5, flexShrink: 0 }} />
-                    <span style={{ fontSize: '7px', marginRight: 3 }}>{s.emoji}</span>
-                    <span style={{ fontSize: '7px', fontWeight: 600, color: 'white', flex: 1, fontFamily: "'Quicksand', sans-serif" }}>{s.name}</span>
-                    <span style={{ fontSize: '7px', color: 'rgba(255,255,255,0.5)', marginRight: 8, fontFamily: "'Quicksand', sans-serif" }}>{s.pct}</span>
-                    <span style={{ fontSize: '7px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>{s.time}</span>
-                  </div>
-                ))}
-
-                {/* Top companions header */}
-                <p style={{ margin: '8px 0 6px 0', fontSize: '6px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em', fontFamily: "'Quicksand', sans-serif" }}>
-                  TOP ANIMAL COMPANIONS
-                </p>
-
-                {/* Top 3 animals */}
-                {[
-                  { rank: '1st', name: 'Bunny', emoji: '🐰', biome: 'Meadow', count: 4, color: '#FBBF24' },
-                  { rank: '2nd', name: 'Butterfly', emoji: '🦋', biome: 'Meadow', count: 4, color: '#9CA3AF' },
-                  { rank: '3rd', name: 'Dog', emoji: '🐶', biome: 'Meadow', count: 2, color: '#CD7F32' },
-                ].map((a, i) => (
-                  <div key={i} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    padding: '4px 6px',
-                    marginBottom: '3px',
-                    borderRadius: '8px',
-                    background: i === 0 ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  }}>
-                    <span style={{
-                      fontSize: '6px',
-                      fontWeight: 700,
-                      color: a.color,
-                      width: 14,
-                      textAlign: 'center',
-                      fontFamily: "'Quicksand', sans-serif",
-                    }}>{a.rank}</span>
-                    <div style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: '6px',
-                      background: 'rgba(139,92,246,0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '10px',
-                    }}>{a.emoji}</div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: '7px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>{a.name}</p>
-                      <p style={{ margin: 0, fontSize: '5px', color: 'rgba(255,255,255,0.4)', fontFamily: "'Quicksand', sans-serif" }}>🌿 {a.biome}</p>
-                    </div>
-                    <div style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      borderRadius: '6px',
-                      padding: '2px 6px',
-                      textAlign: 'center',
-                    }}>
-                      <p style={{ margin: 0, fontSize: '8px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>{a.count}</p>
-                      <p style={{ margin: 0, fontSize: '4px', color: 'rgba(255,255,255,0.4)', fontFamily: "'Quicksand', sans-serif" }}>Earned</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <img src={statsImg} alt="Focus Trends" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </PhoneFrame>
-
           {/* Title & description below phone */}
           <div style={{ textAlign: 'center' }}>
             <h2 style={{
