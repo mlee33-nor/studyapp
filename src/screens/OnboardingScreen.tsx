@@ -1618,23 +1618,21 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const PhoneFrame: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div style={{
       width: '100%',
-      maxWidth: 240,
-      aspectRatio: '9 / 18',
-      borderRadius: '32px',
-      border: '3px solid #2A2A2E',
+      maxWidth: 250,
+      aspectRatio: '9 / 19',
+      borderRadius: '28px',
+      border: '1.5px solid rgba(255, 255, 255, 0.15)',
       overflow: 'hidden',
       position: 'relative',
       boxShadow: `
-        0 0 0 1px rgba(255, 255, 255, 0.08),
         0 20px 60px rgba(0, 0, 0, 0.5)
       `,
-      background: '#2A2A2E',
     }}>
       {/* Screen area */}
       <div style={{
         width: '100%',
         height: '100%',
-        borderRadius: '30px',
+        borderRadius: '27px',
         overflow: 'hidden',
         position: 'relative',
       }}>
