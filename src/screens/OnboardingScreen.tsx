@@ -435,11 +435,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
                 color: 'white',
                 fontSize: '17px',
                 fontWeight: 700,
-                cursor: navCooldown ? 'default' : 'pointer',
+                cursor: 'pointer',
                 boxShadow: t.buttonShadow,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
-                opacity: navCooldown ? 0.5 : 1,
-                transition: 'opacity 0.2s ease',
               }}
             >
               Continue
