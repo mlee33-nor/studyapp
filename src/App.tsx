@@ -1205,6 +1205,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [showTutorialComplete, setShowTutorialComplete] = useState(false);
   const [isPremium, setIsPremium] = useState(() => localStorage.getItem('isPremium') === 'true');
   const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallPlan, setPaywallPlan] = useState<'lifetime' | 'annual' | 'monthly'>('lifetime');
 
   const TUTORIAL_STEPS: TutorialStep[] = [
     {
@@ -3695,117 +3696,164 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               ))}
             </div>
 
-            {/* Lifetime plan */}
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                localStorage.setItem('isPremium', 'true');
-                setIsPremium(true);
-                setShowPaywall(false);
-              }}
-              style={{
-                width: '100%',
-                maxWidth: 360,
-                padding: '16px 20px',
-                borderRadius: '16px',
-                border: '2px solid rgba(167, 139, 250, 0.5)',
-                background: 'rgba(167, 139, 250, 0.1)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '20px',
-                position: 'relative',
-              }}
-            >
-              <div style={{ position: 'absolute', top: '-10px', left: '16px' }}>
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    color: 'white',
-                    background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-                    padding: '2px 8px',
-                    borderRadius: '6px',
-                    fontFamily: "'Quicksand', -apple-system, sans-serif",
-                  }}
-                >
-                  BEST VALUE
-                </span>
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <div
-                  style={{
-                    fontSize: '16px',
-                    fontWeight: 700,
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    fontFamily: "'Quicksand', -apple-system, sans-serif",
-                  }}
-                >
-                  Lifetime
-                </div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: 500,
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontFamily: "'Quicksand', -apple-system, sans-serif",
-                  }}
-                >
-                  Pay once, yours forever
-                </div>
-              </div>
-              <div
+            {/* Plan options */}
+            <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+              {/* Lifetime */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { setPaywallPlan('lifetime'); triggerSelectionTick(); }}
                 style={{
-                  fontSize: '24px',
-                  fontWeight: 800,
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  width: '100%',
+                  padding: '14px 18px',
+                  borderRadius: '16px',
+                  border: paywallPlan === 'lifetime'
+                    ? '2px solid rgba(167, 139, 250, 0.6)'
+                    : '1px solid rgba(255, 255, 255, 0.12)',
+                  background: paywallPlan === 'lifetime' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  position: 'relative',
+                  overflow: 'visible',
+                }}
+              >
+                <div style={{ position: 'absolute', top: '-10px', left: '16px' }}>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      color: 'white',
+                      background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      fontFamily: "'Quicksand', -apple-system, sans-serif",
+                    }}
+                  >
+                    BEST VALUE
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                    Lifetime
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', -apple-system, sans-serif", marginTop: '1px' }}>
+                    Pay once, yours forever
+                  </div>
+                </div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                  $33
+                </div>
+              </motion.button>
+
+              {/* Annual */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { setPaywallPlan('annual'); triggerSelectionTick(); }}
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  borderRadius: '16px',
+                  border: paywallPlan === 'annual'
+                    ? '2px solid rgba(167, 139, 250, 0.6)'
+                    : '1px solid rgba(255, 255, 255, 0.12)',
+                  background: paywallPlan === 'annual' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                    Annual
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', -apple-system, sans-serif", marginTop: '1px' }}>
+                    $1.33/month — save 67%
+                  </div>
+                </div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                  $15.99
+                </div>
+              </motion.button>
+
+              {/* Monthly */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { setPaywallPlan('monthly'); triggerSelectionTick(); }}
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  borderRadius: '16px',
+                  border: paywallPlan === 'monthly'
+                    ? '2px solid rgba(167, 139, 250, 0.6)'
+                    : '1px solid rgba(255, 255, 255, 0.12)',
+                  background: paywallPlan === 'monthly' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                    Monthly
+                  </div>
+                  <div style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', -apple-system, sans-serif", marginTop: '1px' }}>
+                    per month
+                  </div>
+                </div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                  $3.99
+                </div>
+              </motion.button>
+            </div>
+
+            {/* CTA Button */}
+            <div style={{ width: '100%', maxWidth: 360 }}>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  localStorage.setItem('isPremium', 'true');
+                  setIsPremium(true);
+                  setShowPaywall(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  borderRadius: '18px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 24px rgba(139, 92, 246, 0.4)',
                   fontFamily: "'Quicksand', -apple-system, sans-serif",
                 }}
               >
-                $33
-              </div>
-            </motion.button>
+                Start Free Trial
+              </motion.button>
 
-            {/* CTA Button */}
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                localStorage.setItem('isPremium', 'true');
-                setIsPremium(true);
-                setShowPaywall(false);
-              }}
-              style={{
-                width: '100%',
-                maxWidth: 360,
-                padding: '16px',
-                borderRadius: '18px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)',
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 4px 24px rgba(139, 92, 246, 0.4)',
-                fontFamily: "'Quicksand', -apple-system, sans-serif",
-              }}
-            >
-              Start Free Trial
-            </motion.button>
-
-            <p
-              style={{
-                fontSize: '11px',
-                fontWeight: 500,
-                color: 'rgba(255, 255, 255, 0.4)',
-                textAlign: 'center',
-                margin: '8px 0 0 0',
-                lineHeight: 1.4,
-                fontFamily: "'Quicksand', -apple-system, sans-serif",
-              }}
-            >
-              One-time payment of $33. No subscription.
-            </p>
+              <p
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  textAlign: 'center',
+                  margin: '8px 0 0 0',
+                  lineHeight: 1.4,
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                {paywallPlan === 'lifetime'
+                  ? 'One-time payment of $33. No subscription.'
+                  : `3-day free trial, then ${paywallPlan === 'annual' ? '$15.99/year' : '$3.99/month'}. Cancel anytime.`}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
