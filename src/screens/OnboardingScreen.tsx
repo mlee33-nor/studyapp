@@ -1614,31 +1614,46 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     </div>
   );
 
-  // Shared phone frame wrapper for feature showcase slides
+  // Shared phone frame wrapper for feature showcase slides (realistic iPhone style)
   const PhoneFrame: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div style={{
       width: '100%',
       maxWidth: 280,
-      aspectRatio: '9 / 14',
-      borderRadius: '32px',
-      border: '6px solid rgba(255, 255, 255, 0.15)',
+      aspectRatio: '9 / 19.5',
+      borderRadius: '44px',
+      border: '8px solid #2A2A2E',
       overflow: 'hidden',
       position: 'relative',
-      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+      boxShadow: `
+        0 0 0 2px #1a1a1d,
+        0 0 0 3px rgba(255, 255, 255, 0.1),
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05)
+      `,
+      background: '#2A2A2E',
     }}>
-      {/* Notch */}
+      {/* Screen area */}
       <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '40%',
-        height: 20,
-        background: 'rgba(0, 0, 0, 0.9)',
-        borderRadius: '0 0 16px 16px',
-        zIndex: 10,
-      }} />
-      {children}
+        width: '100%',
+        height: '100%',
+        borderRadius: '36px',
+        overflow: 'hidden',
+        position: 'relative',
+      }}>
+        {/* Dynamic Island */}
+        <div style={{
+          position: 'absolute',
+          top: 10,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 84,
+          height: 24,
+          background: '#000',
+          borderRadius: '20px',
+          zIndex: 10,
+        }} />
+        {children}
+      </div>
     </div>
   );
 
