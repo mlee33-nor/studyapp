@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
 import sanctuaryImg from '../assets/Sanctuary.jpg';
-import statsImg from '../assets/Stats.PNG';
+import statsImg from '../assets/Stats.png';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
