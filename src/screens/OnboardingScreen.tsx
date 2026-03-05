@@ -1618,10 +1618,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const PhoneFrame: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <div style={{
       width: '100%',
-      maxWidth: 280,
-      aspectRatio: '9 / 19.5',
-      borderRadius: '44px',
-      border: '8px solid #2A2A2E',
+      maxWidth: 240,
+      aspectRatio: '9 / 18',
+      borderRadius: '38px',
+      border: '7px solid #2A2A2E',
       overflow: 'hidden',
       position: 'relative',
       boxShadow: `
@@ -1666,11 +1666,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         justifyContent: 'space-between',
         height: '100%',
         padding: '0 24px',
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
       }}
     >
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '24px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '16px' }}>
         {/* Phone mockup showing sanctuary */}
         <PhoneFrame>
           <img src={sanctuaryImg} alt="Your Sanctuary" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1679,9 +1679,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         {/* Title & description below phone */}
         <div style={{ textAlign: 'center' }}>
           <h2 style={{
-            fontSize: '28px',
+            fontSize: '24px',
             fontWeight: 800,
-            margin: '0 0 10px 0',
+            margin: '0 0 6px 0',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             letterSpacing: '-0.01em',
             ...GRADIENT_TEXT_STYLE,
@@ -1689,11 +1689,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             Your Sanctuary
           </h2>
           <p style={{
-            fontSize: '16px',
+            fontSize: '15px',
             fontWeight: 500,
             color: t.textSecondary,
             margin: 0,
-            lineHeight: 1.6,
+            lineHeight: 1.5,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}>
             Earn adorable companions with every session and watch your sanctuary come alive!
@@ -1717,11 +1717,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           justifyContent: 'space-between',
           height: '100%',
           padding: '0 24px',
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
         }}
       >
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '24px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '16px' }}>
           {/* Phone mockup showing stats */}
           <PhoneFrame>
             <img src={statsImg} alt="Focus Trends" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1729,9 +1729,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           {/* Title & description below phone */}
           <div style={{ textAlign: 'center' }}>
             <h2 style={{
-              fontSize: '28px',
+              fontSize: '24px',
               fontWeight: 800,
-              margin: '0 0 10px 0',
+              margin: '0 0 6px 0',
               fontFamily: "'Quicksand', -apple-system, sans-serif",
               letterSpacing: '-0.01em',
               ...GRADIENT_TEXT_STYLE,
@@ -1739,11 +1739,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
               Focus Trends
             </h2>
             <p style={{
-              fontSize: '16px',
+              fontSize: '15px',
               fontWeight: 500,
               color: t.textSecondary,
               margin: 0,
-              lineHeight: 1.6,
+              lineHeight: 1.5,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
             }}>
               View focus trends by day, week, month, and year — to stay motivated and review progress
