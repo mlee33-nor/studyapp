@@ -1640,18 +1640,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         overflow: 'hidden',
         position: 'relative',
       }}>
-        {/* Dynamic Island */}
-        <div style={{
-          position: 'absolute',
-          top: 10,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: 84,
-          height: 24,
-          background: '#000',
-          borderRadius: '20px',
-          zIndex: 10,
-        }} />
         {children}
       </div>
     </div>
