@@ -182,6 +182,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [chestAnimData, setChestAnimData] = useState<any>(null);
   const [chestStage, setChestStage] = useState(0);
   const [lastChanceTapGuard, setLastChanceTapGuard] = useState(false);
+  const [showDismissConfirm, setShowDismissConfirm] = useState(false);
   const [navCooldown, setNavCooldown] = useState(false);
   const chestLottieRef = useRef<any>(null);
   const chestDoneRef = useRef(false);
@@ -1476,6 +1477,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         overflow: 'hidden',
+        position: 'relative',
       }}
     >
       {/* Emoji */}
@@ -1619,27 +1621,137 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           Claim This Deal
         </motion.button>
 
+      </div>
+
+      {/* Close X button */}
+      {!lastChanceTapGuard && (
         <button
-          disabled={lastChanceTapGuard}
-          onClick={() => onComplete(data)}
+          onClick={() => setShowDismissConfirm(true)}
           style={{
-            width: '100%',
-            padding: '8px',
+            position: 'absolute',
+            top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+            right: '16px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
             border: 'none',
-            background: 'transparent',
-            color: t.textTertiary,
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: lastChanceTapGuard ? 'default' : 'pointer',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-            marginTop: '8px',
-            opacity: lastChanceTapGuard ? 0 : 1,
-            transition: 'opacity 0.3s ease',
+            background: 'rgba(255, 255, 255, 0.1)',
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontSize: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 10,
+            padding: 0,
+            lineHeight: 1,
           }}
         >
-          No thanks
+          ✕
         </button>
-      </div>
+      )}
+
+      {/* Dismiss confirmation overlay */}
+      <AnimatePresence>
+        {showDismissConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 20,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0, 0, 0, 0.6)',
+              padding: '0 32px',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                width: '100%',
+                maxWidth: 320,
+                background: 'linear-gradient(180deg, #1E1448 0%, #151030 100%)',
+                borderRadius: '20px',
+                padding: '28px 24px',
+                border: '1px solid rgba(167, 139, 250, 0.25)',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: '36px', marginBottom: '12px' }}>😢</div>
+              <h3
+                style={{
+                  fontSize: '18px',
+                  fontWeight: 800,
+                  color: t.textPrimary,
+                  margin: '0 0 8px 0',
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                Are you sure?
+              </h3>
+              <p
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: t.textSecondary,
+                  margin: '0 0 20px 0',
+                  lineHeight: 1.5,
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                This exclusive 10% discount won't be available again. You'll miss out on lifetime access at the lowest price!
+              </p>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowDismissConfirm(false)}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '14px',
+                  border: 'none',
+                  background: t.buttonGradient,
+                  color: 'white',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: t.buttonShadow,
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                  marginBottom: '10px',
+                }}
+              >
+                Keep My Discount
+              </motion.button>
+              <button
+                onClick={() => {
+                  setShowDismissConfirm(false);
+                  onComplete(data);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  border: 'none',
+                  background: 'transparent',
+                  color: t.textTertiary,
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                No thanks, I'll pass
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
