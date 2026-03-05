@@ -879,8 +879,35 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         overflow: 'hidden',
+        position: 'relative',
       }}
     >
+      {/* Close button */}
+      <button
+        onClick={goNext}
+        style={{
+          position: 'absolute',
+          top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+          right: '16px',
+          width: '32px',
+          height: '32px',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'rgba(255, 255, 255, 0.1)',
+          color: t.textSecondary,
+          fontSize: '18px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 10,
+          padding: 0,
+          lineHeight: 1,
+        }}
+      >
+        ✕
+      </button>
+
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '14px', width: '100%', maxWidth: 360 }}>
         <div
@@ -1222,25 +1249,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             : `3-day free trial, then ${selectedPlan === 'annual' ? '$15.99/year' : '$3.99/month'}. Cancel anytime.`}
         </p>
 
-        <button
-          onClick={goNext}
-          style={{
-            width: '100%',
-            padding: '8px',
-            border: 'none',
-            background: 'transparent',
-            color: t.textTertiary,
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: navCooldown ? 'default' : 'pointer',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-            marginTop: '2px',
-            opacity: navCooldown ? 0.5 : 1,
-            transition: 'opacity 0.2s ease',
-          }}
-        >
-          Maybe later
-        </button>
       </div>
     </div>
   );
