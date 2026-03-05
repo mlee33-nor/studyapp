@@ -304,7 +304,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         progress = 100;
         clearInterval(interval);
         triggerHapticFeedback();
-        setTimeout(() => goNext(), 600);
+        setTimeout(() => { setDirection(1); setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1)); }, 600);
       }
       setCalculatingProgress(Math.min(progress, 100));
 
@@ -1243,11 +1243,12 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     const next = chestStage + 1;
     if (next >= 3) {
       chestDoneRef.current = true;
-      goNext();
+      setDirection(1);
+      setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
     } else {
       setChestStage(next);
     }
-  }, [chestStage, goNext]);
+  }, [chestStage]);
 
   const renderChestReveal = () => (
     <div
