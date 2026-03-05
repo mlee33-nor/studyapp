@@ -126,7 +126,7 @@ function getPersonalizedStats(data: OnboardingData) {
   };
 
   const study = studyHoursMap[data.studyHours] || studyHoursMap['2-4'];
-  const age = ageMultiplierMap[data.age] || ageMultiplierMap['25-34'];
+  const age = ageMultiplierMap[data.age ?? '25-34'] || ageMultiplierMap['25-34'];
 
   // Use the midpoint for display
   const lostHoursPerYear = Math.round((study.lostRange[0] + study.lostRange[1]) / 2);
