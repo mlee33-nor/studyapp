@@ -4,8 +4,8 @@ import Lottie from 'lottie-react';
 import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
-import sanctuaryImg from '../assets/Sanctuary.jpg';
-import statsImg from '../assets/Stats.png';
+import sanctuaryImg from '../assets/Sanctuary1.jpg';
+import statsImg from '../assets/Stats1.jpg';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
@@ -1661,7 +1661,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '16px' }}>
         {/* Phone mockup showing sanctuary */}
         <PhoneFrame>
-          <img src={sanctuaryImg} alt="Your Sanctuary" style={{ width: '100%', height: '105%', objectFit: 'cover', objectPosition: 'center bottom' }} />
+          <img src={sanctuaryImg} alt="Your Sanctuary" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </PhoneFrame>
 
         {/* Title & description below phone */}
@@ -1712,7 +1712,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '16px' }}>
           {/* Phone mockup showing stats */}
           <PhoneFrame>
-            <img src={statsImg} alt="Focus Trends" style={{ width: '100%', height: '105%', objectFit: 'cover', objectPosition: 'center bottom' }} />
+            <img src={statsImg} alt="Focus Trends" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </PhoneFrame>
           {/* Title & description below phone */}
           <div style={{ textAlign: 'center' }}>
