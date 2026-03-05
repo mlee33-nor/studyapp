@@ -1736,12 +1736,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
                 }}
                 style={{
                   width: '100%',
-                  padding: '8px',
-                  border: 'none',
-                  background: 'transparent',
-                  color: t.textTertiary,
-                  fontSize: '12px',
-                  fontWeight: 600,
+                  padding: '12px',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '12px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#F87171',
+                  fontSize: '13px',
+                  fontWeight: 700,
                   cursor: 'pointer',
                   fontFamily: "'Quicksand', -apple-system, sans-serif",
                 }}
