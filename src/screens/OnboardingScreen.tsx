@@ -1612,6 +1612,34 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
     </div>
   );
 
+  // Shared phone frame wrapper for feature showcase slides
+  const PhoneFrame: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div style={{
+      width: '100%',
+      maxWidth: 280,
+      aspectRatio: '9 / 14',
+      borderRadius: '32px',
+      border: '6px solid rgba(255, 255, 255, 0.15)',
+      overflow: 'hidden',
+      position: 'relative',
+      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+    }}>
+      {/* Notch */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '40%',
+        height: 20,
+        background: 'rgba(0, 0, 0, 0.9)',
+        borderRadius: '0 0 16px 16px',
+        zIndex: 10,
+      }} />
+      {children}
+    </div>
+  );
+
   const renderSanctuary = () => (
     <div
       style={{
@@ -1620,85 +1648,111 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         alignItems: 'center',
         justifyContent: 'space-between',
         height: '100%',
-        padding: '0 32px',
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        padding: '0 24px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
       }}
     >
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360 }}>
-        <h2
-          style={{
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '24px' }}>
+        {/* Phone mockup showing sanctuary */}
+        <PhoneFrame>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(180deg, #0a0a1a 0%, #111133 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '28px 10px 8px',
+            overflow: 'hidden',
+          }}>
+            {/* View tabs */}
+            <div style={{
+              display: 'flex',
+              gap: '2px',
+              padding: '3px',
+              background: 'rgba(255,255,255,0.08)',
+              borderRadius: '10px',
+              marginBottom: '6px',
+            }}>
+              {['Today', 'Weekly', 'Monthly', 'Yearly'].map((tab, i) => (
+                <div key={tab} style={{
+                  flex: 1,
+                  padding: '4px 2px',
+                  borderRadius: '8px',
+                  background: i === 0 ? 'rgba(167,139,250,0.2)' : 'transparent',
+                  color: i === 0 ? 'white' : 'rgba(255,255,255,0.4)',
+                  fontSize: '7px',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  fontFamily: "'Quicksand', sans-serif",
+                }}>{tab}</div>
+              ))}
+            </div>
+
+            {/* Stats card */}
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              borderRadius: '12px',
+              padding: '6px 10px',
+              marginBottom: '6px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+              <div>
+                <p style={{ margin: 0, fontSize: '6px', color: 'rgba(255,255,255,0.5)', fontFamily: "'Quicksand', sans-serif" }}>Today in Meadow</p>
+                <p style={{ margin: 0, fontSize: '12px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>11 Animals</p>
+              </div>
+              <span style={{ fontSize: '16px' }}>🌿</span>
+            </div>
+
+            {/* Meadow scene */}
+            <div style={{
+              flex: 1,
+              borderRadius: '14px',
+              overflow: 'hidden',
+              position: 'relative',
+              background: 'linear-gradient(180deg, #87CEEB 0%, #B0E0E6 30%, #90EE90 55%, #6BBF59 70%, #4A8C3F 85%, #3D7A35 100%)',
+            }}>
+              {/* Clouds */}
+              <div style={{ position: 'absolute', top: '12%', left: '8%', width: 40, height: 14, background: 'rgba(255,255,255,0.8)', borderRadius: '10px' }} />
+              <div style={{ position: 'absolute', top: '18%', right: '10%', width: 32, height: 11, background: 'rgba(255,255,255,0.7)', borderRadius: '8px' }} />
+              {/* Animals */}
+              <div style={{ position: 'absolute', bottom: '35%', left: '15%', fontSize: '18px' }}>🦋</div>
+              <div style={{ position: 'absolute', bottom: '38%', left: '30%', fontSize: '18px' }}>🦋</div>
+              <div style={{ position: 'absolute', bottom: '34%', right: '25%', fontSize: '18px' }}>🦋</div>
+              <div style={{ position: 'absolute', bottom: '37%', right: '12%', fontSize: '18px' }}>🦋</div>
+              <div style={{ position: 'absolute', bottom: '8%', left: '12%', fontSize: '16px' }}>🐱</div>
+              <div style={{ position: 'absolute', bottom: '8%', left: '28%', fontSize: '16px' }}>🐶</div>
+              <div style={{ position: 'absolute', bottom: '6%', right: '20%', fontSize: '16px' }}>🐰</div>
+              <div style={{ position: 'absolute', bottom: '10%', right: '10%', fontSize: '16px' }}>🐰</div>
+              <div style={{ position: 'absolute', bottom: '6%', right: '32%', fontSize: '16px' }}>🐰</div>
+            </div>
+          </div>
+        </PhoneFrame>
+
+        {/* Title & description below phone */}
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{
             fontSize: '28px',
             fontWeight: 800,
-            margin: '0 0 12px 0',
-            textAlign: 'center',
+            margin: '0 0 10px 0',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             letterSpacing: '-0.01em',
             ...GRADIENT_TEXT_STYLE,
-          }}
-        >
-          Your Sanctuary
-        </h2>
-
-        <p
-          style={{
+          }}>
+            Your Sanctuary
+          </h2>
+          <p style={{
             fontSize: '16px',
             fontWeight: 500,
             color: t.textSecondary,
-            margin: '0 0 32px 0',
-            textAlign: 'center',
+            margin: 0,
             lineHeight: 1.6,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
-            maxWidth: 300,
-          }}
-        >
-          Every session earns you a new companion. Watch your sanctuary come alive as you study!
-        </p>
-
-        {/* Sanctuary Preview Card */}
-        <div
-          style={{
-            width: '100%',
-            borderRadius: '24px',
-            background: t.cardBg,
-            border: `1px solid ${t.cardBorder}`,
-            padding: '20px',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Meadow mockup */}
-          <div
-            style={{
-              width: '100%',
-              height: 180,
-              borderRadius: '16px',
-              background: 'linear-gradient(180deg, #87CEEB 0%, #87CEEB 35%, #90EE90 35%, #228B22 100%)',
-              position: 'relative',
-              overflow: 'hidden',
-              marginBottom: '16px',
-            }}
-          >
-            {/* Sun */}
-            <div style={{ position: 'absolute', top: 16, right: 24, fontSize: '28px' }}>☀️</div>
-            {/* Animals */}
-            <div style={{ position: 'absolute', bottom: 30, left: '20%', fontSize: '32px' }}>🐰</div>
-            <div style={{ position: 'absolute', bottom: 45, left: '50%', fontSize: '32px' }}>🐱</div>
-            <div style={{ position: 'absolute', bottom: 25, left: '72%', fontSize: '32px' }}>🐶</div>
-          </div>
-
-          {/* Label row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
-                Meadow
-              </p>
-              <p style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: t.textPrimary, fontFamily: "'Quicksand', sans-serif" }}>
-                3 Animals
-              </p>
-            </div>
-            <div style={{ fontSize: '32px' }}>🌿</div>
-          </div>
+          }}>
+            Earn adorable companions with every session and watch your sanctuary come alive!
+          </p>
         </div>
       </div>
 
@@ -1709,15 +1763,21 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   );
 
   const renderStats = () => {
-    // Fake focus trend bars for preview
-    const bars = [
-      { day: 'M', value: 0.4 },
-      { day: 'T', value: 0.7 },
-      { day: 'W', value: 0.5 },
-      { day: 'T', value: 0.9 },
-      { day: 'F', value: 0.6 },
-      { day: 'S', value: 0.3 },
-      { day: 'S', value: 0.8 },
+    const subjects = [
+      { emoji: '📚', name: 'Coding', pct: '30%', time: '3 M', color: '#4ADE80' },
+      { emoji: '💰', name: 'Accounting', pct: '30%', time: '3 M', color: '#A78BFA' },
+      { emoji: '📐', name: 'Algebra', pct: '20%', time: '2 M', color: '#FB923C' },
+      { emoji: '📊', name: 'Science', pct: '10%', time: '1 M', color: '#2DD4BF' },
+      { emoji: '🏋️', name: 'Gym', pct: '10%', time: '1 M', color: '#FBBF24' },
+    ];
+
+    // Donut chart segments
+    const donutSegments = [
+      { pct: 30, color: '#4ADE80', offset: 0 },
+      { pct: 30, color: '#A78BFA', offset: 30 },
+      { pct: 20, color: '#FB923C', offset: 60 },
+      { pct: 10, color: '#2DD4BF', offset: 80 },
+      { pct: 10, color: '#FBBF24', offset: 90 },
     ];
 
     return (
@@ -1728,93 +1788,155 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           alignItems: 'center',
           justifyContent: 'space-between',
           height: '100%',
-          padding: '0 32px',
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+          padding: '0 24px',
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 40px)',
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
         }}
       >
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360 }}>
-          <h2
-            style={{
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '24px' }}>
+          {/* Phone mockup showing stats */}
+          <PhoneFrame>
+            <div style={{
+              width: '100%',
+              height: '100%',
+              background: 'linear-gradient(180deg, #0f0f2e 0%, #1a1a3e 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '28px 10px 8px',
+              overflow: 'hidden',
+            }}>
+              {/* Monthly breakdown card */}
+              <div style={{
+                background: 'rgba(255,255,255,0.06)',
+                borderRadius: '14px',
+                padding: '10px',
+                border: '1px solid rgba(139,92,246,0.2)',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+              }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '7px', fontWeight: 700, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.05em', fontFamily: "'Quicksand', sans-serif" }}>
+                  MARCH BREAKDOWN
+                </p>
+
+                {/* Donut chart */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                  <div style={{ position: 'relative', width: 70, height: 70 }}>
+                    <svg viewBox="0 0 36 36" style={{ width: 70, height: 70, transform: 'rotate(-90deg)' }}>
+                      {donutSegments.map((seg, i) => (
+                        <circle
+                          key={i}
+                          cx="18" cy="18" r="14"
+                          fill="none"
+                          stroke={seg.color}
+                          strokeWidth="4"
+                          strokeDasharray={`${seg.pct * 0.88} ${88 - seg.pct * 0.88}`}
+                          strokeDashoffset={`${-seg.offset * 0.88}`}
+                        />
+                      ))}
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>10 M</span>
+                      <span style={{ fontSize: '5px', color: 'rgba(255,255,255,0.4)', fontFamily: "'Quicksand', sans-serif" }}>Total</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Subject rows */}
+                {subjects.map((s, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '4px 0',
+                    borderBottom: i < subjects.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                  }}>
+                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: s.color, marginRight: 5, flexShrink: 0 }} />
+                    <span style={{ fontSize: '7px', marginRight: 3 }}>{s.emoji}</span>
+                    <span style={{ fontSize: '7px', fontWeight: 600, color: 'white', flex: 1, fontFamily: "'Quicksand', sans-serif" }}>{s.name}</span>
+                    <span style={{ fontSize: '7px', color: 'rgba(255,255,255,0.5)', marginRight: 8, fontFamily: "'Quicksand', sans-serif" }}>{s.pct}</span>
+                    <span style={{ fontSize: '7px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>{s.time}</span>
+                  </div>
+                ))}
+
+                {/* Top companions header */}
+                <p style={{ margin: '8px 0 6px 0', fontSize: '6px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.05em', fontFamily: "'Quicksand', sans-serif" }}>
+                  TOP ANIMAL COMPANIONS
+                </p>
+
+                {/* Top 3 animals */}
+                {[
+                  { rank: '1st', name: 'Bunny', emoji: '🐰', biome: 'Meadow', count: 4, color: '#FBBF24' },
+                  { rank: '2nd', name: 'Butterfly', emoji: '🦋', biome: 'Meadow', count: 4, color: '#9CA3AF' },
+                  { rank: '3rd', name: 'Dog', emoji: '🐶', biome: 'Meadow', count: 2, color: '#CD7F32' },
+                ].map((a, i) => (
+                  <div key={i} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '4px 6px',
+                    marginBottom: '3px',
+                    borderRadius: '8px',
+                    background: i === 0 ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  }}>
+                    <span style={{
+                      fontSize: '6px',
+                      fontWeight: 700,
+                      color: a.color,
+                      width: 14,
+                      textAlign: 'center',
+                      fontFamily: "'Quicksand', sans-serif",
+                    }}>{a.rank}</span>
+                    <div style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '6px',
+                      background: 'rgba(139,92,246,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '10px',
+                    }}>{a.emoji}</div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: '7px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>{a.name}</p>
+                      <p style={{ margin: 0, fontSize: '5px', color: 'rgba(255,255,255,0.4)', fontFamily: "'Quicksand', sans-serif" }}>🌿 {a.biome}</p>
+                    </div>
+                    <div style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      borderRadius: '6px',
+                      padding: '2px 6px',
+                      textAlign: 'center',
+                    }}>
+                      <p style={{ margin: 0, fontSize: '8px', fontWeight: 700, color: 'white', fontFamily: "'Quicksand', sans-serif" }}>{a.count}</p>
+                      <p style={{ margin: 0, fontSize: '4px', color: 'rgba(255,255,255,0.4)', fontFamily: "'Quicksand', sans-serif" }}>Earned</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </PhoneFrame>
+
+          {/* Title & description below phone */}
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{
               fontSize: '28px',
               fontWeight: 800,
-              margin: '0 0 12px 0',
-              textAlign: 'center',
+              margin: '0 0 10px 0',
               fontFamily: "'Quicksand', -apple-system, sans-serif",
               letterSpacing: '-0.01em',
               ...GRADIENT_TEXT_STYLE,
-            }}
-          >
-            Focus Trends
-          </h2>
-
-          <p
-            style={{
+            }}>
+              Focus Trends
+            </h2>
+            <p style={{
               fontSize: '16px',
               fontWeight: 500,
               color: t.textSecondary,
-              margin: '0 0 32px 0',
-              textAlign: 'center',
+              margin: 0,
               lineHeight: 1.6,
               fontFamily: "'Quicksand', -apple-system, sans-serif",
-              maxWidth: 300,
-            }}
-          >
-            Track your study habits and watch your focus grow over time.
-          </p>
-
-          {/* Stats Preview Card */}
-          <div
-            style={{
-              width: '100%',
-              borderRadius: '24px',
-              background: t.cardBg,
-              border: `1px solid ${t.cardBorder}`,
-              padding: '20px',
-            }}
-          >
-            {/* Weekly summary row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <div>
-                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
-                  This Week
-                </p>
-                <p style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: t.textPrimary, fontFamily: "'Quicksand', sans-serif" }}>
-                  4h 30m
-                </p>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
-                  Streak
-                </p>
-                <p style={{ margin: 0, fontSize: '24px', fontWeight: 800, fontFamily: "'Quicksand', sans-serif", ...GRADIENT_TEXT_STYLE }}>
-                  7 days
-                </p>
-              </div>
-            </div>
-
-            {/* Bar chart */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: 120, gap: '8px' }}>
-              {bars.map((bar, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: '6px' }}>
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${bar.value * 90}px` }}
-                    transition={{ duration: 0.6, delay: i * 0.08, ease: 'easeOut' }}
-                    style={{
-                      width: '100%',
-                      maxWidth: 32,
-                      borderRadius: '8px',
-                      background: 'linear-gradient(180deg, #A78BFA 0%, #8B5CF6 100%)',
-                      opacity: 0.85,
-                    }}
-                  />
-                  <span style={{ fontSize: '11px', fontWeight: 600, color: t.textTertiary, fontFamily: "'Quicksand', sans-serif" }}>
-                    {bar.day}
-                  </span>
-                </div>
-              ))}
-            </div>
+            }}>
+              View focus trends by day, week, month, and year — to stay motivated and review progress
+            </p>
           </div>
         </div>
 
