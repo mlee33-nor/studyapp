@@ -1213,7 +1213,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => { if (navCooldown) return; triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 3, STEPS.length - 1)); setNavCooldown(true); setTimeout(() => setNavCooldown(false), 1000); }}
+          onClick={() => { if (navCooldown) return; localStorage.setItem('isPremium', 'true'); triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 3, STEPS.length - 1)); setNavCooldown(true); setTimeout(() => setNavCooldown(false), 1000); }}
           style={{
             width: '100%',
             padding: '16px',
@@ -1599,7 +1599,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         <motion.button
           whileTap={lastChanceTapGuard || navCooldown ? {} : { scale: 0.97 }}
           disabled={lastChanceTapGuard}
-          onClick={goNext}
+          onClick={() => { localStorage.setItem('isPremium', 'true'); goNext(); }}
           style={{
             width: '100%',
             padding: '16px',

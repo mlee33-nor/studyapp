@@ -1203,6 +1203,8 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [tutorialStep, setTutorialStep] = useState<number>(-1);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTutorialComplete, setShowTutorialComplete] = useState(false);
+  const [isPremium, setIsPremium] = useState(() => localStorage.getItem('isPremium') === 'true');
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const TUTORIAL_STEPS: TutorialStep[] = [
     {
@@ -3303,6 +3305,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   key={tab.id}
                   data-tutorial-target={tab.id === 'Meadow' ? 'nav-meadow' : undefined}
                   onClick={() => {
+                    if (tab.id === 'Reports' && !isPremium) {
+                      setShowPaywall(true);
+                      return;
+                    }
                     setActiveTab(tab.id);
                     if (showTutorial && currentTutorialStep?.id === 'go-to-sanctuary' && tab.id === 'Meadow') {
                       advanceTutorial();
@@ -3503,7 +3509,12 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => setShowTutorialComplete(false)}
+                onClick={() => {
+                  setShowTutorialComplete(false);
+                  if (!isPremium) {
+                    setShowPaywall(true);
+                  }
+                }}
                 style={{
                   background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%)',
                   border: 'none',
@@ -3520,6 +3531,281 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 Let's Go!
               </motion.button>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Premium Paywall Modal */}
+      <AnimatePresence>
+        {showPaywall && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 10000,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'linear-gradient(180deg, #0F1629 0%, #1A1040 50%, #0F1629 100%)',
+              padding: '0 24px',
+              overflow: 'auto',
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowPaywall(false)}
+              style={{
+                position: 'absolute',
+                top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+                right: '16px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                border: 'none',
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: 'rgba(255, 255, 255, 0.7)',
+                fontSize: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 10,
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '14px', width: '100%', maxWidth: 360 }}>
+              <div
+                style={{
+                  display: 'inline-block',
+                  padding: '4px 14px',
+                  borderRadius: '20px',
+                  background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)',
+                  border: '1px solid rgba(251, 191, 36, 0.3)',
+                  marginBottom: '10px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    fontFamily: "'Quicksand', -apple-system, sans-serif",
+                    background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}
+                >
+                  LIMITED OFFER
+                </span>
+              </div>
+
+              <h2
+                style={{
+                  fontSize: '26px',
+                  fontWeight: 800,
+                  margin: '0 0 2px 0',
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                  letterSpacing: '-0.02em',
+                  background: 'linear-gradient(135deg, #A78BFA 0%, #818CF8 50%, #67E8F9 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+              >
+                Study Buddy
+              </h2>
+              <h3
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 800,
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  margin: '0 0 4px 0',
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                PLUS
+              </h3>
+              <p
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  margin: 0,
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                Unlock your full potential
+              </p>
+            </div>
+
+            {/* Features */}
+            <div
+              style={{
+                width: '100%',
+                maxWidth: 360,
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '16px',
+                padding: '4px 16px',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                marginBottom: '16px',
+              }}
+            >
+              {[
+                { icon: '🎯', label: 'Unlimited focus sessions' },
+                { icon: '🐾', label: 'Unlock all companions & biomes' },
+                { icon: '📊', label: 'Advanced analytics & insights' },
+                { icon: '🎨', label: 'Custom themes & sounds' },
+                { icon: '☁️', label: 'Cloud sync across devices' },
+              ].map((feat, i, arr) => (
+                <div
+                  key={feat.label}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 0',
+                    borderBottom: i < arr.length - 1 ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '18px' }}>{feat.icon}</span>
+                    <span
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: 'rgba(255, 255, 255, 0.85)',
+                        fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      }}
+                    >
+                      {feat.label}
+                    </span>
+                  </div>
+                  <Check size={18} style={{ color: '#A78BFA' }} />
+                </div>
+              ))}
+            </div>
+
+            {/* Lifetime plan */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                localStorage.setItem('isPremium', 'true');
+                setIsPremium(true);
+                setShowPaywall(false);
+              }}
+              style={{
+                width: '100%',
+                maxWidth: 360,
+                padding: '16px 20px',
+                borderRadius: '16px',
+                border: '2px solid rgba(167, 139, 250, 0.5)',
+                background: 'rgba(167, 139, 250, 0.1)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '20px',
+                position: 'relative',
+              }}
+            >
+              <div style={{ position: 'absolute', top: '-10px', left: '16px' }}>
+                <span
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    color: 'white',
+                    background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    fontFamily: "'Quicksand', -apple-system, sans-serif",
+                  }}
+                >
+                  BEST VALUE
+                </span>
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <div
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    fontFamily: "'Quicksand', -apple-system, sans-serif",
+                  }}
+                >
+                  Lifetime
+                </div>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontFamily: "'Quicksand', -apple-system, sans-serif",
+                  }}
+                >
+                  Pay once, yours forever
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: '24px',
+                  fontWeight: 800,
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                $33
+              </div>
+            </motion.button>
+
+            {/* CTA Button */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                localStorage.setItem('isPremium', 'true');
+                setIsPremium(true);
+                setShowPaywall(false);
+              }}
+              style={{
+                width: '100%',
+                maxWidth: 360,
+                padding: '16px',
+                borderRadius: '18px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #A78BFA 0%, #8B5CF6 50%, #7C3AED 100%)',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 24px rgba(139, 92, 246, 0.4)',
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              Start Free Trial
+            </motion.button>
+
+            <p
+              style={{
+                fontSize: '11px',
+                fontWeight: 500,
+                color: 'rgba(255, 255, 255, 0.4)',
+                textAlign: 'center',
+                margin: '8px 0 0 0',
+                lineHeight: 1.4,
+                fontFamily: "'Quicksand', -apple-system, sans-serif",
+              }}
+            >
+              One-time payment of $33. No subscription.
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
