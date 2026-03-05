@@ -1194,6 +1194,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem('onboardingCompleted');
   });
+  const [onboardingInitialStep, setOnboardingInitialStep] = useState<number | undefined>(undefined);
   const [showLogin, setShowLogin] = useState(() => {
     // Show login if user has an account but isn't logged in this session
     return !showOnboarding && hasAccount() && !isLoggedIn();
@@ -3087,6 +3088,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     return (
       <OnboardingScreen
         theme="midnight"
+        initialStep={onboardingInitialStep}
         onComplete={(onboardingData) => {
           localStorage.setItem('onboardingCompleted', 'true');
           localStorage.setItem('onboardingData', JSON.stringify(onboardingData));
@@ -3095,6 +3097,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             setLoggedIn();
           }
           setShowOnboarding(false);
+          setOnboardingInitialStep(undefined);
           // Sync premium status in case user purchased during onboarding
           if (localStorage.getItem('isPremium') === 'true') {
             setIsPremium(true);
@@ -3825,6 +3828,8 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   if (hasAccount()) {
                     setShowLogin(true);
                   } else {
+                    // Jump directly to the createAccount step (index 13)
+                    setOnboardingInitialStep(13);
                     setShowOnboarding(true);
                   }
                 }}
