@@ -435,9 +435,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
                 color: 'white',
                 fontSize: '17px',
                 fontWeight: 700,
-                cursor: 'pointer',
+                cursor: navCooldown ? 'default' : 'pointer',
                 boxShadow: t.buttonShadow,
                 fontFamily: "'Quicksand', -apple-system, sans-serif",
+                opacity: navCooldown ? 0.5 : 1,
+                transition: 'opacity 0.2s ease',
               }}
             >
               Continue
@@ -450,7 +452,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
 
   const renderContinueButton = (label = 'Continue') => (
     <motion.button
-      whileTap={{ scale: 0.97 }}
+      whileTap={navCooldown ? {} : { scale: 0.97 }}
       onClick={goNext}
       style={{
         width: '100%',
@@ -461,9 +463,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
         color: 'white',
         fontSize: '17px',
         fontWeight: 700,
-        cursor: 'pointer',
+        cursor: navCooldown ? 'default' : 'pointer',
         boxShadow: t.buttonShadow,
         fontFamily: "'Quicksand', -apple-system, sans-serif",
+        opacity: navCooldown ? 0.5 : 1,
+        transition: 'opacity 0.2s ease',
       }}
     >
       {label}
@@ -486,11 +490,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
           borderRadius: '50%',
           border: `1px solid ${t.optionBorder}`,
           background: t.optionBg,
-          cursor: 'pointer',
+          cursor: navCooldown ? 'default' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 10,
+          opacity: navCooldown ? 0.5 : 1,
+          transition: 'opacity 0.2s ease',
         }}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={t.textPrimary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1192,9 +1198,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             color: 'white',
             fontSize: '16px',
             fontWeight: 700,
-            cursor: 'pointer',
+            cursor: navCooldown ? 'default' : 'pointer',
             boxShadow: t.buttonShadow,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
+            opacity: navCooldown ? 0.5 : 1,
+            transition: 'opacity 0.2s ease',
           }}
         >
           Start Free Trial
@@ -1226,9 +1234,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             color: t.textTertiary,
             fontSize: '13px',
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: navCooldown ? 'default' : 'pointer',
             fontFamily: "'Quicksand', -apple-system, sans-serif",
             marginTop: '2px',
+            opacity: navCooldown ? 0.5 : 1,
+            transition: 'opacity 0.2s ease',
           }}
         >
           Maybe later
@@ -1581,7 +1591,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       {/* CTA */}
       <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
-          whileTap={lastChanceTapGuard ? {} : { scale: 0.97 }}
+          whileTap={lastChanceTapGuard || navCooldown ? {} : { scale: 0.97 }}
           disabled={lastChanceTapGuard}
           onClick={goNext}
           style={{
@@ -1593,11 +1603,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
             color: 'white',
             fontSize: '16px',
             fontWeight: 700,
-            cursor: lastChanceTapGuard ? 'default' : 'pointer',
+            cursor: lastChanceTapGuard || navCooldown ? 'default' : 'pointer',
             boxShadow: t.buttonShadow,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
-            opacity: lastChanceTapGuard ? 0.7 : 1,
-            transition: 'opacity 0.3s ease',
+            opacity: lastChanceTapGuard || navCooldown ? 0.5 : 1,
+            transition: 'opacity 0.2s ease',
           }}
         >
           Claim This Deal
