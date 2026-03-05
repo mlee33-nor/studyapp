@@ -19,6 +19,7 @@ interface OnboardingData {
 interface OnboardingScreenProps {
   onComplete: (data: OnboardingData) => void;
   theme: 'morning' | 'midnight';
+  initialStep?: number;
 }
 
 const THEMES = {
@@ -155,9 +156,9 @@ function getPersonalizedStats(data: OnboardingData) {
   };
 }
 
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, initialStep }) => {
   const t = THEMES[theme];
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(initialStep ?? 0);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<OnboardingData>({
     studyHours: '',
