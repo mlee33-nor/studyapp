@@ -182,8 +182,16 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const [chestAnimData, setChestAnimData] = useState<any>(null);
   const [chestStage, setChestStage] = useState(0);
   const [lastChanceTapGuard, setLastChanceTapGuard] = useState(false);
+  const [navCooldown, setNavCooldown] = useState(false);
   const chestLottieRef = useRef<any>(null);
   const chestDoneRef = useRef(false);
+
+  // Preload sanctuary and stats images on mount
+  useEffect(() => {
+    const preload = (src: string) => { const img = new Image(); img.src = src; };
+    preload(sanctuaryImg);
+    preload(statsImg);
+  }, []);
 
   // Pre-fetch bunny Lottie animation
   useEffect(() => {
@@ -251,16 +259,22 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
   const stats = getPersonalizedStats(data);
 
   const goNext = useCallback(() => {
+    if (navCooldown) return;
     triggerSelectionTick();
     setDirection(1);
     setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1));
-  }, []);
+    setNavCooldown(true);
+    setTimeout(() => setNavCooldown(false), 1000);
+  }, [navCooldown]);
 
   const goBack = useCallback(() => {
+    if (navCooldown) return;
     triggerSelectionTick();
     setDirection(-1);
     setCurrentStep((s) => Math.max(s - 1, 0));
-  }, []);
+    setNavCooldown(true);
+    setTimeout(() => setNavCooldown(false), 1000);
+  }, [navCooldown]);
 
   const selectOption = useCallback(
     (field: keyof OnboardingData, value: string) => {
@@ -1168,7 +1182,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme }
       <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => { triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 3, STEPS.length - 1)); }}
+          onClick={() => { if (navCooldown) return; triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 3, STEPS.length - 1)); setNavCooldown(true); setTimeout(() => setNavCooldown(false), 1000); }}
           style={{
             width: '100%',
             padding: '16px',
