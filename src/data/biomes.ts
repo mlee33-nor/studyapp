@@ -63,13 +63,13 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
   },
   farm: {
     id: 'farm',
-    name: 'Barn House',
-    emoji: '🐄',
+    name: 'Barn',
+    emoji: '🏡',
     unlockLevel: 50,
-    unlockCost: 12000,
+    unlockCost: 8000,
     primaryColor: '#B45309',
     secondaryColor: '#D97706',
-    description: 'A cozy barn house with friendly farm animals.',
+    description: 'A cozy barn with friendly farm animals.',
   },
 };
 
