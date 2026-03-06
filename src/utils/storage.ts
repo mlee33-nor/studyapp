@@ -190,14 +190,14 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   const MIN_X = 10;
   const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 
-  // Flying animals (like butterflies) can spawn anywhere including the sky
-  const FLYING_ANIMAL_NAMES = new Set(['Butterfly']);
+  // Animals not bound to the ground (can spawn anywhere including sky/water)
+  const FREE_ROAM_NAMES = new Set(['Butterfly', 'Turtle', 'Tropical Fish', 'Octopus']);
 
   // Find a valid spawn position that doesn't overlap with existing animals
   const findValidSpawnPosition = (animalName?: string): { x: number; y: number } => {
     const COLLISION_THRESHOLD = 55; // Allows close proximity, auto-repels when overlapping
     const MAX_ATTEMPTS = 20;
-    const spawnMinY = animalName && FLYING_ANIMAL_NAMES.has(animalName) ? 0 : MIN_Y;
+    const spawnMinY = animalName && FREE_ROAM_NAMES.has(animalName) ? 0 : MIN_Y;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const x = MIN_X + Math.random() * (MAX_X - MIN_X);

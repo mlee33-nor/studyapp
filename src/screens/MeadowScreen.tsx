@@ -435,9 +435,9 @@ const MeadowScreen: React.FC = () => {
     };
   }, [biomeAnimals]);
 
-  // Animals that can fly anywhere (including the sky)
-  const FLYING_ANIMAL_NAMES = new Set(['Butterfly']);
-  const isFlying = (animal: MeadowAnimal) => FLYING_ANIMAL_NAMES.has(animal.name);
+  // Animals not bound to the ground (can roam into sky/water area)
+  const FREE_ROAM_NAMES = new Set(['Butterfly', 'Turtle', 'Tropical Fish', 'Octopus']);
+  const isFreeRoam = (animal: MeadowAnimal) => FREE_ROAM_NAMES.has(animal.name);
 
   // Get dynamic bounds based on actual container size
   const getBounds = (flying = false) => {
@@ -463,7 +463,7 @@ const MeadowScreen: React.FC = () => {
     const constrained = constrainPosition(
       currentAnimal.x + info.offset.x,
       currentAnimal.y + info.offset.y,
-      isFlying(currentAnimal)
+      isFreeRoam(currentAnimal)
     );
 
     updateAnimalPosition(animalId, constrained.x, constrained.y);
@@ -940,7 +940,7 @@ const MeadowScreen: React.FC = () => {
                           dragConstraints={{
                             left: MIN_X,
                             right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - size - 10,
-                            top: isFlying(animal) ? 0 : MIN_Y,
+                            top: isFreeRoam(animal) ? 0 : MIN_Y,
                             bottom: effectiveMaxY,
                           }}
                           onDragStart={() => { if (isWalker) handleWalkingDragStart(animal.id); }}
