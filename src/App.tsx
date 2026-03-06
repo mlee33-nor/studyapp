@@ -3650,12 +3650,12 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 }}
               >
                 {[
-                  { icon: '🎯', label: 'Unlimited\nSessions', color: '#EF4444' },
-                  { icon: '🐾', label: 'All\nCompanions', color: '#F59E0B' },
-                  { icon: '📊', label: 'Advanced\nAnalytics', color: '#10B981' },
-                  { icon: '🎨', label: 'Custom\nThemes', color: '#8B5CF6' },
-                  { icon: '☁️', label: 'Cloud\nSync', color: '#3B82F6' },
-                  { icon: '✨', label: 'Free Future\nUpdates', color: '#EC4899' },
+                  { icon: '🎯', label: 'Unlimited Sessions', color: '#EF4444' },
+                  { icon: '🐾', label: 'All Companions', color: '#F59E0B' },
+                  { icon: '📊', label: 'Advanced Analytics', color: '#10B981' },
+                  { icon: '🎨', label: 'Custom Themes', color: '#8B5CF6' },
+                  { icon: '☁️', label: 'Cloud Sync', color: '#3B82F6' },
+                  { icon: '✨', label: 'Free Future Updates', color: '#EC4899' },
                 ].map((feat) => (
                   <div key={feat.label} style={{ textAlign: 'center' }}>
                     <div
@@ -3679,8 +3679,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                         fontWeight: 600,
                         color: 'rgba(255, 255, 255, 0.7)',
                         fontFamily: "'Quicksand', -apple-system, sans-serif",
-                        lineHeight: 1.3,
-                        whiteSpace: 'pre-line',
+                        lineHeight: 1.2,
                       }}
                     >
                       {feat.label}
