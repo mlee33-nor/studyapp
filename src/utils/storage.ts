@@ -190,7 +190,7 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     forest: 200,
     meadow: 220,
     ocean: 240,
-    safari: 240,
+    safari: 200,
     mountain: 240,
   };
   const MIN_Y = BIOME_MIN_Y[currentData.activeBiome ?? 'meadow'] ?? 220;
