@@ -3079,6 +3079,30 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
           >
             {hasAccount() ? 'Log Out' : 'Log In'}
           </motion.button>
+          {!hasAccount() && (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setOnboardingInitialStep(13);
+                setShowOnboarding(true);
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '14px',
+                border: 'none',
+                marginTop: '10px',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                color: '#FFFFFF',
+                fontSize: '15px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+              }}
+            >
+              Sign Up
+            </motion.button>
+          )}
         </GlassCard>
       </motion.div>
     );
