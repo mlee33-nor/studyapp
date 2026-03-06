@@ -185,7 +185,15 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   const MEADOW_WIDTH = 400;
   const MEADOW_HEIGHT = 450;
   const ANIMAL_SIZE = 60;
-  const MIN_Y = 220; // Ground animals can't float above the grass/sand line
+  // Per-biome ground barrier — forest has more vertical space due to tree canopy
+  const BIOME_MIN_Y: Record<string, number> = {
+    forest: 200,
+    meadow: 220,
+    ocean: 240,
+    safari: 240,
+    mountain: 240,
+  };
+  const MIN_Y = BIOME_MIN_Y[currentData.activeBiome ?? 'meadow'] ?? 220;
   const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
   const MIN_X = 10;
   const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
