@@ -1669,8 +1669,11 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     // Snapshot canonical storage data BEFORE the session update (for achievement comparison)
     const storageBefore = getStorageUserData();
 
+    // Calculate actual minutes studied (in case user completed early)
+    const actualMinutesStudied = Math.floor((timerMinutes * 60 - timeLeft) / 60);
+
     // Save session to enhanced storage (also saves to old format for backward compatibility)
-    saveEnhancedSession(currentCategory || 'Uncategorized', timerMinutes);
+    saveEnhancedSession(currentCategory || 'Uncategorized', actualMinutesStudied);
 
     // Save the selected animal info to storage so addCompletedSession picks it up
     const currentAnimal = ANIMALS[selectedAnimal];
@@ -1686,7 +1689,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     });
 
     // Add completed session to storage (this spawns biome animal automatically)
-    addCompletedSession(timerMinutes, currentAnimal.url);
+    addCompletedSession(actualMinutesStudied, currentAnimal.url);
 
     // Read back updated data from canonical storage (pomodoroStudyApp key)
     // This includes the new permanentCollection and meadowAnimals
@@ -1705,8 +1708,8 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       }
     }
 
-    // Coins earned = 1 per minute studied
-    const coinsEarned = timerMinutes;
+    // Coins earned = 1 per minute actually studied
+    const coinsEarned = actualMinutesStudied;
 
     // Update local userData - sync from canonical storage (pomodoroStudyApp key)
     const newData = {
