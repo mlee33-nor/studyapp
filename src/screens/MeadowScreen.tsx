@@ -704,10 +704,10 @@ const MeadowScreen: React.FC = () => {
           gap: '6px',
           marginBottom: '8px',
           padding: '4px',
-          background: 'rgba(255, 255, 255, 0.6)',
+          background: 'rgba(88, 28, 135, 0.35)',
           backdropFilter: 'blur(20px)',
           borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
+          border: '1px solid rgba(167, 139, 250, 0.3)',
         }}>
           {(['today', 'weekly', 'monthly', 'yearly'] as SanctuaryViewMode[]).map(mode => (
             <motion.button
@@ -720,9 +720,9 @@ const MeadowScreen: React.FC = () => {
                 borderRadius: '12px',
                 border: 'none',
                 background: viewMode === mode
-                  ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(244, 114, 182, 0.2) 100%)'
+                  ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(244, 114, 182, 0.3) 100%)'
                   : 'transparent',
-                color: viewMode === mode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(100, 116, 139, 0.6)',
+                color: viewMode === mode ? '#FFFFFF' : 'rgba(203, 213, 225, 0.7)',
                 fontWeight: 600,
                 fontSize: '0.8rem',
                 cursor: 'pointer',
@@ -747,10 +747,10 @@ const MeadowScreen: React.FC = () => {
               justifyContent: 'space-between',
               marginBottom: '16px',
               padding: '10px 14px',
-              background: 'rgba(255, 255, 255, 0.6)',
+              background: 'rgba(88, 28, 135, 0.35)',
               backdropFilter: 'blur(20px)',
               borderRadius: '16px',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
+              border: '1px solid rgba(167, 139, 250, 0.3)',
             }}
           >
             <motion.button
@@ -765,7 +765,7 @@ const MeadowScreen: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'rgba(51, 65, 85, 0.8)',
+                color: 'rgba(203, 213, 225, 0.9)',
                 fontSize: '20px',
               }}
             >
@@ -776,7 +776,7 @@ const MeadowScreen: React.FC = () => {
               <span style={{
                 fontSize: '0.9rem',
                 fontWeight: 600,
-                color: 'rgba(15, 23, 42, 0.9)',
+                color: '#FFFFFF',
                 fontFamily: "'Quicksand', sans-serif"
               }}>
                 {getDisplayText()}
@@ -786,14 +786,14 @@ const MeadowScreen: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleToday}
                   style={{
-                    background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(244, 114, 182, 0.2) 100%)',
+                    background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(244, 114, 182, 0.3) 100%)',
                     border: 'none',
                     padding: '4px 10px',
                     borderRadius: '8px',
                     fontSize: '0.7rem',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    color: 'rgba(15, 23, 42, 0.9)',
+                    color: '#FFFFFF',
                     fontFamily: "'Quicksand', sans-serif"
                   }}
                 >
@@ -814,7 +814,7 @@ const MeadowScreen: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'rgba(51, 65, 85, 0.8)',
+                color: 'rgba(203, 213, 225, 0.9)',
                 fontSize: '20px',
               }}
             >
@@ -824,16 +824,16 @@ const MeadowScreen: React.FC = () => {
         )}
 
         {/* Stats Card — context-aware */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-3 mb-2 shadow-soft">
+        <div style={{ background: 'rgba(88, 28, 135, 0.35)', backdropFilter: 'blur(20px)', border: '1px solid rgba(167, 139, 250, 0.3)' }} className="rounded-3xl p-3 mb-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-text-secondary">
+              <p className="text-sm" style={{ color: 'rgba(203, 213, 225, 0.8)' }}>
                 {viewMode === 'today'
                   ? `Today in ${BIOME_CONFIG[activeBiome].name}`
                   : `${BIOME_CONFIG[activeBiome].name} — ${periodLabel}`
                 }
               </p>
-              <p className="text-2xl font-bold text-text-primary">
+              <p className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
                 {viewMode === 'today'
                   ? `${biomeAnimals.length} Animals`
                   : timelineTotalCount > timelineAnimals.length
