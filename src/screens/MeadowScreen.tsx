@@ -130,7 +130,11 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
 
 const ALL_BIOME_IDS: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'mountain'];
 
-const MeadowScreen: React.FC = () => {
+interface MeadowScreenProps {
+  onBiomeRevealChange?: (active: boolean) => void;
+}
+
+const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
   const { userData, refreshData } = useUserData();
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [failedAnimations, setFailedAnimations] = useState<Set<string>>(new Set());
@@ -151,6 +155,10 @@ const MeadowScreen: React.FC = () => {
   const [biomePurchaseTarget, setBiomePurchaseTarget] = useState<{ biomeId: BiomeType; cost: number } | null>(null);
   // Crystal seed tap-to-reveal state
   const [biomeReveal, setBiomeReveal] = useState<{ biomeId: BiomeType; stage: number } | null>(null);
+
+  useEffect(() => {
+    onBiomeRevealChange?.(biomeReveal !== null);
+  }, [biomeReveal, onBiomeRevealChange]);
 
   const triggerHapticFeedback = (duration = 20) => {
     if (navigator.vibrate) navigator.vibrate(duration);
