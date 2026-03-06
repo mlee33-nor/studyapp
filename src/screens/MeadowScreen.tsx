@@ -134,6 +134,10 @@ const MeadowScreen: React.FC = () => {
   const [sceneHeight, setSceneHeight] = useState(MEADOW_HEIGHT);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
 
+  // Theme detection
+  const storedTheme = localStorage.getItem('selectedTheme');
+  const isDark = storedTheme !== 'morning';
+
   // Walking animal horizontal movement state
   const walkingInstancesRef = useRef<Record<string, WalkingAnimalInstance>>({});
   const [walkingFlips, setWalkingFlips] = useState<Record<string, boolean>>({});
@@ -706,7 +710,7 @@ const MeadowScreen: React.FC = () => {
           padding: '4px',
           background: 'transparent',
           borderRadius: '16px',
-          border: 'none',
+          border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
         }}>
           {(['today', 'weekly', 'monthly', 'yearly'] as SanctuaryViewMode[]).map(mode => (
             <motion.button
@@ -721,7 +725,9 @@ const MeadowScreen: React.FC = () => {
                 background: viewMode === mode
                   ? 'rgba(167, 139, 250, 0.25)'
                   : 'transparent',
-                color: viewMode === mode ? '#FFFFFF' : 'rgba(255, 255, 255, 0.45)',
+                color: viewMode === mode
+                  ? (isDark ? '#FFFFFF' : 'rgba(15, 23, 42, 0.95)')
+                  : (isDark ? 'rgba(255, 255, 255, 0.45)' : 'rgba(100, 116, 139, 0.6)'),
                 fontWeight: 600,
                 fontSize: '0.8rem',
                 cursor: 'pointer',
@@ -748,7 +754,7 @@ const MeadowScreen: React.FC = () => {
               padding: '10px 14px',
               background: 'transparent',
               borderRadius: '16px',
-              border: 'none',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)',
             }}
           >
             <motion.button
@@ -763,7 +769,7 @@ const MeadowScreen: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'rgba(203, 213, 225, 0.9)',
+                color: isDark ? 'rgba(203, 213, 225, 0.9)' : 'rgba(51, 65, 85, 0.8)',
                 fontSize: '20px',
               }}
             >
@@ -774,7 +780,7 @@ const MeadowScreen: React.FC = () => {
               <span style={{
                 fontSize: '0.9rem',
                 fontWeight: 600,
-                color: '#FFFFFF',
+                color: isDark ? '#FFFFFF' : 'rgba(15, 23, 42, 0.9)',
                 fontFamily: "'Quicksand', sans-serif"
               }}>
                 {getDisplayText()}
@@ -784,14 +790,14 @@ const MeadowScreen: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={handleToday}
                   style={{
-                    background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(244, 114, 182, 0.3) 100%)',
+                    background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.2) 100%)',
                     border: 'none',
                     padding: '4px 10px',
                     borderRadius: '8px',
                     fontSize: '0.7rem',
                     fontWeight: 600,
                     cursor: 'pointer',
-                    color: '#FFFFFF',
+                    color: isDark ? '#FFFFFF' : 'rgba(15, 23, 42, 0.9)',
                     fontFamily: "'Quicksand', sans-serif"
                   }}
                 >
@@ -812,7 +818,7 @@ const MeadowScreen: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'rgba(203, 213, 225, 0.9)',
+                color: isDark ? 'rgba(203, 213, 225, 0.9)' : 'rgba(51, 65, 85, 0.8)',
                 fontSize: '20px',
               }}
             >
@@ -822,16 +828,16 @@ const MeadowScreen: React.FC = () => {
         )}
 
         {/* Stats Card — context-aware */}
-        <div style={{ background: 'transparent' }} className="rounded-3xl p-3 mb-2">
+        <div style={{ background: 'transparent', border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.1)' }} className="rounded-3xl p-3 mb-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+              <p className="text-sm" style={{ color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(100, 116, 139, 0.7)' }}>
                 {viewMode === 'today'
                   ? `Today in ${BIOME_CONFIG[activeBiome].name}`
                   : `${BIOME_CONFIG[activeBiome].name} — ${periodLabel}`
                 }
               </p>
-              <p className="text-2xl font-bold" style={{ color: '#FFFFFF' }}>
+              <p className="text-2xl font-bold" style={{ color: isDark ? '#FFFFFF' : 'rgba(15, 23, 42, 0.95)' }}>
                 {viewMode === 'today'
                   ? `${biomeAnimals.length} Animals`
                   : timelineTotalCount > timelineAnimals.length
