@@ -1661,6 +1661,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       setUserData({ ...userData, ...newData });
       saveUserData({ ...userData, ...newData });
       triggerCelebration();
+      setTimeLeft(timerMinutes * 60);
       return;
     }
 
@@ -1723,6 +1724,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     setUserData({ ...userData, ...newData });
     saveUserData({ ...userData, ...newData });
     triggerCelebration();
+    setTimeLeft(timerMinutes * 60);
   };
 
   const handleFailSession = () => {
