@@ -61,16 +61,6 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     secondaryColor: '#06B6D4',
     description: 'A tropical ocean biome with aquatic life.',
   },
-  arctic: {
-    id: 'arctic',
-    name: 'Arctic',
-    emoji: '❄️',
-    unlockLevel: 40,
-    unlockCost: 8000,
-    primaryColor: '#60A5FA',
-    secondaryColor: '#93C5FD',
-    description: 'A frozen arctic tundra with polar creatures.',
-  },
   mountain: {
     id: 'mountain',
     name: 'Mountain',
@@ -181,34 +171,6 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
   },
 ];
 
-// Arctic Animals - Real Lottie Animation URLs
-export const ARCTIC_ANIMALS: BiomeAnimal[] = [
-  {
-    id: 'penguin',
-    name: 'Penguin',
-    lottieUrl: 'https://lottie.host/d914f30d-98b8-49b6-9b30-45d41c744b26/1gVkyH9G4b.json',
-    price: 0,
-  },
-  {
-    id: 'seal',
-    name: 'Seal',
-    lottieUrl: 'https://lottie.host/7002f4f6-50e9-4117-92e7-fdd0b848d031/JBfJzJJicn.json',
-    price: 0,
-  },
-  {
-    id: 'arctic_fox',
-    name: 'Fox',
-    lottieUrl: 'https://lottie.host/d3c1b1e1-a463-4a0f-b1df-f272da956d77/lfzKlyXeao.json',
-    price: 800,
-  },
-  {
-    id: 'polar_bear',
-    name: 'Polar Bear',
-    lottieUrl: 'https://lottie.host/22db9151-bf0a-411d-b178-8a906267b28c/wP2cRjqZ4n.json',
-    price: 800,
-  },
-];
-
 // Mountain Animals - Real Lottie Animation URLs
 export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
   {
@@ -278,8 +240,6 @@ export const getAnimalsForBiome = (biomeId: BiomeType): BiomeAnimal[] => {
       return FOREST_ANIMALS;
     case 'ocean':
       return OCEAN_ANIMALS;
-    case 'arctic':
-      return ARCTIC_ANIMALS;
     case 'mountain':
       return MOUNTAIN_ANIMALS;
     default:
@@ -302,7 +262,7 @@ export const getUnlockedBiomes = (level: number): BiomeType[] => {
 // Get scale factor for an animal by its lottieUrl
 const ALL_BIOME_ANIMALS = () => [
   ...SAFARI_ANIMALS, ...FOREST_ANIMALS, ...OCEAN_ANIMALS,
-  ...ARCTIC_ANIMALS, ...MOUNTAIN_ANIMALS, ...MEADOW_ANIMALS,
+  ...MOUNTAIN_ANIMALS, ...MEADOW_ANIMALS,
 ];
 
 export const getAnimalScale = (lottieUrl: string): number | undefined => {

@@ -31,7 +31,6 @@ import meadowBg from '../assets/biomes/meadows.jpg';
 import safariBg from '../assets/biomes/safari.jpg';
 import forestBg from '../assets/biomes/forest.jpg';
 import oceanBg from '../assets/biomes/ocean.jpg';
-import arcticBg from '../assets/biomes/arctic.jpg';
 import mountainBg from '../assets/biomes/mountains.jpg';
 
 // Meadow dimensions and safe zones
@@ -120,11 +119,10 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   safari: () => <div style={biomeBackgroundStyle(safariBg)} />,
   forest: () => <div style={biomeBackgroundStyle(forestBg)} />,
   ocean: () => <div style={biomeBackgroundStyle(oceanBg)} />,
-  arctic: () => <div style={biomeBackgroundStyle(arcticBg)} />,
   mountain: () => <div style={biomeBackgroundStyle(mountainBg)} />,
 };
 
-const ALL_BIOME_IDS: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
+const ALL_BIOME_IDS: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'mountain'];
 
 const MeadowScreen: React.FC = () => {
   const { userData, refreshData } = useUserData();
