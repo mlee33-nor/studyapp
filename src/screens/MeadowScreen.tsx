@@ -435,16 +435,20 @@ const MeadowScreen: React.FC = () => {
     };
   }, [biomeAnimals]);
 
+  // Animals that can fly anywhere (including the sky)
+  const FLYING_ANIMAL_NAMES = new Set(['Butterfly']);
+  const isFlying = (animal: MeadowAnimal) => FLYING_ANIMAL_NAMES.has(animal.name);
+
   // Get dynamic bounds based on actual container size
-  const getBounds = () => {
+  const getBounds = (flying = false) => {
     const meadowWidth = meadowRef.current?.offsetWidth ?? MEADOW_WIDTH;
     const maxX = meadowWidth - ANIMAL_SIZE - 10;
-    return { minX: MIN_X, maxX, minY: MIN_Y, maxY: effectiveMaxY };
+    return { minX: MIN_X, maxX, minY: flying ? 0 : MIN_Y, maxY: effectiveMaxY };
   };
 
   // Constrain position to valid bounds
-  const constrainPosition = (x: number, y: number) => {
-    const { minX, maxX, minY, maxY } = getBounds();
+  const constrainPosition = (x: number, y: number, flying = false) => {
+    const { minX, maxX, minY, maxY } = getBounds(flying);
     return {
       x: Math.max(minX, Math.min(maxX, x)),
       y: Math.max(minY, Math.min(maxY, y))
@@ -458,7 +462,8 @@ const MeadowScreen: React.FC = () => {
 
     const constrained = constrainPosition(
       currentAnimal.x + info.offset.x,
-      currentAnimal.y + info.offset.y
+      currentAnimal.y + info.offset.y,
+      isFlying(currentAnimal)
     );
 
     updateAnimalPosition(animalId, constrained.x, constrained.y);
@@ -935,7 +940,7 @@ const MeadowScreen: React.FC = () => {
                           dragConstraints={{
                             left: MIN_X,
                             right: (meadowRef.current?.offsetWidth ?? MEADOW_WIDTH) - size - 10,
-                            top: MIN_Y,
+                            top: isFlying(animal) ? 0 : MIN_Y,
                             bottom: effectiveMaxY,
                           }}
                           onDragStart={() => { if (isWalker) handleWalkingDragStart(animal.id); }}
