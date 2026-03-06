@@ -195,10 +195,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
   const chestLottieRef = useRef<any>(null);
   const chestDoneRef = useRef(false);
 
-  // Preload sanctuary and stats images on mount
+  // Preload sanctuary video on mount so it's ready by the time user reaches that screen
   useEffect(() => {
-    const preload = (src: string) => { const img = new Image(); img.src = src; };
-    preload(sanctuaryVideo);
+    const video = document.createElement('video');
+    video.preload = 'auto';
+    video.muted = true;
+    video.src = sanctuaryVideo;
+    video.load();
   }, []);
 
   // Use the module-level pre-fetched bunny Lottie animation
