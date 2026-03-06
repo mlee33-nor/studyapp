@@ -7,6 +7,7 @@ import { useUserData } from '../hooks/useUserData';
 import { updateAnimalPosition, getUserData, saveUserData } from '../utils/storage';
 import type { MeadowAnimal, BiomeType, CollectedAnimal } from '../types';
 import { BIOME_CONFIG, getAnimalScale, getBiomeCost } from '../data/biomes';
+import { fetchAnimation, getAllCached } from '../utils/lottieCache';
 import { Lock } from 'lucide-react';
 import { BiomeUnlockCelebration } from '../animations/BiomeUnlockAnimation';
 import {
@@ -136,7 +137,7 @@ interface MeadowScreenProps {
 
 const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
   const { userData, refreshData } = useUserData();
-  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
+  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>(getAllCached);
   const [failedAnimations, setFailedAnimations] = useState<Set<string>>(new Set());
   const meadowRef = useRef<HTMLDivElement>(null);
   const [sceneHeight, setSceneHeight] = useState(MEADOW_HEIGHT);
@@ -303,22 +304,25 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
 
   // Load Lottie animations for today's diorama
   useEffect(() => {
+    let cancelled = false;
     const loadAnimations = async () => {
       const toLoad = userData.meadowAnimals.filter(
         a => !loadedAnimations[a.id] && !failedAnimations.has(a.id)
       );
+      if (toLoad.length === 0) return;
+
       const results = await Promise.all(
         toLoad.map(async (animal) => {
           try {
-            const response = await fetch(animal.lottieUrl);
-            if (!response.ok) return { id: animal.id, failed: true };
-            const data = await response.json();
+            const data = await fetchAnimation(animal.id, animal.lottieUrl);
             return { id: animal.id, data, failed: false };
           } catch {
-            return { id: animal.id, failed: true };
+            return { id: animal.id, data: null, failed: true };
           }
         })
       );
+
+      if (cancelled) return;
 
       const animations: Record<string, any> = {};
       const failed: string[] = [];
@@ -338,7 +342,8 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
     };
 
     loadAnimations();
-  }, [userData.meadowAnimals]);
+    return () => { cancelled = true; };
+  }, [userData.meadowAnimals]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Walking animal horizontal movement animation loop
   useEffect(() => {
