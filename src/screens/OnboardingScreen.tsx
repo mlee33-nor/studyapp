@@ -523,6 +523,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         padding: '0 32px',
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+        opacity: bunnyAnimData ? 1 : 0,
+        transition: 'opacity 0.3s ease',
       }}
     >
       <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -541,10 +543,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
             overflow: 'hidden',
           }}
         >
-          {bunnyAnimData ? (
+          {bunnyAnimData && (
             <Lottie animationData={bunnyAnimData} loop style={{ width: 120, height: 120 }} />
-          ) : (
-            <span style={{ fontSize: '56px' }}>🐰</span>
           )}
         </div>
 
@@ -2431,10 +2431,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
           overflow: 'hidden',
         }}
       >
-        {bunnyAnimData ? (
+        {bunnyAnimData && (
           <Lottie animationData={bunnyAnimData} loop style={{ width: 100, height: 100 }} />
-        ) : (
-          <span style={{ fontSize: '48px' }}>🐰</span>
         )}
       </div>
 
