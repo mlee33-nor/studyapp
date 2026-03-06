@@ -39,8 +39,14 @@ const MEADOW_HEIGHT = 450;
 const ANIMAL_SIZE = 60;
 const EMOJI_SIZE = 90; // Larger size for emoji fallback animals
 
-// Depth zones - ground animals can't float above the grass/sand line
-const MIN_Y = 220;
+// Per-biome ground barrier — forest has more vertical space due to tree canopy
+const BIOME_MIN_Y: Record<string, number> = {
+  forest: 200,
+  meadow: 220,
+  ocean: 240,
+  safari: 240,
+  mountain: 240,
+};
 
 // Safe horizontal bounds
 const MIN_X = 10;
@@ -58,7 +64,7 @@ interface WalkingAnimalInstance {
   resumeTimer: ReturnType<typeof setTimeout> | null;
 }
 
-const WALKING_ANIMAL_NAMES = new Set(['Giraffe', 'Monkey', 'Elephant']);
+const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Elephant']);
 const VERTICAL_WALKING_ANIMAL_NAMES = new Set<string>([]);
 const isWalkingAnimal = (animal: MeadowAnimal) =>
   WALKING_ANIMAL_NAMES.has(animal.name) || VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
@@ -131,6 +137,7 @@ const MeadowScreen: React.FC = () => {
   const meadowRef = useRef<HTMLDivElement>(null);
   const [sceneHeight, setSceneHeight] = useState(MEADOW_HEIGHT);
   const [activeBiome, setActiveBiome] = useState<BiomeType>(userData.activeBiome as BiomeType);
+  const MIN_Y = BIOME_MIN_Y[activeBiome] ?? 220;
 
   // Theme detection
   const storedTheme = localStorage.getItem('selectedTheme');
