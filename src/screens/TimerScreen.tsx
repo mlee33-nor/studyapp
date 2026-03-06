@@ -8,6 +8,7 @@ import { getWeeklyMinutes } from '../utils/storage';
 import { triggerSelectionTick } from '../utils/haptics';
 import { getAnimalsForBiome, getAnimalScale, BIOME_CONFIG } from '../data/biomes';
 import Lottie from 'lottie-react';
+import { fetchAnimation, getAllCached } from '../utils/lottieCache';
 
 const TimerScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const TimerScreen: React.FC = () => {
   const [weeklyMinutes, setWeeklyMinutes] = useState(0);
   const [customDuration, setCustomDuration] = useState(userData.settings.studyDuration);
   const [showAnimalSelector, setShowAnimalSelector] = useState(false);
-  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
+  const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>(getAllCached);
   const circleRef = useRef<SVGSVGElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const previousMinutesRef = useRef<number>(customDuration);
@@ -176,19 +177,16 @@ const TimerScreen: React.FC = () => {
 
   // Load selected animal animation
   useEffect(() => {
-    const loadAnimation = async () => {
-      if (userData.selectedAnimal && !loadedAnimations[userData.selectedAnimal.id]) {
-        try {
-          const response = await fetch(userData.selectedAnimal.lottieUrl);
-          const data = await response.json();
-          setLoadedAnimations(prev => ({ ...prev, [userData.selectedAnimal!.id]: data }));
-        } catch (error) {
-          console.error('Error loading animation:', error);
-        }
-      }
-    };
-    loadAnimation();
-  }, [userData.selectedAnimal, loadedAnimations]);
+    const animal = userData.selectedAnimal;
+    if (!animal) return;
+    // Skip if already in local state (from cache or previous load)
+    if (loadedAnimations[animal.id]) return;
+    let cancelled = false;
+    fetchAnimation(animal.id, animal.lottieUrl)
+      .then(data => { if (!cancelled) setLoadedAnimations(prev => ({ ...prev, [animal.id]: data })); })
+      .catch(err => console.error('Error loading animation:', err));
+    return () => { cancelled = true; };
+  }, [userData.selectedAnimal?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className={`min-h-screen ${getGradientClass()} transition-all duration-700 pb-20 px-6 pt-8`}>
