@@ -1089,7 +1089,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
                   fontFamily: "'Quicksand', -apple-system, sans-serif",
                 }}
               >
-                Save 66%
+                Save 67%
               </span>
             </div>
             <div>
