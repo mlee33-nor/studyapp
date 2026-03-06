@@ -704,10 +704,9 @@ const MeadowScreen: React.FC = () => {
           gap: '6px',
           marginBottom: '8px',
           padding: '4px',
-          background: 'rgba(88, 28, 135, 0.35)',
-          backdropFilter: 'blur(20px)',
+          background: 'transparent',
           borderRadius: '16px',
-          border: '1px solid rgba(167, 139, 250, 0.3)',
+          border: 'none',
         }}>
           {(['today', 'weekly', 'monthly', 'yearly'] as SanctuaryViewMode[]).map(mode => (
             <motion.button
@@ -720,9 +719,9 @@ const MeadowScreen: React.FC = () => {
                 borderRadius: '12px',
                 border: 'none',
                 background: viewMode === mode
-                  ? 'linear-gradient(135deg, rgba(167, 139, 250, 0.4) 0%, rgba(244, 114, 182, 0.3) 100%)'
+                  ? 'rgba(167, 139, 250, 0.25)'
                   : 'transparent',
-                color: viewMode === mode ? '#FFFFFF' : 'rgba(203, 213, 225, 0.7)',
+                color: viewMode === mode ? '#FFFFFF' : 'rgba(255, 255, 255, 0.45)',
                 fontWeight: 600,
                 fontSize: '0.8rem',
                 cursor: 'pointer',
@@ -747,10 +746,9 @@ const MeadowScreen: React.FC = () => {
               justifyContent: 'space-between',
               marginBottom: '16px',
               padding: '10px 14px',
-              background: 'rgba(88, 28, 135, 0.35)',
-              backdropFilter: 'blur(20px)',
+              background: 'transparent',
               borderRadius: '16px',
-              border: '1px solid rgba(167, 139, 250, 0.3)',
+              border: 'none',
             }}
           >
             <motion.button
@@ -824,10 +822,10 @@ const MeadowScreen: React.FC = () => {
         )}
 
         {/* Stats Card — context-aware */}
-        <div style={{ background: 'rgba(88, 28, 135, 0.35)', backdropFilter: 'blur(20px)', border: '1px solid rgba(167, 139, 250, 0.3)' }} className="rounded-3xl p-3 mb-2">
+        <div style={{ background: 'transparent' }} className="rounded-3xl p-3 mb-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm" style={{ color: 'rgba(203, 213, 225, 0.8)' }}>
+              <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                 {viewMode === 'today'
                   ? `Today in ${BIOME_CONFIG[activeBiome].name}`
                   : `${BIOME_CONFIG[activeBiome].name} — ${periodLabel}`
