@@ -177,25 +177,27 @@ export const FARM_ANIMALS: BiomeAnimal[] = [
     id: 'chicken',
     name: 'Chicken',
     lottieUrl: '/studyapp/animations/chicken.json',
+    scale: 1.3,
     price: 0,
   },
   {
     id: 'meditating_cow',
     name: 'Meditating Cow',
     lottieUrl: '/studyapp/animations/meditating_cow.json',
-    scale: 1.5,
     price: 0,
   },
   {
     id: 'pig',
     name: 'Pig',
     lottieUrl: '/studyapp/animations/pig.json',
+    scale: 0.8,
     price: 800,
   },
   {
     id: 'bee',
     name: 'Bee',
     lottieUrl: '/studyapp/animations/bee_lounging.json',
+    scale: 0.8,
     price: 800,
   },
 ];
