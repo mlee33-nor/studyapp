@@ -3341,7 +3341,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               display: 'flex',
               gap: '8px',
               padding: '10px 16px',
-              pointerEvents: 'auto',
+              pointerEvents: chestOpening ? 'none' : 'auto',
+              opacity: chestOpening ? 0.5 : 1,
+              transition: 'opacity 0.3s',
             }}
           >
             {NAV_TABS.map(tab => {
@@ -3353,6 +3355,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   key={tab.id}
                   data-tutorial-target={tab.id === 'Meadow' ? 'nav-meadow' : undefined}
                   onClick={() => {
+                    if (chestOpening) return;
                     if (tab.id === 'Reports' && !isPremium) {
                       setShowPaywall(true);
                       return;
