@@ -3083,7 +3083,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                setOnboardingInitialStep(13);
+                setOnboardingInitialStep(12);
                 setShowOnboarding(true);
               }}
               style={{
@@ -3877,7 +3877,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   {
                     flag: '🇬🇧',
                     title: 'So much better than other focus apps',
-                    body: 'I\'ve tried every pomodoro app on the App Store and none of them stuck until this one. The companions make it actually fun to sit down and study. My screen time on social media dropped by 3 hours a day since I started using this.',
+                    body: 'I\'ve tried every pomodoro app on the App Store and none of them stuck until this one. The animal companions make it actually fun to sit down and study. My screen time on social media dropped by 3 hours a day since I started using this.',
                   },
                   {
                     flag: '🇨🇦',
@@ -3887,7 +3887,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   {
                     flag: '🇦🇺',
                     title: 'My productivity skyrocketed',
-                    body: 'Used to waste hours on my phone before discovering Study Buddy. Now I actually look forward to study sessions because of the biomes and collecting companions. My friends all downloaded it after seeing my results. Worth every penny for Plus!',
+                    body: 'Used to waste hours on my phone before discovering Study Buddy. Now I actually look forward to study sessions because of the biomes and collecting animal companions. My friends all downloaded it after seeing my results. Worth every penny for Plus!',
                   },
                   {
                     flag: '🇩🇪',
@@ -4006,7 +4006,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                     setShowLogin(true);
                   } else {
                     // Jump directly to the createAccount step (index 13)
-                    setOnboardingInitialStep(13);
+                    setOnboardingInitialStep(12);
                     setShowOnboarding(true);
                   }
                 }}
