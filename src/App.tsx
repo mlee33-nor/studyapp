@@ -3557,11 +3557,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               zIndex: 10000,
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
               background: 'linear-gradient(180deg, #0F1629 0%, #1A1040 50%, #0F1629 100%)',
-              padding: '0 24px',
-              overflow: 'auto',
             }}
           >
             {/* Close button */}
@@ -3570,7 +3566,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               style={{
                 position: 'absolute',
                 top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
-                right: '16px',
+                left: '16px',
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
@@ -3590,237 +3586,392 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               ✕
             </button>
 
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: '14px', width: '100%', maxWidth: 360 }}>
-              <div
-                style={{
-                  display: 'inline-block',
-                  padding: '4px 14px',
-                  borderRadius: '20px',
-                  background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%)',
-                  border: '1px solid rgba(251, 191, 36, 0.3)',
-                  marginBottom: '10px',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    fontFamily: "'Quicksand', -apple-system, sans-serif",
-                    background: 'linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    backgroundClip: 'text',
-                  }}
-                >
-                  LIMITED OFFER
-                </span>
-              </div>
-
-              <h2
-                style={{
-                  fontSize: '26px',
-                  fontWeight: 800,
-                  margin: '0 0 2px 0',
-                  fontFamily: "'Quicksand', -apple-system, sans-serif",
-                  letterSpacing: '-0.02em',
-                  background: 'linear-gradient(135deg, #A78BFA 0%, #818CF8 50%, #67E8F9 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                Study Buddy
-              </h2>
-              <h3
-                style={{
-                  fontSize: '20px',
-                  fontWeight: 800,
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  margin: '0 0 4px 0',
-                  fontFamily: "'Quicksand', -apple-system, sans-serif",
-                }}
-              >
-                PLUS
-              </h3>
-              <p
-                style={{
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  margin: 0,
-                  fontFamily: "'Quicksand', -apple-system, sans-serif",
-                }}
-              >
-                Unlock your full potential
-              </p>
-            </div>
-
-            {/* Features */}
+            {/* Scrollable content */}
             <div
               style={{
-                width: '100%',
-                maxWidth: 360,
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '16px',
-                padding: '4px 16px',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                marginBottom: '16px',
+                flex: 1,
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                padding: '0 24px',
+                paddingTop: 'calc(env(safe-area-inset-top, 0px) + 56px)',
+                paddingBottom: '160px',
               }}
             >
-              {[
-                { icon: '🎯', label: 'Unlimited focus sessions' },
-                { icon: '🐾', label: 'Unlock all companions & biomes' },
-                { icon: '📊', label: 'Advanced analytics & insights' },
-                { icon: '🎨', label: 'Custom themes & sounds' },
-                { icon: '☁️', label: 'Cloud sync across devices' },
-              ].map((feat, i, arr) => (
-                <div
-                  key={feat.label}
+              {/* Header */}
+              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <h2
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 0',
-                    borderBottom: i < arr.length - 1 ? '1px solid rgba(255, 255, 255, 0.06)' : 'none',
+                    fontSize: '28px',
+                    fontWeight: 800,
+                    margin: '0 0 4px 0',
+                    fontFamily: "'Quicksand', -apple-system, sans-serif",
+                    letterSpacing: '-0.02em',
+                    color: 'rgba(255, 255, 255, 0.95)',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '18px' }}>{feat.icon}</span>
+                  Study Buddy{' '}
+                  <span
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: 800,
+                      padding: '3px 10px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)',
+                      color: 'white',
+                      verticalAlign: 'middle',
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    PLUS
+                  </span>
+                </h2>
+                <p
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    margin: '4px 0 0 0',
+                    fontFamily: "'Quicksand', -apple-system, sans-serif",
+                  }}
+                >
+                  Unlock all features and future updates
+                </p>
+              </div>
+
+              {/* Feature icons grid */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '16px',
+                  marginBottom: '24px',
+                  maxWidth: 360,
+                  margin: '0 auto 24px auto',
+                }}
+              >
+                {[
+                  { icon: '🎯', label: 'Unlimited\nSessions', color: '#EF4444' },
+                  { icon: '🐾', label: 'All\nCompanions', color: '#F59E0B' },
+                  { icon: '📊', label: 'Advanced\nAnalytics', color: '#10B981' },
+                  { icon: '🎨', label: 'Custom\nThemes', color: '#8B5CF6' },
+                  { icon: '☁️', label: 'Cloud\nSync', color: '#3B82F6' },
+                  { icon: '✨', label: 'Free Future\nUpdates', color: '#EC4899' },
+                ].map((feat) => (
+                  <div key={feat.label} style={{ textAlign: 'center' }}>
+                    <div
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: '16px',
+                        background: `${feat.color}20`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 6px auto',
+                        fontSize: '24px',
+                      }}
+                    >
+                      {feat.icon}
+                    </div>
                     <span
                       style={{
-                        fontSize: '14px',
+                        fontSize: '11px',
                         fontWeight: 600,
-                        color: 'rgba(255, 255, 255, 0.85)',
+                        color: 'rgba(255, 255, 255, 0.7)',
                         fontFamily: "'Quicksand', -apple-system, sans-serif",
+                        lineHeight: 1.3,
+                        whiteSpace: 'pre-line',
                       }}
                     >
                       {feat.label}
                     </span>
                   </div>
-                  <Check size={18} style={{ color: '#A78BFA' }} />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            {/* Plan options */}
-            <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-              {/* Lifetime */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { setPaywallPlan('lifetime'); triggerSelectionTick(); }}
-                style={{
-                  width: '100%',
-                  padding: '14px 18px',
-                  borderRadius: '16px',
-                  border: paywallPlan === 'lifetime'
-                    ? '2px solid rgba(167, 139, 250, 0.6)'
-                    : '1px solid rgba(255, 255, 255, 0.12)',
-                  background: paywallPlan === 'lifetime' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  position: 'relative',
-                  overflow: 'visible',
-                }}
-              >
-                <div style={{ position: 'absolute', top: '-10px', left: '16px' }}>
-                  <span
+              {/* Plan options */}
+              <div style={{ maxWidth: 360, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                {/* Lifetime */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setPaywallPlan('lifetime'); triggerSelectionTick(); }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    borderRadius: '16px',
+                    border: paywallPlan === 'lifetime'
+                      ? '2px solid rgba(167, 139, 250, 0.6)'
+                      : '1px solid rgba(255, 255, 255, 0.12)',
+                    background: paywallPlan === 'lifetime' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    position: 'relative',
+                    overflow: 'visible',
+                  }}
+                >
+                  <div style={{ position: 'absolute', top: '-10px', right: '16px' }}>
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        color: 'white',
+                        background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      }}
+                    >
+                      Best Value
+                    </span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                      Lifetime · One-time Payment
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '24px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.95)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                        $33
+                      </span>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.35)', textDecoration: 'line-through', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                        $99.99
+                      </span>
+                    </div>
+                  </div>
+                </motion.button>
+
+                {/* Annual */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setPaywallPlan('annual'); triggerSelectionTick(); }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    borderRadius: '16px',
+                    border: paywallPlan === 'annual'
+                      ? '2px solid rgba(167, 139, 250, 0.6)'
+                      : '1px solid rgba(255, 255, 255, 0.12)',
+                    background: paywallPlan === 'annual' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    position: 'relative',
+                    overflow: 'visible',
+                  }}
+                >
+                  <div style={{ position: 'absolute', top: '-10px', right: '16px' }}>
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        color: 'white',
+                        background: 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      }}
+                    >
+                      Save 66%
+                    </span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                      Annually · First 7 days free
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '24px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.95)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                        $15.99
+                      </span>
+                      <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.4)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                        /year ($1.33/month)
+                      </span>
+                    </div>
+                  </div>
+                </motion.button>
+
+                {/* Monthly */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setPaywallPlan('monthly'); triggerSelectionTick(); }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    borderRadius: '16px',
+                    border: paywallPlan === 'monthly'
+                      ? '2px solid rgba(167, 139, 250, 0.6)'
+                      : '1px solid rgba(255, 255, 255, 0.12)',
+                    background: paywallPlan === 'monthly' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                      Monthly
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '24px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.95)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                        $3.99
+                      </span>
+                      <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.4)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                        /month
+                      </span>
+                    </div>
+                  </div>
+                </motion.button>
+              </div>
+
+              {/* Ratings header */}
+              <div style={{ textAlign: 'center', marginBottom: '20px', maxWidth: 360, margin: '0 auto 20px auto' }}>
+                <div style={{ fontSize: '36px', fontWeight: 800, color: '#FBBF24', fontFamily: "'Quicksand', -apple-system, sans-serif", marginBottom: '4px' }}>
+                  12,000+
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '4px' }}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <span key={s} style={{ fontSize: '20px', color: '#FBBF24' }}>★</span>
+                  ))}
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+                  5-star ratings
+                </div>
+              </div>
+
+              {/* Reviews */}
+              <div style={{ maxWidth: 360, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                {[
+                  {
+                    flag: '🇺🇸',
+                    title: 'Helped me ace my finals!',
+                    body: 'I downloaded this during midterms on a whim and it completely changed how I study. The timer keeps me locked in and I love watching my little animal collection grow. Went from C\'s to A\'s in one semester. Seriously the best study tool out there.',
+                  },
+                  {
+                    flag: '🇬🇧',
+                    title: 'So much better than other focus apps',
+                    body: 'I\'ve tried every pomodoro app on the App Store and none of them stuck until this one. The companions make it actually fun to sit down and study. My screen time on social media dropped by 3 hours a day since I started using this.',
+                  },
+                  {
+                    flag: '🇨🇦',
+                    title: 'Perfect for ADHD brains',
+                    body: 'As someone with ADHD, staying focused is a daily battle. The reward system here gives me that little dopamine hit I need to keep going. The animals are adorable and I find myself wanting to study MORE just to unlock new ones. 10/10.',
+                  },
+                  {
+                    flag: '🇦🇺',
+                    title: 'My productivity skyrocketed',
+                    body: 'Used to waste hours on my phone before discovering Study Buddy. Now I actually look forward to study sessions because of the biomes and collecting companions. My friends all downloaded it after seeing my results. Worth every penny for Plus!',
+                  },
+                  {
+                    flag: '🇩🇪',
+                    title: 'Clean design, no distractions',
+                    body: 'What I love most is how simple and beautiful the interface is. It doesn\'t overwhelm you with features — it just works. The analytics help me understand my patterns and the cloud sync means I can switch between my phone and iPad seamlessly.',
+                  },
+                  {
+                    flag: '🇯🇵',
+                    title: 'Cutest study app ever made',
+                    body: 'The animals are SO cute I literally can\'t stop collecting them. But beyond the cuteness, it genuinely helped me build a consistent study habit. I\'ve used it every single day for 4 months now. The streak feature keeps me coming back!',
+                  },
+                ].map((review, i) => (
+                  <div
+                    key={i}
                     style={{
-                      fontSize: '10px',
-                      fontWeight: 800,
-                      color: 'white',
-                      background: 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-                      padding: '2px 8px',
-                      borderRadius: '6px',
-                      fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
                     }}
                   >
-                    BEST VALUE
-                  </span>
-                </div>
-                <div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
-                    Lifetime
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '16px' }}>{review.flag}</span>
+                      <span
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontFamily: "'Quicksand', -apple-system, sans-serif",
+                        }}
+                      >
+                        {review.title}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        color: 'rgba(255, 255, 255, 0.55)',
+                        margin: 0,
+                        lineHeight: 1.5,
+                        fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      }}
+                    >
+                      {review.body}
+                    </p>
                   </div>
-                  <div style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', -apple-system, sans-serif", marginTop: '1px' }}>
-                    Pay once, yours forever
-                  </div>
-                </div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
-                  $33
-                </div>
-              </motion.button>
+                ))}
+              </div>
 
-              {/* Annual */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { setPaywallPlan('annual'); triggerSelectionTick(); }}
-                style={{
-                  width: '100%',
-                  padding: '14px 18px',
-                  borderRadius: '16px',
-                  border: paywallPlan === 'annual'
-                    ? '2px solid rgba(167, 139, 250, 0.6)'
-                    : '1px solid rgba(255, 255, 255, 0.12)',
-                  background: paywallPlan === 'annual' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
-                    Annual
-                  </div>
-                  <div style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', -apple-system, sans-serif", marginTop: '1px' }}>
-                    $1.33/month — save 67%
-                  </div>
+              {/* Footer links */}
+              <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                <p
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#A78BFA',
+                    margin: '0 0 12px 0',
+                    cursor: 'pointer',
+                    fontFamily: "'Quicksand', -apple-system, sans-serif",
+                  }}
+                >
+                  Failed Purchase?
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                  {['Restore', 'Terms', 'Privacy'].map((link) => (
+                    <span
+                      key={link}
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        color: 'rgba(255, 255, 255, 0.35)',
+                        cursor: 'pointer',
+                        fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      }}
+                    >
+                      {link}
+                    </span>
+                  ))}
                 </div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
-                  $15.99
-                </div>
-              </motion.button>
-
-              {/* Monthly */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { setPaywallPlan('monthly'); triggerSelectionTick(); }}
-                style={{
-                  width: '100%',
-                  padding: '14px 18px',
-                  borderRadius: '16px',
-                  border: paywallPlan === 'monthly'
-                    ? '2px solid rgba(167, 139, 250, 0.6)'
-                    : '1px solid rgba(255, 255, 255, 0.12)',
-                  background: paywallPlan === 'monthly' ? 'rgba(167, 139, 250, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
-                    Monthly
-                  </div>
-                  <div style={{ fontSize: '11px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.5)', fontFamily: "'Quicksand', -apple-system, sans-serif", marginTop: '1px' }}>
-                    per month
-                  </div>
-                </div>
-                <div style={{ fontSize: '22px', fontWeight: 800, color: 'rgba(255, 255, 255, 0.9)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
-                  $3.99
-                </div>
-              </motion.button>
+              </div>
             </div>
 
-            {/* CTA Button */}
-            <div style={{ width: '100%', maxWidth: 360 }}>
+            {/* Sticky CTA at bottom */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '12px 24px',
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+                background: 'linear-gradient(180deg, transparent 0%, #0F1629 30%)',
+              }}
+            >
+              <p
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  color: 'rgba(255, 255, 255, 0.4)',
+                  textAlign: 'center',
+                  margin: '0 0 8px 0',
+                  fontFamily: "'Quicksand', -apple-system, sans-serif",
+                }}
+              >
+                No payment now
+              </p>
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => {
@@ -3838,6 +3989,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 }}
                 style={{
                   width: '100%',
+                  maxWidth: 360,
+                  display: 'block',
+                  margin: '0 auto',
                   padding: '16px',
                   borderRadius: '18px',
                   border: 'none',
@@ -3850,24 +4004,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   fontFamily: "'Quicksand', -apple-system, sans-serif",
                 }}
               >
-                Start Free Trial
-              </motion.button>
-
-              <p
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  color: 'rgba(255, 255, 255, 0.4)',
-                  textAlign: 'center',
-                  margin: '8px 0 0 0',
-                  lineHeight: 1.4,
-                  fontFamily: "'Quicksand', -apple-system, sans-serif",
-                }}
-              >
                 {paywallPlan === 'lifetime'
-                  ? 'One-time payment of $33. No subscription.'
-                  : `3-day free trial, then ${paywallPlan === 'annual' ? '$15.99/year' : '$3.99/month'}. Cancel anytime.`}
-              </p>
+                  ? 'Get Lifetime Access'
+                  : `Start ${paywallPlan === 'annual' ? '7 days' : '3 days'} free trial`}
+              </motion.button>
             </div>
           </motion.div>
         )}
