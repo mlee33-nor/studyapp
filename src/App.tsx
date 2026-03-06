@@ -614,6 +614,17 @@ const InteractiveTimerRing: React.FC<{
         >
           {(isRunning || isPaused) ? formatTime(timeLeft) : `${minutes}:00`}
         </motion.h1>
+        {(isRunning || isPaused) && (
+          <div style={{
+            fontSize: '12px',
+            color: 'rgba(139, 92, 246, 0.7)',
+            marginTop: '4px',
+            fontFamily: "'Quicksand', sans-serif",
+            fontWeight: 500
+          }}>
+            <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {Math.floor((totalSeconds - timeLeft) / 60)} coins earned
+          </div>
+        )}
         {!isRunning && !isPaused && (
           <motion.div
             initial={{ opacity: 0, y: -5 }}
