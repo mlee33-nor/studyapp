@@ -1199,6 +1199,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     animalIndex: number;
     animalName: string;
   } | null>(null);
+  const [biomeRevealing, setBiomeRevealing] = useState(false);
   const [chestAnimData, setChestAnimData] = useState<any>(null);
   const chestLottieRef = useRef<any>(null);
   const [unlockedAchievement, setUnlockedAchievement] = useState<Achievement | null>(null);
@@ -2707,7 +2708,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     }
 
     if (activeTab === 'Meadow') {
-      return <MeadowScreen />;
+      return <MeadowScreen onBiomeRevealChange={setBiomeRevealing} />;
     }
 
     if (activeTab === 'Collection') {
@@ -3341,8 +3342,8 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               display: 'flex',
               gap: '8px',
               padding: '10px 16px',
-              pointerEvents: chestOpening ? 'none' : 'auto',
-              opacity: chestOpening ? 0.5 : 1,
+              pointerEvents: (chestOpening || biomeRevealing) ? 'none' : 'auto',
+              opacity: (chestOpening || biomeRevealing) ? 0.5 : 1,
               transition: 'opacity 0.3s',
             }}
           >
@@ -3355,7 +3356,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   key={tab.id}
                   data-tutorial-target={tab.id === 'Meadow' ? 'nav-meadow' : undefined}
                   onClick={() => {
-                    if (chestOpening) return;
+                    if (chestOpening || biomeRevealing) return;
                     if (tab.id === 'Reports' && !isPremium) {
                       setShowPaywall(true);
                       return;
