@@ -9,7 +9,7 @@ export interface MeadowAnimal {
 }
 
 // Biome and Collection Types
-export type BiomeType = 'meadow' | 'safari' | 'forest' | 'ocean' | 'arctic' | 'mountain';
+export type BiomeType = 'meadow' | 'safari' | 'forest' | 'ocean' | 'mountain';
 
 export interface CollectedAnimal {
   id: string;

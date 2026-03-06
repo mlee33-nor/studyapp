@@ -337,7 +337,7 @@ export const purchaseAnimal = (animalId: string, price: number): UserData | null
 
 // Dev Mode: Unlock all biomes and animals
 export const unlockAllBiomes = (): UserData => {
-  const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'arctic', 'mountain'];
+  const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'mountain'];
   const newData = updateUserData({
     unlockedBiomes: biomeIds,
     activeBiome: 'meadow',
