@@ -191,7 +191,7 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     meadow: 220,
     ocean: 240,
     safari: 200,
-    farm: 240,
+    farm: 170,
   };
   const MIN_Y = BIOME_MIN_Y[currentData.activeBiome ?? 'meadow'] ?? 220;
   const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
@@ -199,7 +199,7 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
   const MAX_X = MEADOW_WIDTH - ANIMAL_SIZE - 10;
 
   // Animals not bound to the ground (can spawn anywhere including sky/water)
-  const FREE_ROAM_NAMES = new Set(['Butterfly', 'Turtle', 'Tropical Fish', 'Octopus']);
+  const FREE_ROAM_NAMES = new Set(['Butterfly', 'Turtle', 'Tropical Fish', 'Octopus', 'Bee']);
 
   // Find a valid spawn position that doesn't overlap with existing animals
   const findValidSpawnPosition = (animalName?: string): { x: number; y: number } => {

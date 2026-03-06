@@ -183,6 +183,7 @@ export const FARM_ANIMALS: BiomeAnimal[] = [
     id: 'meditating_cow',
     name: 'Meditating Cow',
     lottieUrl: '/studyapp/animations/meditating_cow.json',
+    scale: 1.5,
     price: 0,
   },
   {

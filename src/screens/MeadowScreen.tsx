@@ -46,7 +46,7 @@ const BIOME_MIN_Y: Record<string, number> = {
   meadow: 220,
   ocean: 240,
   safari: 200,
-  farm: 240,
+  farm: 170,
 };
 
 // Safe horizontal bounds
@@ -456,7 +456,7 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
   }, [biomeAnimals]);
 
   // Animals not bound to the ground (can roam into sky/water area)
-  const FREE_ROAM_NAMES = new Set(['Butterfly', 'Turtle', 'Tropical Fish', 'Octopus']);
+  const FREE_ROAM_NAMES = new Set(['Butterfly', 'Turtle', 'Tropical Fish', 'Octopus', 'Bee']);
   const isFreeRoam = (animal: MeadowAnimal) => FREE_ROAM_NAMES.has(animal.name);
 
   // Get dynamic bounds based on actual container size
