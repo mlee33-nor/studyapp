@@ -3872,16 +3872,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
               {/* Ratings header */}
               <div style={{ textAlign: 'center', marginBottom: '20px', maxWidth: 360, margin: '0 auto 20px auto' }}>
-                <div style={{ fontSize: '36px', fontWeight: 800, color: '#FBBF24', fontFamily: "'Quicksand', -apple-system, sans-serif", marginBottom: '4px' }}>
-                  12,000+
+                <div style={{ fontSize: '24px', fontWeight: 700, color: 'rgba(255, 255, 255, 0.85)', fontFamily: "'Quicksand', -apple-system, sans-serif", marginBottom: '4px' }}>
+                  Loved by thousands of students
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', marginBottom: '4px' }}>
                   {[1, 2, 3, 4, 5].map((s) => (
                     <span key={s} style={{ fontSize: '20px', color: '#FBBF24' }}>★</span>
                   ))}
-                </div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.6)', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
-                  5-star ratings
                 </div>
               </div>
 
