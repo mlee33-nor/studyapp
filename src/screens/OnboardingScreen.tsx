@@ -4,7 +4,7 @@ import Lottie from 'lottie-react';
 import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
-import sanctuaryImg from '../assets/Sanctuary.jpg';
+import sanctuaryVideo from '../assets/YourSanctuary.mov';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
@@ -198,7 +198,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
   // Preload sanctuary and stats images on mount
   useEffect(() => {
     const preload = (src: string) => { const img = new Image(); img.src = src; };
-    preload(sanctuaryImg);
+    preload(sanctuaryVideo);
   }, []);
 
   // Use the module-level pre-fetched bunny Lottie animation
@@ -1863,7 +1863,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '16px' }}>
         {/* Phone mockup showing sanctuary */}
         <PhoneFrame>
-          <img src={sanctuaryImg} alt="Your Sanctuary" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <video src={sanctuaryVideo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </PhoneFrame>
 
         {/* Title & description below phone */}
