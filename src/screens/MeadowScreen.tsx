@@ -44,7 +44,7 @@ const BIOME_MIN_Y: Record<string, number> = {
   forest: 200,
   meadow: 220,
   ocean: 240,
-  safari: 240,
+  safari: 200,
   mountain: 240,
 };
 
