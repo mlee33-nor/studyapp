@@ -3774,7 +3774,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                         fontFamily: "'Quicksand', -apple-system, sans-serif",
                       }}
                     >
-                      Save 66%
+                      Save 67%
                     </span>
                   </div>
                   <div>
