@@ -967,8 +967,8 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
                             }
                           }}
                           onTap={() => handleAnimalTap(animal.id)}
-                          animate={isWalker ? undefined : { x: animal.x, y: animal.y }}
-                          transition={isWalker ? undefined : { duration: 0.1, ease: 'easeOut' }}
+                          animate={isWalker ? { scaleX: flipped ? -1 : 1, scaleY: verticalFlipped ? -1 : 1 } : { x: animal.x, y: animal.y }}
+                          transition={isWalker ? { scaleX: { duration: 0 }, scaleY: { duration: 0 } } : { duration: 0.1, ease: 'easeOut' }}
                           className="absolute cursor-grab active:cursor-grabbing"
                           style={{
                             position: 'absolute',
@@ -981,8 +981,8 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             zIndex: getZIndex(animal.y),
-                            scaleX: flipped ? -1 : 1,
-                            scaleY: verticalFlipped ? -1 : 1,
+                            scaleX: isWalker ? undefined : (flipped ? -1 : 1),
+                            scaleY: isWalker ? undefined : (verticalFlipped ? -1 : 1),
                             filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
                             x: walkingInst ? walkingInst.x : animal.x,
                             y: walkingInst ? walkingInst.y : animal.y,
