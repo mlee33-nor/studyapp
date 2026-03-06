@@ -135,18 +135,21 @@ function getPersonalizedStats(data: OnboardingData) {
   const study = studyHoursMap[data.studyHours] || studyHoursMap['2-4'];
   const age = ageMultiplierMap[data.age ?? '25-34'] || ageMultiplierMap['25-34'];
 
-  // Use the midpoint for display
-  const lostHoursPerYear = Math.round((study.lostRange[0] + study.lostRange[1]) / 2);
+  // Use the midpoint, then round down to nearest 50 for approachable display
+  const lostHoursRaw = Math.round((study.lostRange[0] + study.lostRange[1]) / 2);
+  const lostHoursPerYear = Math.floor(lostHoursRaw / 50) * 50;
   const workweeks = Math.round((study.workweeksRange[0] + study.workweeksRange[1]) / 2);
 
   // Compounded hours over remaining learning years
-  const compoundedHours = lostHoursPerYear * age.years;
+  const compoundedHoursRaw = lostHoursPerYear * age.years;
+  const compoundedHours = Math.floor(compoundedHoursRaw / 100) * 100;
 
   // Reclaimable: ~80% of lost hours (what the app can help save)
-  const reclaimableHours = Math.round(lostHoursPerYear * 0.8);
+  const reclaimableHoursRaw = Math.round(lostHoursPerYear * 0.8);
+  const reclaimableHours = Math.floor(reclaimableHoursRaw / 50) * 50;
 
   // Format workweeks for display
-  const workweeksLabel = workweeks === 1 ? '1 full workweek' : `${workweeks} full workweeks`;
+  const workweeksLabel = workweeks === 1 ? '1+ full workweek' : `${workweeks}+ full workweeks`;
 
   const goalTagline = goalTaglineMap[data.goal] || goalTaglineMap['productive'];
 
@@ -703,7 +706,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          You lose nearly
+          You lose
         </p>
 
         <h2
@@ -716,7 +719,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
             ...GRADIENT_TEXT_STYLE,
           }}
         >
-          {stats.lostHoursPerYear} hours
+          {stats.lostHoursPerYear}+ hours
         </h2>
 
         <p
