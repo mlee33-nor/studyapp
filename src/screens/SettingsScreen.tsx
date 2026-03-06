@@ -126,7 +126,7 @@ const SettingsScreen: React.FC = () => {
         </p>
         <button
           onClick={() => {
-            const biomeIds: any[] = ['meadow', 'safari', 'forest', 'ocean', 'mountain'];
+            const biomeIds: any[] = ['meadow', 'safari', 'forest', 'ocean', 'farm'];
             const newData = {
               ...userData,
               level: 50,

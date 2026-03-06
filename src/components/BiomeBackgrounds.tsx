@@ -608,91 +608,25 @@ const MeadowBackground: React.FC = () => {
 };
 
 /**
- * Mountain Background Component
- * Gray/purple peaks with snow and animated clouds
+ * Farm Background Component
+ * Warm sky with gentle clouds, green pastures, and fence details
  */
-const MountainBackground: React.FC = () => {
+const FarmBackground: React.FC = () => {
   const clouds = useMemo(() =>
-    Array.from({ length: 5 }, (_, i) => ({
-      top: 20 + i * 15,
+    Array.from({ length: 4 }, (_, i) => ({
+      top: 10 + i * 12,
       left: Math.random() * 80,
-      delay: i * 0.3,
-    })), []);
-
-  const peaks = useMemo(() =>
-    Array.from({ length: 5 }, (_, i) => ({
-      left: (i / 5) * 120 - 10,
-      height: 200 + Math.random() * 150,
-      color: `hsl(${240 + i * 10}, ${30 + i * 5}%, ${50 + i * 3}%)`,
+      delay: i * 0.5,
     })), []);
 
   return (
     <div style={{
       position: 'absolute',
       inset: 0,
-      background: 'linear-gradient(180deg, #87CEEB 0%, #B0D9E0 30%, #9DBBC4 60%, #A39FB3 100%)',
+      background: 'linear-gradient(180deg, #87CEEB 0%, #B8E0F7 40%, #E8D5A3 70%, #8B7D3C 100%)',
       overflow: 'hidden',
     }}>
-      {/* Background peaks - far */}
-      {peaks.map((peak, i) => (
-        <div
-          key={`peak-far-${i}`}
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: `${peak.left}%`,
-            width: '200px',
-            height: `${peak.height * 0.6}px`,
-            background: `linear-gradient(135deg, ${peak.color} 0%, ${peak.color}dd 50%, #4A5568 100%)`,
-            clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
-            opacity: 0.5,
-            filter: 'blur(2px)',
-            zIndex: 2,
-            pointerEvents: 'none',
-          }}
-        />
-      ))}
-
-      {/* Mid-ground peaks */}
-      {peaks.map((peak, i) => (
-        <div
-          key={`peak-mid-${i}`}
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: `${peak.left + 5}%`,
-            width: '180px',
-            height: `${peak.height * 0.8}px`,
-            background: `linear-gradient(135deg, ${peak.color}aa 0%, #5D6D7B 50%, #2D3748 100%)`,
-            clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
-            opacity: 0.7,
-            zIndex: 3,
-            pointerEvents: 'none',
-          }}
-        />
-      ))}
-
-      {/* Snow caps */}
-      {peaks.map((peak, i) => (
-        <div
-          key={`snowcap-${i}`}
-          style={{
-            position: 'absolute',
-            bottom: `${peak.height * 0.5}px`,
-            left: `${peak.left + 5}%`,
-            width: '180px',
-            height: `${peak.height * 0.25}px`,
-            background: 'linear-gradient(135deg, #FFFFFF 0%, #F0F8FF 50%, #E6F5FF 100%)',
-            clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
-            opacity: 0.9,
-            zIndex: 4,
-            pointerEvents: 'none',
-            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
-          }}
-        />
-      ))}
-
-      {/* Animated clouds */}
+      {/* Gentle clouds */}
       {clouds.map((cloud, i) => (
         <motion.div
           key={`cloud-${i}`}
@@ -700,19 +634,19 @@ const MountainBackground: React.FC = () => {
             position: 'absolute',
             top: `${cloud.top}%`,
             left: `${cloud.left}%`,
-            width: '100px',
-            height: '40px',
-            background: 'rgba(255,255,255,0.7)',
+            width: `${80 + i * 20}px`,
+            height: '30px',
+            background: 'rgba(255,255,255,0.75)',
             borderRadius: '50px',
-            filter: 'blur(8px)',
+            filter: 'blur(6px)',
             zIndex: 2,
             pointerEvents: 'none',
           }}
           animate={{
-            x: [0, 100, 0],
+            x: [0, 80, 0],
           }}
           transition={{
-            duration: 15 + i * 3,
+            duration: 20 + i * 4,
             repeat: Infinity,
             ease: 'linear',
             delay: cloud.delay,
@@ -720,36 +654,102 @@ const MountainBackground: React.FC = () => {
         />
       ))}
 
-      {/* Ground - rocky terrain */}
+      {/* Rolling hills - back */}
+      <div style={{
+        position: 'absolute',
+        bottom: '20%',
+        left: '-10%',
+        right: '-10%',
+        height: '30%',
+        background: '#6B8E23',
+        borderRadius: '50% 50% 0 0',
+        opacity: 0.5,
+        zIndex: 2,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Rolling hills - mid */}
+      <div style={{
+        position: 'absolute',
+        bottom: '12%',
+        left: '-5%',
+        right: '-15%',
+        height: '25%',
+        background: '#7BA428',
+        borderRadius: '60% 40% 0 0',
+        opacity: 0.6,
+        zIndex: 3,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Ground - green pasture */}
       <div style={{
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: '15%',
-        background: 'linear-gradient(to bottom, #8B9BA8 0%, #5D6D7B 100%)',
+        height: '18%',
+        background: 'linear-gradient(to bottom, #5D8A1E 0%, #4A7016 100%)',
         pointerEvents: 'none',
         zIndex: 5,
-        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.2)',
+        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.15)',
       }} />
 
-      {/* Alpine vegetation patches */}
-      {[...Array(6)].map((_, i) => (
+      {/* Fence posts */}
+      {[...Array(7)].map((_, i) => (
         <div
-          key={`vegetation-${i}`}
+          key={`fence-${i}`}
           style={{
             position: 'absolute',
-            bottom: '15%',
-            left: `${10 + i * 15}%`,
-            width: '30px',
-            height: '20px',
-            background: 'rgba(76, 110, 50, 0.6)',
-            borderRadius: '50%',
-            zIndex: 5,
+            bottom: '16%',
+            left: `${5 + i * 14}%`,
+            width: '6px',
+            height: '30px',
+            background: '#8B6914',
+            borderRadius: '2px',
+            zIndex: 6,
             pointerEvents: 'none',
           }}
         />
       ))}
+
+      {/* Fence rail */}
+      <div style={{
+        position: 'absolute',
+        bottom: 'calc(16% + 18px)',
+        left: '3%',
+        right: '3%',
+        height: '4px',
+        background: '#8B6914',
+        borderRadius: '2px',
+        zIndex: 6,
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: 'calc(16% + 8px)',
+        left: '3%',
+        right: '3%',
+        height: '4px',
+        background: '#8B6914',
+        borderRadius: '2px',
+        zIndex: 6,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Hay bale accent */}
+      <div style={{
+        position: 'absolute',
+        bottom: '17%',
+        right: '12%',
+        width: '28px',
+        height: '22px',
+        background: 'linear-gradient(135deg, #D4A017 0%, #C49B12 100%)',
+        borderRadius: '4px',
+        zIndex: 5,
+        pointerEvents: 'none',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+      }} />
     </div>
   );
 };
@@ -760,8 +760,8 @@ export const BiomeBackgrounds: React.FC<BiomeBackgroundProps> = ({ biomeId }) =>
       return <ForestBackground />;
     case 'ocean':
       return <OceanBackground />;
-    case 'mountain':
-      return <MountainBackground />;
+    case 'farm':
+      return <FarmBackground />;
     case 'safari':
       return <SafariBackground />;
     case 'meadow':

@@ -61,15 +61,15 @@ export const BIOME_CONFIG: Record<BiomeType, BiomeConfig> = {
     secondaryColor: '#06B6D4',
     description: 'A tropical ocean biome with aquatic life.',
   },
-  mountain: {
-    id: 'mountain',
-    name: 'Mountain',
-    emoji: '⛰️',
+  farm: {
+    id: 'farm',
+    name: 'Barn House',
+    emoji: '🐄',
     unlockLevel: 50,
     unlockCost: 12000,
-    primaryColor: '#8B5CF6',
-    secondaryColor: '#A78BFA',
-    description: 'A majestic mountain peak with highland animals.',
+    primaryColor: '#B45309',
+    secondaryColor: '#D97706',
+    description: 'A cozy barn house with friendly farm animals.',
   },
 };
 
@@ -171,30 +171,30 @@ export const OCEAN_ANIMALS: BiomeAnimal[] = [
   },
 ];
 
-// Mountain Animals - Real Lottie Animation URLs
-export const MOUNTAIN_ANIMALS: BiomeAnimal[] = [
+// Farm Animals - Local Lottie Animation Files
+export const FARM_ANIMALS: BiomeAnimal[] = [
   {
-    id: 'mountain_goat',
-    name: 'Sheep',
-    lottieUrl: 'https://lottie.host/0eb3338c-2f86-43ea-be30-0b0db2ae6741/d0jUu44UBf.lottie',
+    id: 'chicken',
+    name: 'Chicken',
+    lottieUrl: '/studyapp/animations/chicken.json',
     price: 0,
   },
   {
-    id: 'snow_leopard',
-    name: 'Leopard',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/bbbf7156-1170-11ee-a909-976822febe92/oGgjhV63HT.json',
+    id: 'meditating_cow',
+    name: 'Meditating Cow',
+    lottieUrl: '/studyapp/animations/meditating_cow.json',
     price: 0,
   },
   {
-    id: 'yak',
-    name: 'Yak',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/71feb22a-0620-11ef-a850-9ba4d00d4ca9/jtmaGxZkus.json',
+    id: 'pig',
+    name: 'Pig',
+    lottieUrl: '/studyapp/animations/pig.json',
     price: 800,
   },
   {
-    id: 'phoenix',
-    name: 'Phoenix',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/c9471362-117d-11ee-9f06-d76a368bf2f8/C3dWG6j7NP.json',
+    id: 'bee',
+    name: 'Bee',
+    lottieUrl: '/studyapp/animations/bee_lounging.json',
     price: 800,
   },
 ];
@@ -240,8 +240,8 @@ export const getAnimalsForBiome = (biomeId: BiomeType): BiomeAnimal[] => {
       return FOREST_ANIMALS;
     case 'ocean':
       return OCEAN_ANIMALS;
-    case 'mountain':
-      return MOUNTAIN_ANIMALS;
+    case 'farm':
+      return FARM_ANIMALS;
     default:
       return [];
   }
@@ -262,7 +262,7 @@ export const getUnlockedBiomes = (level: number): BiomeType[] => {
 // Get scale factor for an animal by its lottieUrl
 const ALL_BIOME_ANIMALS = () => [
   ...SAFARI_ANIMALS, ...FOREST_ANIMALS, ...OCEAN_ANIMALS,
-  ...MOUNTAIN_ANIMALS, ...MEADOW_ANIMALS,
+  ...FARM_ANIMALS, ...MEADOW_ANIMALS,
 ];
 
 export const getAnimalScale = (lottieUrl: string): number | undefined => {

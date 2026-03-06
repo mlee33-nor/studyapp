@@ -31,7 +31,7 @@ import meadowBg from '../assets/biomes/meadows.jpg';
 import safariBg from '../assets/biomes/safari.jpg';
 import forestBg from '../assets/biomes/forest.jpg';
 import oceanBg from '../assets/biomes/ocean.jpg';
-import mountainBg from '../assets/biomes/mountains.jpg';
+import farmBg from '../assets/biomes/farm.jpg';
 
 // Meadow dimensions and safe zones
 const MEADOW_WIDTH = 400;
@@ -45,7 +45,7 @@ const BIOME_MIN_Y: Record<string, number> = {
   meadow: 220,
   ocean: 240,
   safari: 200,
-  mountain: 240,
+  farm: 240,
 };
 
 // Safe horizontal bounds
@@ -125,10 +125,10 @@ const BiomeBackgrounds: Record<BiomeType, React.FC> = {
   safari: () => <div style={biomeBackgroundStyle(safariBg)} />,
   forest: () => <div style={biomeBackgroundStyle(forestBg)} />,
   ocean: () => <div style={biomeBackgroundStyle(oceanBg)} />,
-  mountain: () => <div style={biomeBackgroundStyle(mountainBg)} />,
+  farm: () => <div style={biomeBackgroundStyle(farmBg)} />,
 };
 
-const ALL_BIOME_IDS: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'mountain'];
+const ALL_BIOME_IDS: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'farm'];
 
 interface MeadowScreenProps {
   onBiomeRevealChange?: (active: boolean) => void;

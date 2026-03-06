@@ -191,7 +191,7 @@ export const addCompletedSession = (minutes: number, animalUrl?: string): UserDa
     meadow: 220,
     ocean: 240,
     safari: 200,
-    mountain: 240,
+    farm: 240,
   };
   const MIN_Y = BIOME_MIN_Y[currentData.activeBiome ?? 'meadow'] ?? 220;
   const MAX_Y = MEADOW_HEIGHT - ANIMAL_SIZE - 20;
@@ -349,7 +349,7 @@ export const purchaseAnimal = (animalId: string, price: number): UserData | null
 
 // Dev Mode: Unlock all biomes and animals
 export const unlockAllBiomes = (): UserData => {
-  const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'mountain'];
+  const biomeIds: BiomeType[] = ['meadow', 'safari', 'forest', 'ocean', 'farm'];
   const newData = updateUserData({
     unlockedBiomes: biomeIds,
     activeBiome: 'meadow',
