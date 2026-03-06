@@ -39,8 +39,8 @@ const MEADOW_HEIGHT = 450;
 const ANIMAL_SIZE = 60;
 const EMOJI_SIZE = 90; // Larger size for emoji fallback animals
 
-// Depth zones - animals can't go into the sky (top 180px is sky area)
-const MIN_Y = 185; // Start on first color of green
+// Depth zones - ground animals can't float above the grass/sand line
+const MIN_Y = 240;
 
 // Safe horizontal bounds
 const MIN_X = 10;
