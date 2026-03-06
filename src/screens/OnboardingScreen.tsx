@@ -94,7 +94,6 @@ const STEPS = [
   { id: 'goodNews' },
   { id: 'sanctuary' },
   { id: 'stats' },
-  { id: 'premium' },
   { id: 'chestReveal' },
   { id: 'lastChance' },
   { id: 'createAccount' },
@@ -484,7 +483,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
 
   const renderBackButton = () => {
     // Hide back button on welcome, calculating, and post-calculating Opal screens
-    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'sanctuary', 'stats', 'premium', 'chestReveal', 'lastChance', 'createAccount'];
+    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'sanctuary', 'stats', 'chestReveal', 'lastChance', 'createAccount'];
     if (currentStep <= 0 || postCalcSteps.includes(stepId)) return null;
     return (
       <button
@@ -1171,7 +1170,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
             {
               flag: '🇬🇧',
               title: 'So much better than other focus apps',
-              body: 'I\'ve tried every pomodoro app on the App Store and none of them stuck until this one. The companions make it actually fun to sit down and study. My screen time on social media dropped by 3 hours a day since I started using this.',
+              body: 'I\'ve tried every pomodoro app on the App Store and none of them stuck until this one. The animal companions make it actually fun to sit down and study. My screen time on social media dropped by 3 hours a day since I started using this.',
             },
             {
               flag: '🇨🇦',
@@ -1181,7 +1180,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
             {
               flag: '🇦🇺',
               title: 'My productivity skyrocketed',
-              body: 'Used to waste hours on my phone before discovering Study Buddy. Now I actually look forward to study sessions because of the biomes and collecting companions. My friends all downloaded it after seeing my results. Worth every penny for Plus!',
+              body: 'Used to waste hours on my phone before discovering Study Buddy. Now I actually look forward to study sessions because of the biomes and collecting animal companions. My friends all downloaded it after seeing my results. Worth every penny for Plus!',
             },
             {
               flag: '🇩🇪',
@@ -1889,7 +1888,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
             lineHeight: 1.5,
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}>
-            Earn adorable companions with every session and watch your sanctuary come alive!
+            Earn adorable animal companions with every session and watch your sanctuary come alive!
           </p>
         </div>
       </div>
