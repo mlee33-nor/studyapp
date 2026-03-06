@@ -342,6 +342,12 @@ const TimerScreen: React.FC = () => {
                   <span className="text-6xl font-light text-text-primary">
                     {formatTime(timer.timeLeft)}
                   </span>
+                  {timer.isRunning && timerMode === 'study' && (
+                    <p className="text-sm text-text-secondary mt-1 flex items-center justify-center gap-1">
+                      <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span>
+                      {Math.floor((timer.progress / 100) * customDuration)} coins earned
+                    </p>
+                  )}
                   {!timer.isRunning && timerMode === 'study' && (
                     <p className="text-sm text-text-secondary mt-2">
                       Drag handle to adjust
