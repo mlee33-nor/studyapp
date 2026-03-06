@@ -622,7 +622,7 @@ const InteractiveTimerRing: React.FC<{
             fontFamily: "'Quicksand', sans-serif",
             fontWeight: 500
           }}>
-            <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {Math.floor((totalSeconds - timeLeft) / 60)} coins earned
+            <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {Math.floor((totalSeconds - timeLeft) / 60)}
           </div>
         )}
         {!isRunning && !isPaused && (
