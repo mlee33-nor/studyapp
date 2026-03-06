@@ -2403,7 +2403,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         {renderOption('goal', 'focus', 'Stay focused longer', '🎯')}
         {renderOption('goal', 'consistent', 'Build a study habit', '📅')}
         {renderOption('goal', 'productive', 'Be more productive', '⚡')}
-        {renderOption('goal', 'exam-prep', 'Prepare for exams', '📝')}
+        {renderOption('goal', 'exam-prep', 'Ace your exams', '📝')}
       </div>
 
       {renderConfirmButton('goal')}
