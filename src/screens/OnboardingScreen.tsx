@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
 import sanctuaryVideo from '../assets/YourSanctuary.mov';
+import sanctuaryPoster from '../assets/Sanctuary.jpg';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
@@ -194,14 +195,20 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
   const [navCooldown, setNavCooldown] = useState(false);
   const chestLottieRef = useRef<any>(null);
   const chestDoneRef = useRef(false);
+  const sanctuaryVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [sanctuaryVideoReady, setSanctuaryVideoReady] = useState(false);
 
   // Preload sanctuary video on mount so it's ready by the time user reaches that screen
   useEffect(() => {
     const video = document.createElement('video');
     video.preload = 'auto';
     video.muted = true;
+    video.playsInline = true;
+    video.loop = true;
     video.src = sanctuaryVideo;
     video.load();
+    video.addEventListener('canplaythrough', () => setSanctuaryVideoReady(true), { once: true });
+    sanctuaryVideoRef.current = video;
   }, []);
 
   // Use the module-level pre-fetched bunny Lottie animation
@@ -1866,7 +1873,21 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '16px' }}>
         {/* Phone mockup showing sanctuary */}
         <PhoneFrame>
-          <video src={sanctuaryVideo} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div
+            ref={(container) => {
+              if (container && sanctuaryVideoRef.current && !container.contains(sanctuaryVideoRef.current)) {
+                const v = sanctuaryVideoRef.current;
+                Object.assign(v.style, { width: '100%', height: '100%', objectFit: 'cover' });
+                container.appendChild(v);
+                v.play().catch(() => {});
+              }
+            }}
+            style={{ width: '100%', height: '100%', position: 'relative' }}
+          >
+            {!sanctuaryVideoReady && (
+              <img src={sanctuaryPoster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+            )}
+          </div>
         </PhoneFrame>
 
         {/* Title & description below phone */}
