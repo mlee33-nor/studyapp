@@ -679,7 +679,7 @@ const MeadowScreen: React.FC = () => {
                 <div style={{
                   fontSize: '10px',
                   fontWeight: 600,
-                  color: isUnlocked ? '#FFFFFF' : 'rgba(100, 116, 139, 0.7)'
+                  color: isUnlocked ? (isDark ? '#FFFFFF' : 'rgba(15, 23, 42, 0.95)') : 'rgba(100, 116, 139, 0.7)'
                 }}>
                   {biomeConfig.name}
                 </div>
