@@ -898,19 +898,19 @@ const MeadowScreen: React.FC = () => {
                         <div style={{ fontSize: '64px', marginBottom: '16px' }}>{BIOME_CONFIG[activeBiome].emoji}</div>
                         <div style={{
                           fontSize: '16px',
-                          color: 'rgba(255,255,255,0.95)',
+                          color: 'rgba(0,0,0,0.85)',
                           fontFamily: "'Quicksand', sans-serif",
                           fontWeight: 600,
-                          textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          textShadow: 'none'
                         }}>
                           Explore {BIOME_CONFIG[activeBiome].name}...
                         </div>
                         <div style={{
                           fontSize: '13px',
-                          color: 'rgba(255,255,255,0.8)',
+                          color: 'rgba(0,0,0,0.6)',
                           marginTop: '8px',
                           fontFamily: "'Quicksand', sans-serif",
-                          textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                          textShadow: 'none'
                         }}>
                           Complete study sessions to discover animals here!
                         </div>
