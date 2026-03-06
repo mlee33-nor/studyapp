@@ -64,7 +64,7 @@ interface WalkingAnimalInstance {
   resumeTimer: ReturnType<typeof setTimeout> | null;
 }
 
-const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Elephant']);
+const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Elephant', 'Squirrel']);
 const VERTICAL_WALKING_ANIMAL_NAMES = new Set<string>([]);
 const isWalkingAnimal = (animal: MeadowAnimal) =>
   WALKING_ANIMAL_NAMES.has(animal.name) || VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
