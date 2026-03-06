@@ -5,7 +5,6 @@ import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
 import sanctuaryImg from '../assets/Sanctuary.jpg';
-import statsImg from '../assets/Stats.jpg';
 
 const BUNNY_LOTTIE_URL = 'https://assets-v2.lottiefiles.com/a/935dfeb0-118b-11ee-9126-43e3de286e2f/1X7rBzXV9L.json';
 
@@ -93,7 +92,7 @@ const STEPS = [
   { id: 'badNews' },
   { id: 'goodNews' },
   { id: 'sanctuary' },
-  { id: 'stats' },
+  { id: 'premium' },
   { id: 'chestReveal' },
   { id: 'lastChance' },
   { id: 'createAccount' },
@@ -200,7 +199,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
   useEffect(() => {
     const preload = (src: string) => { const img = new Image(); img.src = src; };
     preload(sanctuaryImg);
-    preload(statsImg);
   }, []);
 
   // Use the module-level pre-fetched bunny Lottie animation
@@ -483,7 +481,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
 
   const renderBackButton = () => {
     // Hide back button on welcome, calculating, and post-calculating Opal screens
-    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'sanctuary', 'stats', 'chestReveal', 'lastChance', 'createAccount'];
+    const postCalcSteps: string[] = ['welcome', 'calculating', 'intro', 'badNews', 'goodNews', 'sanctuary', 'premium', 'chestReveal', 'lastChance', 'createAccount'];
     if (currentStep <= 0 || postCalcSteps.includes(stepId)) return null;
     return (
       <button
@@ -1899,57 +1897,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
     </div>
   );
 
-  const renderStats = () => {
-    return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          height: '100%',
-          padding: '0 24px',
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
-          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
-        }}
-      >
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '100%', maxWidth: 360, gap: '16px' }}>
-          {/* Phone mockup showing stats */}
-          <PhoneFrame>
-            <img src={statsImg} alt="Focus Trends" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </PhoneFrame>
-          {/* Title & description below phone */}
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: 800,
-              margin: '0 0 6px 0',
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-              letterSpacing: '-0.01em',
-              ...GRADIENT_TEXT_STYLE,
-            }}>
-              Focus Trends
-            </h2>
-            <p style={{
-              fontSize: '15px',
-              fontWeight: 500,
-              color: t.textSecondary,
-              margin: 0,
-              lineHeight: 1.5,
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-            }}>
-              View focus trends by day, week, month, and year — to stay motivated and review progress
-            </p>
-          </div>
-        </div>
-
-        <div style={{ width: '100%', maxWidth: 360 }}>
-          {renderContinueButton()}
-        </div>
-      </div>
-    );
-  };
-
   // --- Create Account Screen ---
   const handleCreateAccount = async () => {
     setSignupError('');
@@ -2564,8 +2511,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         return renderGoodNews();
       case 'sanctuary':
         return renderSanctuary();
-      case 'stats':
-        return renderStats();
       case 'premium':
         return renderPremium();
       case 'chestReveal':
