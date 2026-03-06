@@ -607,7 +607,14 @@ const MeadowScreen: React.FC = () => {
             const storageCoins = getUserData().coins ?? 0;
             const appCoins = (() => { try { const d = JSON.parse(localStorage.getItem('userData') || '{}'); return d.coins ?? 0; } catch { return 0; } })();
             const currentCoins = Math.max(storageCoins, appCoins);
-            return ALL_BIOME_IDS.map((biomeId) => {
+            const sortedBiomeIds = [...ALL_BIOME_IDS].sort((a, b) => {
+              const aUnlocked = unlockedBiomes.includes(a);
+              const bUnlocked = unlockedBiomes.includes(b);
+              if (aUnlocked && !bUnlocked) return -1;
+              if (!aUnlocked && bUnlocked) return 1;
+              return 0;
+            });
+            return sortedBiomeIds.map((biomeId) => {
             const biomeConfig = BIOME_CONFIG[biomeId];
             const isActive = activeBiome === biomeId;
             const isUnlocked = unlockedBiomes.includes(biomeId);
@@ -640,7 +647,7 @@ const MeadowScreen: React.FC = () => {
                   background: isActive
                     ? 'rgba(167, 139, 250, 0.2)'
                     : isUnlocked
-                      ? 'rgba(255, 255, 255, 0.5)'
+                      ? 'rgba(100, 116, 139, 0.45)'
                       : 'rgba(0, 0, 0, 0.08)',
                   backdropFilter: 'blur(10px)',
                   cursor: isUnlocked || canAffordBiome ? 'pointer' : 'default',
@@ -668,7 +675,7 @@ const MeadowScreen: React.FC = () => {
                 <div style={{
                   fontSize: '10px',
                   fontWeight: 600,
-                  color: isActive ? 'rgba(15, 23, 42, 0.95)' : 'rgba(100, 116, 139, 0.7)'
+                  color: isUnlocked ? '#FFFFFF' : 'rgba(100, 116, 139, 0.7)'
                 }}>
                   {biomeConfig.name}
                 </div>
