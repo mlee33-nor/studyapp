@@ -3170,6 +3170,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => {
+                if (!isPremium) {
+                  setShowPaywall(true);
+                  return;
+                }
                 setOnboardingInitialStep(12);
                 setShowOnboarding(true);
               }}
