@@ -2002,6 +2002,32 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
       }}
     >
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        onClick={() => onComplete(data)}
+        style={{
+          position: 'absolute',
+          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+          right: '20px',
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'rgba(255, 255, 255, 0.1)',
+          color: t.textSecondary,
+          fontSize: '20px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 10,
+          fontFamily: "'Quicksand', sans-serif",
+        }}
+      >
+        ✕
+      </motion.button>
+
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
         <h2
           style={{
@@ -2141,6 +2167,32 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
       }}
     >
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        onClick={() => onComplete(data)}
+        style={{
+          position: 'absolute',
+          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+          right: '20px',
+          width: '36px',
+          height: '36px',
+          borderRadius: '50%',
+          border: 'none',
+          background: 'rgba(255, 255, 255, 0.1)',
+          color: t.textSecondary,
+          fontSize: '20px',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 10,
+          fontFamily: "'Quicksand', sans-serif",
+        }}
+      >
+        ✕
+      </motion.button>
+
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
         <h2
           style={{
@@ -2246,24 +2298,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         >
           {signupLoading ? 'Creating...' : 'Create Account'}
         </motion.button>
-
-        <button
-          onClick={() => onComplete(data)}
-          style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: '20px',
-            border: 'none',
-            background: 'transparent',
-            color: t.textTertiary,
-            fontSize: '15px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Skip for now
-        </button>
 
         <button
           onClick={() => { setLoginMode(true); setSignupError(''); }}
