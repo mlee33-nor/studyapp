@@ -1969,22 +1969,22 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setShowPaywall(true)}
                   style={{
-                    width: '26px',
-                    height: '26px',
-                    borderRadius: '50%',
+                    padding: '4px 10px',
+                    borderRadius: '12px',
                     background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: 700,
+                    fontSize: '11px',
+                    fontWeight: 800,
                     color: '#FFFFFF',
-                    lineHeight: 1,
+                    letterSpacing: '0.05em',
+                    fontFamily: "'Quicksand', sans-serif",
                     boxShadow: '0 2px 8px rgba(124, 58, 237, 0.4)',
                   }}
                 >
-                  +
+                  PLUS
                 </motion.div>
               )}
             </div>
