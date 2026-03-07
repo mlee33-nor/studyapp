@@ -1028,6 +1028,18 @@ const CategorySelectionModal: React.FC<{
         }}>
           {isTutorial ? 'Pick a subject to start!' : 'What are we focusing on?'}
         </h2>
+        {!isTutorial && (
+          <p style={{
+            margin: '-8px 0 8px 0',
+            fontSize: '13px',
+            color: isDark ? 'rgba(200, 200, 230, 0.5)' : 'rgba(100, 100, 150, 0.6)',
+            textAlign: 'center',
+            fontFamily: "'Quicksand', sans-serif",
+            fontWeight: 500,
+          }}>
+            (long press to change color & emoji)
+          </p>
+        )}
 
         {/* Quick Select Chips with Emojis */}
         <div style={{
