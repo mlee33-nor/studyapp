@@ -1046,6 +1046,7 @@ const CategorySelectionModal: React.FC<{
                 handleCategoryClick(category.title);
               }}
               onPointerDown={() => {
+                if (isTutorial) return;
                 longPressTriggered.current = false;
                 longPressTimer.current = setTimeout(() => {
                   longPressTriggered.current = true;
