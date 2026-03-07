@@ -1964,6 +1964,29 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               }}>
                 <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0}
               </div>
+              {!isPremium && (
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowPaywall(true)}
+                  style={{
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: '#FFFFFF',
+                    lineHeight: 1,
+                    boxShadow: '0 2px 8px rgba(124, 58, 237, 0.4)',
+                  }}
+                >
+                  +
+                </motion.div>
+              )}
             </div>
             {currentCategory && (
               <motion.div
