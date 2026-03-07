@@ -107,11 +107,11 @@ const QUESTION_STEP_IDS = ['studyHours', 'occupation', 'goal'] as const;
 function getPersonalizedStats(data: OnboardingData) {
   // Daily study hours → estimated lost hours/year (20-30% distraction rate, 300 study days)
   const studyHoursMap: Record<string, { lostRange: [number, number]; reclaimHeadline: string; workweeksRange: [number, number] }> = {
-    'less-than-1': { lostRange: [45, 67], reclaimHeadline: 'Save up to 1 week per year.', workweeksRange: [1, 1.5] },
-    '1-2': { lostRange: [90, 135], reclaimHeadline: 'Reclaim 2\u20133 weeks per year.', workweeksRange: [2, 3] },
+    'less-than-1': { lostRange: [420, 630], reclaimHeadline: 'Save 2\u20133 months every year.', workweeksRange: [10, 16] },
+    '1-2': { lostRange: [300, 450], reclaimHeadline: 'Recover 1.5\u20132 months per year.', workweeksRange: [7.5, 11] },
     '2-4': { lostRange: [180, 270], reclaimHeadline: 'Gain back 1 full month per year.', workweeksRange: [4.5, 7] },
-    '4-6': { lostRange: [300, 450], reclaimHeadline: 'Recover 1.5\u20132 months per year.', workweeksRange: [7.5, 11] },
-    '6-plus': { lostRange: [420, 630], reclaimHeadline: 'Save 2\u20133 months every year.', workweeksRange: [10, 16] },
+    '4-6': { lostRange: [90, 135], reclaimHeadline: 'Reclaim 2\u20133 weeks per year.', workweeksRange: [2, 3] },
+    '6-plus': { lostRange: [45, 67], reclaimHeadline: 'Save up to 1 week per year.', workweeksRange: [1, 1.5] },
   };
 
   // Age → compounded impact projection
@@ -145,7 +145,7 @@ function getPersonalizedStats(data: OnboardingData) {
 
   // Reclaimable: ~80% of lost hours (what the app can help save)
   const reclaimableHoursRaw = Math.round(lostHoursPerYear * 0.8);
-  const reclaimableHours = Math.floor(reclaimableHoursRaw / 50) * 50;
+  const reclaimableHours = Math.max(50, Math.floor(reclaimableHoursRaw / 50) * 50);
 
   // Format workweeks for display
   const workweeksLabel = workweeks === 1 ? '1+ full workweek' : `${workweeks}+ full workweeks`;
