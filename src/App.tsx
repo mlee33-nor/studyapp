@@ -1964,10 +1964,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               }}>
                 <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0}
               </div>
-              {!isPremium && (
-                <motion.div
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowPaywall(true)}
+              <motion.div
+                  whileTap={!isPremium ? { scale: 0.9 } : {}}
+                  onClick={!isPremium ? () => setShowPaywall(true) : undefined}
                   style={{
                     padding: '4px 10px',
                     borderRadius: '12px',
@@ -1975,7 +1974,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    cursor: 'pointer',
+                    cursor: !isPremium ? 'pointer' : 'default',
                     fontSize: '11px',
                     fontWeight: 800,
                     color: '#FFFFFF',
@@ -1984,9 +1983,8 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                     boxShadow: '0 2px 8px rgba(124, 58, 237, 0.4)',
                   }}
                 >
-                  PLUS
+                  {isPremium ? 'PLUS' : 'UNLOCK PLUS'}
                 </motion.div>
-              )}
             </div>
             {currentCategory && (
               <motion.div
