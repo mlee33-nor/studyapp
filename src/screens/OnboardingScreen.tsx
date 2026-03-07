@@ -110,8 +110,8 @@ function getPersonalizedStats(data: OnboardingData) {
     'less-than-1': { lostRange: [420, 630], reclaimHeadline: 'Save 2\u20133 months every year.', workweeksRange: [10, 16] },
     '1-2': { lostRange: [300, 450], reclaimHeadline: 'Recover 1.5\u20132 months per year.', workweeksRange: [7.5, 11] },
     '2-4': { lostRange: [180, 270], reclaimHeadline: 'Gain back 1 full month per year.', workweeksRange: [4.5, 7] },
-    '4-6': { lostRange: [90, 135], reclaimHeadline: 'Reclaim 2\u20133 weeks per year.', workweeksRange: [2, 3] },
-    '6-plus': { lostRange: [45, 67], reclaimHeadline: 'Save up to 1 week per year.', workweeksRange: [1, 1.5] },
+    '4-6': { lostRange: [180, 270], reclaimHeadline: 'Reclaim 2\u20133 weeks per year.', workweeksRange: [2, 3] },
+    '6-plus': { lostRange: [130, 170], reclaimHeadline: 'Save up to 1 week per year.', workweeksRange: [1, 1.5] },
   };
 
   // Age → compounded impact projection
