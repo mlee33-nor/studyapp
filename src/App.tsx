@@ -688,7 +688,8 @@ const CategoryCustomizeModal: React.FC<{
   theme: 'morning' | 'midnight';
   onConfirm: (emoji: string, themeColor: string, accentColor: string) => void;
   onCancel: () => void;
-}> = ({ isOpen, categoryTitle, theme, onConfirm, onCancel }) => {
+  customizeOnly?: boolean;
+}> = ({ isOpen, categoryTitle, theme, onConfirm, onCancel, customizeOnly }) => {
   const [selectedEmoji, setSelectedEmoji] = useState(EMOJI_OPTIONS[0]);
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
 
@@ -908,7 +909,7 @@ const CategoryCustomizeModal: React.FC<{
               boxShadow: `0 4px 20px ${selectedColor[0]}44`,
             }}
           >
-            Start Studying
+            {customizeOnly ? 'Save' : 'Start Studying'}
           </motion.button>
         </div>
       </motion.div>
@@ -921,10 +922,13 @@ const CategorySelectionModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onSelectCategory: (category: string) => void;
+  onCustomizeCategory: (category: string) => void;
   theme: 'morning' | 'midnight';
   isTutorial?: boolean;
-}> = ({ isOpen, onClose, onSelectCategory, theme, isTutorial }) => {
+}> = ({ isOpen, onClose, onSelectCategory, onCustomizeCategory, theme, isTutorial }) => {
   const [customInput, setCustomInput] = useState('');
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggered = useRef(false);
 
   // Re-read categories from storage every time the modal opens
   const allCategories = useMemo(() => getCategories(), [isOpen]);
@@ -1037,7 +1041,23 @@ const CategorySelectionModal: React.FC<{
               key={category.id}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => handleCategoryClick(category.title)}
+              onClick={() => {
+                if (longPressTriggered.current) return;
+                handleCategoryClick(category.title);
+              }}
+              onPointerDown={() => {
+                longPressTriggered.current = false;
+                longPressTimer.current = setTimeout(() => {
+                  longPressTriggered.current = true;
+                  onCustomizeCategory(category.title);
+                }, 500);
+              }}
+              onPointerUp={() => {
+                if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+              }}
+              onPointerLeave={() => {
+                if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+              }}
               style={{
                 background: customInput === ''
                   ? `linear-gradient(135deg, ${category.themeColor}99 0%, ${category.accentColor}99 100%)`
@@ -1185,6 +1205,7 @@ export default function App() {
   const [showFailConfirm, setShowFailConfirm] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
   const [isChangingCategory, setIsChangingCategory] = useState(false);
+  const [isCustomizeOnly, setIsCustomizeOnly] = useState(false);
 const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [selectedAnimal, setSelectedAnimal] = useState(0);
@@ -1791,9 +1812,17 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       personalized.push(pendingCategory.toLowerCase());
       localStorage.setItem('personalizedCategories', JSON.stringify(personalized));
     }
-    setCurrentCategory(pendingCategory);
     setShowCustomizeModal(false);
     setPendingCategory('');
+
+    if (isCustomizeOnly) {
+      // Long-press customize: just save appearance and return to category modal
+      setIsCustomizeOnly(false);
+      setShowCategoryModal(true);
+      return;
+    }
+
+    setCurrentCategory(pendingCategory);
     if (showTutorial && currentTutorialStep?.id === 'customize-category') {
       advanceTutorial(); // advance to 'press-complete'
     }
@@ -1803,10 +1832,23 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     setIsChangingCategory(false);
   };
 
+  const handleLongPressCustomize = (category: string) => {
+    setPendingCategory(category);
+    setIsCustomizeOnly(true);
+    setShowCategoryModal(false);
+    setShowCustomizeModal(true);
+  };
+
   const handleCustomizeCancel = () => {
     if (showTutorial) return; // prevent canceling during tutorial
     setShowCustomizeModal(false);
     setPendingCategory('');
+    if (isCustomizeOnly) {
+      // Return to category selection without starting anything
+      setIsCustomizeOnly(false);
+      setShowCategoryModal(true);
+      return;
+    }
     // Re-open the category selection modal so the user can pick again
     setShowCategoryModal(true);
   };
@@ -3208,6 +3250,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         isOpen={showCategoryModal}
         onClose={() => { if (!showTutorial) { setShowCategoryModal(false); setIsChangingCategory(false); } }}
         onSelectCategory={handleCategorySelected}
+        onCustomizeCategory={handleLongPressCustomize}
         theme={selectedTheme}
         isTutorial={showTutorial}
       />
@@ -3218,6 +3261,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         theme={selectedTheme}
         onConfirm={handleCustomizeConfirm}
         onCancel={handleCustomizeCancel}
+        customizeOnly={isCustomizeOnly}
       />
 
       {/* Fail Session Confirmation Modal */}
