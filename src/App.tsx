@@ -1184,6 +1184,7 @@ export default function App() {
   const [pendingCategory, setPendingCategory] = useState('');
   const [showFailConfirm, setShowFailConfirm] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<string>('');
+  const [isChangingCategory, setIsChangingCategory] = useState(false);
 const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [loadedAnimations, setLoadedAnimations] = useState<Record<string, any>>({});
   const [selectedAnimal, setSelectedAnimal] = useState(0);
@@ -1771,7 +1772,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     getOrCreateCategory(category);
     setCurrentCategory(category);
     setShowCategoryModal(false);
-    setIsRunning(true);
+    if (!isChangingCategory) {
+      setIsRunning(true);
+    }
+    setIsChangingCategory(false);
   };
 
   const handleCustomizeConfirm = (emoji: string, themeColor: string, accentColor: string) => {
@@ -1793,7 +1797,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     if (showTutorial && currentTutorialStep?.id === 'customize-category') {
       advanceTutorial(); // advance to 'press-complete'
     }
-    setIsRunning(true);
+    if (!isChangingCategory) {
+      setIsRunning(true);
+    }
+    setIsChangingCategory(false);
   };
 
   const handleCustomizeCancel = () => {
@@ -1907,6 +1914,13 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
+                whileTap={(isRunning || isPaused) ? { scale: 0.95 } : {}}
+                onClick={() => {
+                  if (isRunning || isPaused) {
+                    setIsChangingCategory(true);
+                    setShowCategoryModal(true);
+                  }
+                }}
                 style={{
                   marginTop: '8px',
                   padding: '6px 16px',
@@ -1920,6 +1934,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   color: 'rgba(139, 92, 246, 0.9)',
                   fontFamily: "'Quicksand', sans-serif",
                   boxShadow: '0 2px 10px rgba(167, 139, 250, 0.2)',
+                  cursor: (isRunning || isPaused) ? 'pointer' : 'default',
                 }}
               >
                 📚 {currentCategory}
@@ -3191,7 +3206,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       {/* Category Selection Modal */}
       <CategorySelectionModal
         isOpen={showCategoryModal}
-        onClose={() => { if (!showTutorial) setShowCategoryModal(false); }}
+        onClose={() => { if (!showTutorial) { setShowCategoryModal(false); setIsChangingCategory(false); } }}
         onSelectCategory={handleCategorySelected}
         theme={selectedTheme}
         isTutorial={showTutorial}
