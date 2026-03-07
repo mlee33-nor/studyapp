@@ -4,6 +4,7 @@ import { verifyLogin, getStoredEmail, setLoggedIn } from '../utils/auth';
 
 interface LoginScreenProps {
   onSuccess: () => void;
+  onClose?: () => void;
   theme: 'morning' | 'midnight';
 }
 
@@ -30,7 +31,7 @@ const THEMES = {
   },
 };
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess, theme }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess, onClose, theme }) => {
   const t = THEMES[theme];
   const storedEmail = getStoredEmail() || '';
   const [email, setEmail] = useState(storedEmail);
@@ -95,6 +96,33 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onSuccess, theme }) => {
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
       }}
     >
+      {onClose && (
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+            right: '20px',
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            border: 'none',
+            background: theme === 'midnight' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+            color: t.textSecondary,
+            fontSize: '20px',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontFamily: "'Quicksand', sans-serif",
+          }}
+        >
+          ✕
+        </motion.button>
+      )}
+
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
         <h2
           style={{

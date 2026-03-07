@@ -3253,6 +3253,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
       <LoginScreen
         theme="midnight"
         onSuccess={() => setShowLogin(false)}
+        onClose={() => setShowLogin(false)}
       />
     );
   }
