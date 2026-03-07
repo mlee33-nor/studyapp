@@ -1983,7 +1983,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                     boxShadow: '0 2px 8px rgba(124, 58, 237, 0.4)',
                   }}
                 >
-                  {isPremium ? 'PLUS' : 'UNLOCK PLUS'}
+                  {isPremium ? 'PLUS' : 'GET PLUS'}
                 </motion.div>
             </div>
             {currentCategory && (
