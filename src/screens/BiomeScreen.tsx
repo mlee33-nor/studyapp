@@ -39,7 +39,7 @@ interface BiomeScreenProps {
 // Walking speed for wolves in biome view (pixels per second)
 const WALKING_SPEED = 30;
 
-const WALKING_ANIMAL_NAMES = new Set(['Wolf', 'Turtle', 'Tropical Fish']);
+const WALKING_ANIMAL_NAMES = new Set(['Wolf', 'Turtle', 'Tropical Fish', 'Crab']);
 // Animals whose Lottie animations face left by default (need inverted flip)
 const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish', 'Octopus']);
 
