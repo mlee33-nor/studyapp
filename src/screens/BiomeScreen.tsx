@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, motionValue } from 'framer-motion';
+import type { MotionValue } from 'framer-motion';
 import Lottie from 'lottie-react';
 import { useUserData } from '../hooks/useUserData';
 import BiomeBackgrounds from '../components/BiomeBackgrounds';
@@ -36,6 +37,16 @@ interface BiomeScreenProps {
   biomeId: BiomeType;
 }
 
+// Walking speed for wolves in biome view (pixels per second)
+const WALKING_SPEED = 30;
+
+const WALKING_ANIMAL_NAMES = new Set(['Wolf']);
+
+interface WalkingInstance {
+  x: MotionValue<number>;
+  direction: 1 | -1;
+}
+
 /**
  * BiomeScreen Component
  * Displays a specific biome with its background and animals
@@ -49,6 +60,8 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
   const [timelineView, setTimelineView] = useState<TimelineViewMode>('monthly');
   const [timelineDate, setTimelineDate] = useState(new Date());
   const biomeRef = useRef<HTMLDivElement>(null);
+  const walkingInstancesRef = useRef<Record<string, WalkingInstance>>({});
+  const [walkingFlips, setWalkingFlips] = useState<Record<string, boolean>>({});
 
   const biomeConfig = BIOME_CONFIG[biomeId];
 
@@ -202,6 +215,78 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
     loadAnimations();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [biomeAnimals.length]);
+
+  // Walking animal horizontal movement animation loop
+  useEffect(() => {
+    const walkers = biomeAnimals.filter(a => WALKING_ANIMAL_NAMES.has(a.name));
+
+    // Initialize instances for new walking animals
+    for (const walker of walkers) {
+      if (!walkingInstancesRef.current[walker.id]) {
+        const startX = Math.random() * 200 + 50;
+        const dir = Math.random() > 0.5 ? 1 : -1;
+        walkingInstancesRef.current[walker.id] = {
+          x: motionValue(startX),
+          direction: dir as 1 | -1,
+        };
+        setWalkingFlips(prev => ({ ...prev, [walker.id]: dir === -1 }));
+      }
+    }
+
+    // Clean up removed walking animals
+    const walkerIds = new Set(walkers.map(w => w.id));
+    for (const id of Object.keys(walkingInstancesRef.current)) {
+      if (!walkerIds.has(id)) {
+        delete walkingInstancesRef.current[id];
+      }
+    }
+
+    if (walkers.length === 0) return;
+
+    let lastTime = performance.now();
+    let rafId: number;
+
+    const tick = (now: number) => {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+
+      const containerWidth = biomeRef.current?.offsetWidth ?? 400;
+      const maxX = containerWidth - ANIMAL_SIZE;
+      const minX = 10;
+
+      let flipsChanged = false;
+      const newFlips: Record<string, boolean> = {};
+
+      for (const id of Object.keys(walkingInstancesRef.current)) {
+        const inst = walkingInstancesRef.current[id];
+        const currentX = inst.x.get();
+        let newX = currentX + inst.direction * WALKING_SPEED * dt;
+
+        if (newX >= maxX) {
+          newX = maxX;
+          inst.direction = -1;
+          newFlips[id] = true;
+          flipsChanged = true;
+        } else if (newX <= minX) {
+          newX = minX;
+          inst.direction = 1;
+          newFlips[id] = false;
+          flipsChanged = true;
+        }
+
+        inst.x.set(newX);
+      }
+
+      if (flipsChanged) {
+        setWalkingFlips(prev => ({ ...prev, ...newFlips }));
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [biomeAnimals]);
 
   // Load lottie for species breakdown (uses lottieUrl as key)
   const [speciesLottie, setSpeciesLottie] = useState<Record<string, any>>({});
@@ -375,93 +460,31 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                   </div>
                 </div>
               ) : (
-                biomeAnimals.map((animal, animalIndex) => {
-                  const isWolf = animal.name === 'Wolf';
-                  // Stagger wolf vertical positions so multiple wolves don't overlap
-                  const wolfTop = 45 + (animalIndex % 3) * 15;
-                  return isWolf ? (
-                    <div
-                      key={`${animal.id}-${animal.collectedAt}`}
-                      onClick={() => handleAnimalTap(animal)}
-                      style={{
-                        position: 'absolute',
-                        top: `${wolfTop}%`,
-                        left: 0,
-                        width: '100%',
-                        height: `${ANIMAL_SIZE}px`,
-                        zIndex: 6,
-                        pointerEvents: 'none',
-                      }}
-                    >
-                      <div
-                        className={`wolf-move-${animalIndex}`}
-                        style={{
-                          position: 'absolute',
-                          left: 0,
-                          width: `${ANIMAL_SIZE}px`,
-                          height: `${ANIMAL_SIZE}px`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                          pointerEvents: 'auto',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <div className={`wolf-flip-${animalIndex}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {loadedAnimations[animal.id] && (() => {
-                            const animalScale = getAnimalScale(animal.lottieUrl);
-                            const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
-                            return (
-                              <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
-                                <Lottie
-                                  animationData={loadedAnimations[animal.id]}
-                                  loop={true}
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    pointerEvents: 'none',
-                                  }}
-                                />
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                      <style>{`
-                        .wolf-move-${animalIndex} {
-                          animation: wolfMove${animalIndex} ${18 + (animalIndex % 3) * 4}s linear infinite;
-                        }
-                        .wolf-flip-${animalIndex} {
-                          animation: wolfFlip${animalIndex} ${18 + (animalIndex % 3) * 4}s step-end infinite;
-                        }
-                        @keyframes wolfMove${animalIndex} {
-                          0% { left: -${ANIMAL_SIZE}px; }
-                          50% { left: calc(100% - ${ANIMAL_SIZE}px); }
-                          100% { left: -${ANIMAL_SIZE}px; }
-                        }
-                        @keyframes wolfFlip${animalIndex} {
-                          0% { transform: scaleX(1); }
-                          50% { transform: scaleX(-1); }
-                        }
-                      `}</style>
-                    </div>
-                  ) : (
+                biomeAnimals.map((animal) => {
+                  const isWalker = WALKING_ANIMAL_NAMES.has(animal.name);
+                  const walkingInst = isWalker ? walkingInstancesRef.current[animal.id] : null;
+                  const walkFlip = !!walkingFlips[animal.id];
+                  const animalScale = getAnimalScale(animal.lottieUrl);
+                  const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
+
+                  return (
                     <motion.div
                       key={`${animal.id}-${animal.collectedAt}`}
-                      drag
+                      drag={!isWalker}
                       dragMomentum={false}
                       dragElastic={0}
                       dragConstraints={biomeRef}
-                      onDragStart={() => setDraggingAnimalId(animal.id + animal.collectedAt)}
-                      onDragEnd={(event) => handleDragEnd(animal.id, event)}
+                      onDragStart={() => !isWalker && setDraggingAnimalId(animal.id + animal.collectedAt)}
+                      onDragEnd={(event) => !isWalker && handleDragEnd(animal.id, event)}
                       onClick={() => handleAnimalTap(animal)}
-                      animate={draggingAnimalId !== animal.id + animal.collectedAt ? { x: 0, y: 0 } : undefined}
-                      transition={draggingAnimalId === animal.id + animal.collectedAt ? { duration: 0 } : { type: "tween", duration: 0.2 }}
-                      className="absolute cursor-grab active:cursor-grabbing"
+                      animate={isWalker ? {
+                        scaleX: walkFlip ? -1 : 1,
+                      } : (draggingAnimalId !== animal.id + animal.collectedAt ? { x: 0, y: 0 } : undefined)}
+                      transition={isWalker ? { duration: 0 } : (draggingAnimalId === animal.id + animal.collectedAt ? { duration: 0 } : { type: "tween", duration: 0.2 })}
+                      className={isWalker ? "absolute cursor-pointer" : "absolute cursor-grab active:cursor-grabbing"}
                       style={{
                         position: 'absolute',
-                        left: `${Math.random() * 50 + 25}%`,
+                        left: isWalker ? 0 : `${Math.random() * 50 + 25}%`,
                         top: `${Math.random() * 40 + 30}%`,
                         width: `${ANIMAL_SIZE}px`,
                         height: `${ANIMAL_SIZE}px`,
@@ -471,7 +494,8 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                         justifyContent: 'center',
                         zIndex: 6,
                         filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                        transform: 'translate(-50%, -50%)',
+                        transform: isWalker ? undefined : 'translate(-50%, -50%)',
+                        x: walkingInst ? walkingInst.x : undefined,
                       }}
                       whileHover={{
                         scale: 1.05,
@@ -480,23 +504,17 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                       whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
                     >
                       {loadedAnimations[animal.id] && (
-                        (() => {
-                          const animalScale = getAnimalScale(animal.lottieUrl);
-                          const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
-                          return (
-                            <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
-                              <Lottie
-                                animationData={loadedAnimations[animal.id]}
-                                loop={true}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  pointerEvents: 'none',
-                                }}
-                              />
-                            </div>
-                          );
-                        })()
+                        <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                          <Lottie
+                            animationData={loadedAnimations[animal.id]}
+                            loop={true}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                        </div>
                       )}
                     </motion.div>
                   );
