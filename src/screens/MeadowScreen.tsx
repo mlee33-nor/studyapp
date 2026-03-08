@@ -46,7 +46,7 @@ const BIOME_MIN_Y: Record<string, number> = {
   meadow: 220,
   ocean: 240,
   safari: 200,
-  farm: 170,
+  farm: 120,
 };
 
 // Safe horizontal bounds
