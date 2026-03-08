@@ -484,7 +484,6 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                           <Lottie
                             animationData={loadedAnimations[animal.id]}
                             loop={true}
-                            initialSegment={animal.name === 'Wolf' ? [0, 60] : undefined}
                             style={{
                               width: '100%',
                               height: '100%',

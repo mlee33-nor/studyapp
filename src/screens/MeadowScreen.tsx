@@ -1009,7 +1009,6 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
                                     animationData={loadedAnimations[animal.id]}
                                     loop={!isLion}
                                     autoplay={!isLion}
-                                    initialSegment={animal.name === 'Wolf' ? [0, 60] : undefined}
                                     style={{
                                       width: '100%',
                                       height: '100%',
