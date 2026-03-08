@@ -40,12 +40,15 @@ interface BiomeScreenProps {
 const WALKING_SPEED = 30;
 
 const WALKING_ANIMAL_NAMES = new Set(['Wolf', 'Turtle', 'Tropical Fish']);
+// Animals whose Lottie animations face left by default (need inverted flip)
+const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish']);
 
 interface WalkingInstance {
   x: number;
   direction: 1 | -1;
   el: HTMLDivElement | null;
   flipped: boolean;
+  reverseFacing: boolean;
 }
 
 /**
@@ -228,6 +231,7 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
           direction: Math.random() > 0.5 ? 1 : -1 as 1 | -1,
           el: null,
           flipped: false,
+          reverseFacing: REVERSE_FACING_ANIMALS.has(walker.name),
         };
       }
     }
@@ -270,7 +274,8 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
           inst.flipped = false;
         }
 
-        inst.el.style.transform = `translateX(${inst.x}px) scaleX(${inst.flipped ? -1 : 1})`;
+        const effectiveFlip = inst.reverseFacing ? !inst.flipped : inst.flipped;
+        inst.el.style.transform = `translateX(${inst.x}px) scaleX(${effectiveFlip ? -1 : 1})`;
       }
 
       rafId = requestAnimationFrame(tick);
