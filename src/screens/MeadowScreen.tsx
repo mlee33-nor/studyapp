@@ -65,7 +65,7 @@ interface WalkingAnimalInstance {
   resumeTimer: ReturnType<typeof setTimeout> | null;
 }
 
-const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Tiger', 'Wolf']);
+const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Wolf']);
 const VERTICAL_WALKING_ANIMAL_NAMES = new Set<string>([]);
 const isWalkingAnimal = (animal: MeadowAnimal) =>
   WALKING_ANIMAL_NAMES.has(animal.name) || VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
@@ -947,7 +947,7 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
                         const walkFlip = !!walkingFlips[animal.id];
                         const isVertical = VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
                         const flipped = isWalker && !isVertical
-                          ? (animal.name === 'Tiger' ? !walkFlip : walkFlip)
+                          ? walkFlip
                           : !isVertical && !!animal.flipped;
                         const verticalFlipped = isVertical && walkFlip;
                         return (
