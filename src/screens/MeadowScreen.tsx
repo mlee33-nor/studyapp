@@ -59,16 +59,19 @@ interface WalkingAnimalInstance {
   x: MotionValue<number>;
   y: MotionValue<number>;
   direction: 1 | -1;
+  directionY: 1 | -1;
   paused: boolean;
   dragStartX: number;
   dragStartY: number;
   resumeTimer: ReturnType<typeof setTimeout> | null;
 }
 
-const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Wolf', 'Turtle', 'Tropical Fish']);
+const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Wolf', 'Turtle', 'Tropical Fish', 'Octopus']);
 const VERTICAL_WALKING_ANIMAL_NAMES = new Set<string>([]);
 // Animals whose Lottie animations face left by default (need inverted flip)
-const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish']);
+const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish', 'Octopus']);
+// Swimming animals move freely in both X and Y (free-roam movement)
+const SWIMMING_ANIMAL_NAMES = new Set(['Tropical Fish', 'Octopus']);
 const isWalkingAnimal = (animal: MeadowAnimal) =>
   WALKING_ANIMAL_NAMES.has(animal.name) || VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
 
@@ -358,6 +361,7 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
           x: motionValue(walker.x),
           y: motionValue(walker.y),
           direction: Math.random() > 0.5 ? 1 : -1,
+          directionY: Math.random() > 0.5 ? 1 : -1,
           paused: false,
           dragStartX: walker.x,
           dragStartY: walker.y,
@@ -402,11 +406,43 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
         const inst = walkingInstancesRef.current[id];
         if (inst.paused) continue;
 
-        // Check if this is a vertical walker
+        // Check if this is a vertical walker or swimming animal
         const walker = walkers.find(w => w.id === id);
         const isVertical = walker && VERTICAL_WALKING_ANIMAL_NAMES.has(walker.name);
+        const isSwimming = walker && SWIMMING_ANIMAL_NAMES.has(walker.name);
 
-        if (isVertical) {
+        if (isSwimming) {
+          // Swimming animals move freely in both X and Y
+          const currentX = inst.x.get();
+          let newX = currentX + inst.direction * WALKING_SPEED * delta;
+
+          if (newX >= maxX) {
+            newX = maxX;
+            inst.direction = -1;
+            newFlips[id] = true;
+            flipsChanged = true;
+          } else if (newX <= MIN_X) {
+            newX = MIN_X;
+            inst.direction = 1;
+            newFlips[id] = false;
+            flipsChanged = true;
+          }
+
+          inst.x.set(newX);
+
+          const currentY = inst.y.get();
+          let newY = currentY + inst.directionY * WALKING_SPEED * delta;
+
+          if (newY >= dynamicMaxY) {
+            newY = dynamicMaxY;
+            inst.directionY = -1;
+          } else if (newY <= 0) {
+            newY = 0;
+            inst.directionY = 1;
+          }
+
+          inst.y.set(newY);
+        } else if (isVertical) {
           const currentY = inst.y.get();
           let newY = currentY + inst.direction * WALKING_SPEED * delta;
 

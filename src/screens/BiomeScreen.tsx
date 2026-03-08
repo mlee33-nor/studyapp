@@ -39,16 +39,21 @@ interface BiomeScreenProps {
 // Walking speed for wolves in biome view (pixels per second)
 const WALKING_SPEED = 30;
 
-const WALKING_ANIMAL_NAMES = new Set(['Wolf', 'Turtle', 'Tropical Fish']);
+const WALKING_ANIMAL_NAMES = new Set(['Wolf', 'Turtle', 'Tropical Fish', 'Octopus']);
 // Animals whose Lottie animations face left by default (need inverted flip)
-const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish']);
+const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish', 'Octopus']);
+// Swimming animals move freely in both X and Y
+const SWIMMING_ANIMAL_NAMES = new Set(['Tropical Fish', 'Octopus']);
 
 interface WalkingInstance {
   x: number;
+  y: number;
   direction: 1 | -1;
+  directionY: 1 | -1;
   el: HTMLDivElement | null;
   flipped: boolean;
   reverseFacing: boolean;
+  swimming: boolean;
 }
 
 /**
@@ -228,10 +233,13 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
       if (!walkingInstancesRef.current[walker.id]) {
         walkingInstancesRef.current[walker.id] = {
           x: Math.random() * 200 + 50,
+          y: 0,
           direction: Math.random() > 0.5 ? 1 : -1 as 1 | -1,
+          directionY: Math.random() > 0.5 ? 1 : -1 as 1 | -1,
           el: null,
           flipped: false,
           reverseFacing: REVERSE_FACING_ANIMALS.has(walker.name),
+          swimming: SWIMMING_ANIMAL_NAMES.has(walker.name),
         };
       }
     }
@@ -254,9 +262,12 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
       lastTime = now;
 
       const containerWidth = biomeRef.current?.offsetWidth ?? 400;
+      const containerHeight = biomeRef.current?.offsetHeight ?? 300;
       // Keep wolf well within bounds to avoid 3D perspective clipping
       const maxX = containerWidth - ANIMAL_SIZE * 3;
       const minX = ANIMAL_SIZE;
+      const maxY = containerHeight - ANIMAL_SIZE * 2;
+      const minY = 0;
 
       for (const id of Object.keys(walkingInstancesRef.current)) {
         const inst = walkingInstancesRef.current[id];
@@ -274,8 +285,21 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
           inst.flipped = false;
         }
 
+        // Swimming animals also move vertically
+        if (inst.swimming) {
+          inst.y += inst.directionY * WALKING_SPEED * dt;
+
+          if (inst.y >= maxY) {
+            inst.y = maxY;
+            inst.directionY = -1;
+          } else if (inst.y <= minY) {
+            inst.y = minY;
+            inst.directionY = 1;
+          }
+        }
+
         const effectiveFlip = inst.reverseFacing ? !inst.flipped : inst.flipped;
-        inst.el.style.transform = `translateX(${inst.x}px) scaleX(${effectiveFlip ? -1 : 1})`;
+        inst.el.style.transform = `translateX(${inst.x}px) translateY(${inst.y}px) scaleX(${effectiveFlip ? -1 : 1})`;
       }
 
       rafId = requestAnimationFrame(tick);
