@@ -39,7 +39,7 @@ interface BiomeScreenProps {
 // Walking speed for wolves in biome view (pixels per second)
 const WALKING_SPEED = 30;
 
-const WALKING_ANIMAL_NAMES = new Set(['Wolf']);
+const WALKING_ANIMAL_NAMES = new Set(['Wolf', 'Turtle', 'Tropical Fish']);
 
 interface WalkingInstance {
   x: number;
