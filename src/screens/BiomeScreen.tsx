@@ -228,7 +228,6 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
       if (!walkingInstancesRef.current[walker.id]) {
         walkingInstancesRef.current[walker.id] = {
           x: Math.random() * 200 + 50,
-          y: 0,
           direction: Math.random() > 0.5 ? 1 : -1 as 1 | -1,
           el: null,
           flipped: false,
