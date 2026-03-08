@@ -375,60 +375,121 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                   </div>
                 </div>
               ) : (
-                biomeAnimals.map((animal) => (
-                  <motion.div
-                    key={`${animal.id}-${animal.collectedAt}`}
-                    drag
-                    dragMomentum={false}
-                    dragElastic={0}
-                    dragConstraints={biomeRef}
-                    onDragStart={() => setDraggingAnimalId(animal.id + animal.collectedAt)}
-                    onDragEnd={(event) => handleDragEnd(animal.id, event)}
-                    onClick={() => handleAnimalTap(animal)}
-                    animate={draggingAnimalId !== animal.id + animal.collectedAt ? { x: 0, y: 0 } : undefined}
-                    transition={draggingAnimalId === animal.id + animal.collectedAt ? { duration: 0 } : { type: "tween", duration: 0.2 }}
-                    className="absolute cursor-grab active:cursor-grabbing"
-                    style={{
-                      position: 'absolute',
-                      left: `${Math.random() * 50 + 25}%`,
-                      top: `${Math.random() * 40 + 30}%`,
-                      width: `${ANIMAL_SIZE}px`,
-                      height: `${ANIMAL_SIZE}px`,
-                      overflow: 'hidden',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 6,
-                      filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                    whileHover={{
-                      scale: 1.05,
-                      filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))'
-                    }}
-                    whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
-                  >
-                    {loadedAnimations[animal.id] && (
-                      (() => {
-                        const animalScale = getAnimalScale(animal.lottieUrl);
-                        const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
-                        return (
-                          <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
-                            <Lottie
-                              animationData={loadedAnimations[animal.id]}
-                              loop={true}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                pointerEvents: 'none',
-                              }}
-                            />
-                          </div>
-                        );
-                      })()
-                    )}
-                  </motion.div>
-                ))
+                biomeAnimals.map((animal, animalIndex) => {
+                  const isWolf = animal.name === 'Wolf';
+                  // Stagger wolf vertical positions so multiple wolves don't overlap
+                  const wolfTop = 45 + (animalIndex % 3) * 15;
+                  return isWolf ? (
+                    <div
+                      key={`${animal.id}-${animal.collectedAt}`}
+                      onClick={() => handleAnimalTap(animal)}
+                      style={{
+                        position: 'absolute',
+                        top: `${wolfTop}%`,
+                        left: 0,
+                        width: '100%',
+                        height: `${ANIMAL_SIZE}px`,
+                        zIndex: 6,
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          width: `${ANIMAL_SIZE}px`,
+                          height: `${ANIMAL_SIZE}px`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                          pointerEvents: 'auto',
+                          cursor: 'pointer',
+                          animation: `wolfWalk${animalIndex} ${18 + (animalIndex % 3) * 4}s linear infinite`,
+                        }}
+                      >
+                        {loadedAnimations[animal.id] && (() => {
+                          const animalScale = getAnimalScale(animal.lottieUrl);
+                          const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
+                          return (
+                            <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                              <Lottie
+                                animationData={loadedAnimations[animal.id]}
+                                loop={true}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  pointerEvents: 'none',
+                                }}
+                              />
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <style>{`
+                        @keyframes wolfWalk${animalIndex} {
+                          0% { left: -${ANIMAL_SIZE}px; transform: scaleX(1); }
+                          49.9% { left: calc(100% - ${ANIMAL_SIZE}px); transform: scaleX(1); }
+                          50% { left: calc(100% - ${ANIMAL_SIZE}px); transform: scaleX(-1); }
+                          99.9% { left: -${ANIMAL_SIZE}px; transform: scaleX(-1); }
+                          100% { left: -${ANIMAL_SIZE}px; transform: scaleX(1); }
+                        }
+                      `}</style>
+                    </div>
+                  ) : (
+                    <motion.div
+                      key={`${animal.id}-${animal.collectedAt}`}
+                      drag
+                      dragMomentum={false}
+                      dragElastic={0}
+                      dragConstraints={biomeRef}
+                      onDragStart={() => setDraggingAnimalId(animal.id + animal.collectedAt)}
+                      onDragEnd={(event) => handleDragEnd(animal.id, event)}
+                      onClick={() => handleAnimalTap(animal)}
+                      animate={draggingAnimalId !== animal.id + animal.collectedAt ? { x: 0, y: 0 } : undefined}
+                      transition={draggingAnimalId === animal.id + animal.collectedAt ? { duration: 0 } : { type: "tween", duration: 0.2 }}
+                      className="absolute cursor-grab active:cursor-grabbing"
+                      style={{
+                        position: 'absolute',
+                        left: `${Math.random() * 50 + 25}%`,
+                        top: `${Math.random() * 40 + 30}%`,
+                        width: `${ANIMAL_SIZE}px`,
+                        height: `${ANIMAL_SIZE}px`,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 6,
+                        filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                      whileHover={{
+                        scale: 1.05,
+                        filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))'
+                      }}
+                      whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
+                    >
+                      {loadedAnimations[animal.id] && (
+                        (() => {
+                          const animalScale = getAnimalScale(animal.lottieUrl);
+                          const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
+                          return (
+                            <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                              <Lottie
+                                animationData={loadedAnimations[animal.id]}
+                                loop={true}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  pointerEvents: 'none',
+                                }}
+                              />
+                            </div>
+                          );
+                        })()
+                      )}
+                    </motion.div>
+                  );
+                })
               )}
             </div>
           </div>

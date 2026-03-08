@@ -90,9 +90,9 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     price: 0,
   },
   {
-    id: 'elephant',
-    name: 'Elephant',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ad2abee-8ab1-11ee-8fae-d7b22e00dcc5/Q3wSZsw2nW.json',
+    id: 'tiger',
+    name: 'Tiger',
+    lottieUrl: '/studyapp/animations/tiger.json',
     scale: 1.4,
     price: 800,
   },
@@ -108,9 +108,9 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
 // Forest Animals - Real Lottie Animation URLs
 export const FOREST_ANIMALS: BiomeAnimal[] = [
   {
-    id: 'squirrel',
-    name: 'Squirrel',
-    lottieUrl: 'https://assets-v2.lottiefiles.com/a/7ba0c728-117a-11ee-9eb8-cba5cf43b9a9/SeYh6q2ap3.json',
+    id: 'wolf',
+    name: 'Wolf',
+    lottieUrl: '/studyapp/animations/wolf.json',
     scale: 1.5,
     price: 0,
   },
