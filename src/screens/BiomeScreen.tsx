@@ -251,8 +251,8 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
       lastTime = now;
 
       const containerWidth = biomeRef.current?.offsetWidth ?? 400;
-      const maxX = containerWidth - ANIMAL_SIZE;
-      const minX = 10;
+      const maxX = containerWidth - ANIMAL_SIZE * 2;
+      const minX = ANIMAL_SIZE / 2;
 
       let flipsChanged = false;
       const newFlips: Record<string, boolean> = {};
@@ -477,25 +477,22 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                       onDragStart={() => !isWalker && setDraggingAnimalId(animal.id + animal.collectedAt)}
                       onDragEnd={(event) => !isWalker && handleDragEnd(animal.id, event)}
                       onClick={() => handleAnimalTap(animal)}
-                      animate={isWalker ? {
-                        scaleX: walkFlip ? -1 : 1,
-                      } : (draggingAnimalId !== animal.id + animal.collectedAt ? { x: 0, y: 0 } : undefined)}
-                      transition={isWalker ? { duration: 0 } : (draggingAnimalId === animal.id + animal.collectedAt ? { duration: 0 } : { type: "tween", duration: 0.2 })}
+                      animate={isWalker ? undefined : (draggingAnimalId !== animal.id + animal.collectedAt ? { x: 0, y: 0 } : undefined)}
+                      transition={isWalker ? undefined : (draggingAnimalId === animal.id + animal.collectedAt ? { duration: 0 } : { type: "tween", duration: 0.2 })}
                       className={isWalker ? "absolute cursor-pointer" : "absolute cursor-grab active:cursor-grabbing"}
                       style={{
                         position: 'absolute',
-                        left: isWalker ? 0 : `${Math.random() * 50 + 25}%`,
-                        top: `${Math.random() * 40 + 30}%`,
+                        left: 0,
+                        top: isWalker ? `${50 + (walkFlip ? 5 : 0)}%` : `${Math.random() * 40 + 30}%`,
                         width: `${ANIMAL_SIZE}px`,
                         height: `${ANIMAL_SIZE}px`,
-                        overflow: 'hidden',
+                        overflow: 'visible',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         zIndex: 6,
                         filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                        transform: isWalker ? undefined : 'translate(-50%, -50%)',
-                        x: walkingInst ? walkingInst.x : undefined,
+                        x: walkingInst ? walkingInst.x : 0,
                       }}
                       whileHover={{
                         scale: 1.05,
@@ -504,7 +501,12 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                       whileTap={{ scale: 0.95, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}
                     >
                       {loadedAnimations[animal.id] && (
-                        <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                        <div style={{
+                          width: `${scaledSize}px`,
+                          height: `${scaledSize}px`,
+                          flexShrink: 0,
+                          transform: isWalker ? `scaleX(${walkFlip ? -1 : 1})` : undefined,
+                        }}>
                           <Lottie
                             animationData={loadedAnimations[animal.id]}
                             loop={true}
