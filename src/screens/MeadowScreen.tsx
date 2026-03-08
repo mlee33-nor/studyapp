@@ -551,10 +551,15 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
       return;
     }
 
+    // Check if this animal is free-roam (allow full Y range)
+    const currentAnimal = userData.meadowAnimals.find(a => a.id === animalId);
+    const flying = currentAnimal ? isFreeRoam(currentAnimal) : false;
+
     // Compute drop position from where the animal visually was, not stored position
     const constrained = constrainPosition(
       inst.dragStartX + info.offset.x,
-      inst.dragStartY + info.offset.y
+      inst.dragStartY + info.offset.y,
+      flying
     );
 
     updateAnimalPosition(animalId, constrained.x, constrained.y);
