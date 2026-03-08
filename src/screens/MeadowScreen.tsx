@@ -42,7 +42,7 @@ const EMOJI_SIZE = 90; // Larger size for emoji fallback animals
 
 // Per-biome ground barrier — forest has more vertical space due to tree canopy
 const BIOME_MIN_Y: Record<string, number> = {
-  forest: 200,
+  forest: 180,
   meadow: 220,
   ocean: 240,
   safari: 200,
