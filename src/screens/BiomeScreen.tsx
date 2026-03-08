@@ -250,8 +250,9 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
       lastTime = now;
 
       const containerWidth = biomeRef.current?.offsetWidth ?? 400;
-      const maxX = containerWidth - ANIMAL_SIZE * 2;
-      const minX = ANIMAL_SIZE / 2;
+      // Keep wolf well within bounds to avoid 3D perspective clipping
+      const maxX = containerWidth - ANIMAL_SIZE * 3;
+      const minX = ANIMAL_SIZE;
 
       for (const id of Object.keys(walkingInstancesRef.current)) {
         const inst = walkingInstancesRef.current[id];
@@ -469,30 +470,27 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                         style={{
                           position: 'absolute',
                           left: 0,
-                          top: '55%',
-                          width: `${ANIMAL_SIZE}px`,
-                          height: `${ANIMAL_SIZE}px`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
+                          top: '50%',
+                          width: `${scaledSize}px`,
+                          height: `${scaledSize}px`,
                           zIndex: 6,
                           cursor: 'pointer',
-                          willChange: 'transform',
+                          transformStyle: 'flat' as const,
+                          backfaceVisibility: 'hidden' as const,
+                          isolation: 'isolate' as const,
                         }}
                       >
-                        <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
-                          {loadedAnimations[animal.id] && (
-                            <Lottie
-                              animationData={loadedAnimations[animal.id]}
-                              loop={true}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                pointerEvents: 'none',
-                              }}
-                            />
-                          )}
-                        </div>
+                        {loadedAnimations[animal.id] && (
+                          <Lottie
+                            animationData={loadedAnimations[animal.id]}
+                            loop={true}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                        )}
                       </div>
                     );
                   }
