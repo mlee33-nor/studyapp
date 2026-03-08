@@ -394,8 +394,10 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                       }}
                     >
                       <div
+                        className={`wolf-move-${animalIndex}`}
                         style={{
                           position: 'absolute',
+                          left: 0,
                           width: `${ANIMAL_SIZE}px`,
                           height: `${ANIMAL_SIZE}px`,
                           display: 'flex',
@@ -404,34 +406,43 @@ const BiomeScreen: React.FC<BiomeScreenProps> = ({ biomeId }) => {
                           filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
                           pointerEvents: 'auto',
                           cursor: 'pointer',
-                          animation: `wolfWalk${animalIndex} ${18 + (animalIndex % 3) * 4}s linear infinite`,
                         }}
                       >
-                        {loadedAnimations[animal.id] && (() => {
-                          const animalScale = getAnimalScale(animal.lottieUrl);
-                          const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
-                          return (
-                            <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
-                              <Lottie
-                                animationData={loadedAnimations[animal.id]}
-                                loop={true}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  pointerEvents: 'none',
-                                }}
-                              />
-                            </div>
-                          );
-                        })()}
+                        <div className={`wolf-flip-${animalIndex}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {loadedAnimations[animal.id] && (() => {
+                            const animalScale = getAnimalScale(animal.lottieUrl);
+                            const scaledSize = animalScale ? ANIMAL_SIZE * animalScale : ANIMAL_SIZE;
+                            return (
+                              <div style={{ width: `${scaledSize}px`, height: `${scaledSize}px`, flexShrink: 0 }}>
+                                <Lottie
+                                  animationData={loadedAnimations[animal.id]}
+                                  loop={true}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    pointerEvents: 'none',
+                                  }}
+                                />
+                              </div>
+                            );
+                          })()}
+                        </div>
                       </div>
                       <style>{`
-                        @keyframes wolfWalk${animalIndex} {
-                          0% { left: -${ANIMAL_SIZE}px; transform: scaleX(1); }
-                          49.9% { left: calc(100% - ${ANIMAL_SIZE}px); transform: scaleX(1); }
-                          50% { left: calc(100% - ${ANIMAL_SIZE}px); transform: scaleX(-1); }
-                          99.9% { left: -${ANIMAL_SIZE}px; transform: scaleX(-1); }
-                          100% { left: -${ANIMAL_SIZE}px; transform: scaleX(1); }
+                        .wolf-move-${animalIndex} {
+                          animation: wolfMove${animalIndex} ${18 + (animalIndex % 3) * 4}s linear infinite;
+                        }
+                        .wolf-flip-${animalIndex} {
+                          animation: wolfFlip${animalIndex} ${18 + (animalIndex % 3) * 4}s step-end infinite;
+                        }
+                        @keyframes wolfMove${animalIndex} {
+                          0% { left: -${ANIMAL_SIZE}px; }
+                          50% { left: calc(100% - ${ANIMAL_SIZE}px); }
+                          100% { left: -${ANIMAL_SIZE}px; }
+                        }
+                        @keyframes wolfFlip${animalIndex} {
+                          0% { transform: scaleX(1); }
+                          50% { transform: scaleX(-1); }
                         }
                       `}</style>
                     </div>

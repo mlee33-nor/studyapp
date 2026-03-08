@@ -93,7 +93,7 @@ export const SAFARI_ANIMALS: BiomeAnimal[] = [
     id: 'tiger',
     name: 'Tiger',
     lottieUrl: '/studyapp/animations/tiger.json',
-    scale: 1.4,
+    scale: 1.1,
     price: 800,
   },
   {
