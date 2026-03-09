@@ -68,7 +68,7 @@ interface WalkingAnimalInstance {
 const WALKING_ANIMAL_NAMES = new Set(['Monkey', 'Wolf', 'Turtle', 'Tropical Fish', 'Crab']);
 const VERTICAL_WALKING_ANIMAL_NAMES = new Set<string>([]);
 // Animals whose Lottie animations face left by default (need inverted flip)
-const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish', 'Octopus']);
+const REVERSE_FACING_ANIMALS = new Set(['Turtle', 'Tropical Fish', 'Octopus', 'Crab']);
 const isWalkingAnimal = (animal: MeadowAnimal) =>
   WALKING_ANIMAL_NAMES.has(animal.name) || VERTICAL_WALKING_ANIMAL_NAMES.has(animal.name);
 
