@@ -542,12 +542,23 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
     const lastTap = lastTapRef.current[animalId] || 0;
 
     if (now - lastTap < 300) {
-      const currentData = getUserData();
-      const updatedAnimals = currentData.meadowAnimals.map(animal =>
-        animal.id === animalId ? { ...animal, flipped: !animal.flipped } : animal
-      );
-      saveUserData({ ...currentData, meadowAnimals: updatedAnimals });
-      refreshData();
+      const inst = walkingInstancesRef.current[animalId];
+      if (inst) {
+        // Walking animal: reverse direction
+        inst.direction = (inst.direction === 1 ? -1 : 1) as 1 | -1;
+        setWalkingFlips(prev => ({
+          ...prev,
+          [animalId]: inst.direction === -1,
+        }));
+      } else {
+        // Stationary animal: toggle flipped in storage
+        const currentData = getUserData();
+        const updatedAnimals = currentData.meadowAnimals.map(animal =>
+          animal.id === animalId ? { ...animal, flipped: !animal.flipped } : animal
+        );
+        saveUserData({ ...currentData, meadowAnimals: updatedAnimals });
+        refreshData();
+      }
       window.dispatchEvent(new CustomEvent('meadow-animal-flipped'));
       lastTapRef.current[animalId] = 0;
     } else {
