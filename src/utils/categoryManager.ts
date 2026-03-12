@@ -20,7 +20,11 @@ const ENHANCED_SESSIONS_KEY = 'enhancedFocusSessions';
 export const getCategories = (): StudyCategory[] => {
   const stored = localStorage.getItem(CATEGORIES_KEY);
   if (stored) {
-    return JSON.parse(stored);
+    try {
+      return JSON.parse(stored);
+    } catch {
+      localStorage.removeItem(CATEGORIES_KEY);
+    }
   }
 
   // Initialize with predefined categories
@@ -169,26 +173,34 @@ export const getRecentCategories = (): StudyCategory[] => {
 export const getEnhancedSessions = (): EnhancedFocusSession[] => {
   const stored = localStorage.getItem(ENHANCED_SESSIONS_KEY);
   if (stored) {
-    return JSON.parse(stored);
+    try {
+      return JSON.parse(stored);
+    } catch {
+      localStorage.removeItem(ENHANCED_SESSIONS_KEY);
+    }
   }
 
   // Try to migrate old sessions
   const oldSessions = localStorage.getItem('focusHistory');
   if (oldSessions) {
-    const sessions = JSON.parse(oldSessions);
-    const enhanced = sessions.map((s: any) => {
-      const category = getOrCreateCategory(s.category);
-      return {
-        ...s,
-        categoryId: category.id,
-        emoji: category.emoji,
-        themeColor: category.themeColor,
-        timestamp: s.id,
-        successStatus: true
-      };
-    });
-    saveEnhancedSessions(enhanced);
-    return enhanced;
+    try {
+      const sessions = JSON.parse(oldSessions);
+      const enhanced = sessions.map((s: any) => {
+        const category = getOrCreateCategory(s.category);
+        return {
+          ...s,
+          categoryId: category.id,
+          emoji: category.emoji,
+          themeColor: category.themeColor,
+          timestamp: s.id,
+          successStatus: true
+        };
+      });
+      saveEnhancedSessions(enhanced);
+      return enhanced;
+    } catch {
+      localStorage.removeItem('focusHistory');
+    }
   }
 
   return [];

@@ -21,6 +21,7 @@ import { getCategories, getRecentCategories, getOrCreateCategory, saveEnhancedSe
 import { addCompletedSession, addFailedSession, updateUserData as updateStorageUserData, getUserData as getStorageUserData, purchaseAnimal } from './utils/storage';
 import { getAnimalsForBiome, getStarterAnimalIds, getAllAnimalIds } from './data/biomes';
 import type { BiomeType } from './types';
+import { purchaseProduct, restorePurchases, initializePurchases, type PlanType } from './utils/purchases';
 
 // --- STORAGE HELPERS ---
 const getSelectedTheme = (): 'morning' | 'midnight' => {
@@ -35,39 +36,31 @@ const setSelectedTheme = (theme: 'morning' | 'midnight') => {
   localStorage.setItem('selectedTheme', theme);
 };
 
+const DEFAULT_USER = {
+  level: 1,
+  xp: 0,
+  sessionsCompleted: 0,
+  meadowAnimals: [],
+  lastMeadowReset: null,
+  permanentCollection: [],
+  activeBiome: 'meadow' as const,
+  unlockedBiomes: ['meadow'],
+  lastDailyReset: null,
+  coins: 0,
+  purchasedAnimals: getStarterAnimalIds(),
+};
+
 const getUserData = () => {
   const data = localStorage.getItem('userData');
   if (data) {
-    const parsed = JSON.parse(data);
-    // Ensure meadow fields and collection fields exist
-    return {
-      level: 1,
-      xp: 0,
-      sessionsCompleted: 0,
-      meadowAnimals: [],
-      lastMeadowReset: null,
-      permanentCollection: [],
-      activeBiome: 'meadow' as const,
-      unlockedBiomes: ['meadow'],
-      lastDailyReset: null,
-      coins: 0,
-      purchasedAnimals: [],
-      ...parsed
-    };
+    try {
+      const parsed = JSON.parse(data);
+      return { ...DEFAULT_USER, ...parsed };
+    } catch {
+      localStorage.removeItem('userData');
+    }
   }
-  return {
-    level: 1,
-    xp: 0,
-    sessionsCompleted: 0,
-    meadowAnimals: [],
-    lastMeadowReset: null,
-    permanentCollection: [],
-    activeBiome: 'meadow' as const,
-    unlockedBiomes: ['meadow'],
-    lastDailyReset: null,
-    coins: 0,
-    purchasedAnimals: getStarterAnimalIds(),
-  };
+  return { ...DEFAULT_USER };
 };
 
 const saveUserData = (data: any) => {
@@ -77,8 +70,11 @@ const saveUserData = (data: any) => {
 const getStoredStreak = () => {
   const data = localStorage.getItem('studyStreak');
   if (data) {
-    const parsed = JSON.parse(data);
-    return parsed;
+    try {
+      return JSON.parse(data);
+    } catch {
+      localStorage.removeItem('studyStreak');
+    }
   }
   return { streak: 0, lastStudyDate: null };
 };
@@ -1254,6 +1250,9 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
   const [isPremium, setIsPremium] = useState(() => localStorage.getItem('isPremium') === 'true');
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallPlan, setPaywallPlan] = useState<'lifetime' | 'annual' | 'monthly'>('lifetime');
+
+  // Initialize StoreKit on mount
+  useEffect(() => { initializePurchases(); }, []);
 
   const TUTORIAL_STEPS: TutorialStep[] = [
     {
@@ -4068,20 +4067,56 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   Failed Purchase?
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-                  {['Restore', 'Terms', 'Privacy'].map((link) => (
-                    <span
-                      key={link}
-                      style={{
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        color: 'rgba(255, 255, 255, 0.35)',
-                        cursor: 'pointer',
-                        fontFamily: "'Quicksand', -apple-system, sans-serif",
-                      }}
-                    >
-                      {link}
-                    </span>
-                  ))}
+                  <span
+                    onClick={async () => {
+                      try {
+                        const restored = await restorePurchases();
+                        if (restored) {
+                          setIsPremium(true);
+                          setShowPaywall(false);
+                        }
+                      } catch {}
+                    }}
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      color: 'rgba(255, 255, 255, 0.35)',
+                      cursor: 'pointer',
+                      fontFamily: "'Quicksand', -apple-system, sans-serif",
+                    }}
+                  >
+                    Restore
+                  </span>
+                  <a
+                    href="/studyapp/terms.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      color: 'rgba(255, 255, 255, 0.35)',
+                      cursor: 'pointer',
+                      fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Terms
+                  </a>
+                  <a
+                    href="/studyapp/privacy.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      color: 'rgba(255, 255, 255, 0.35)',
+                      cursor: 'pointer',
+                      fontFamily: "'Quicksand', -apple-system, sans-serif",
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Privacy
+                  </a>
                 </div>
               </div>
             </div>
@@ -4108,21 +4143,23 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                   fontFamily: "'Quicksand', -apple-system, sans-serif",
                 }}
               >
-                No payment now
+                {paywallPlan === 'lifetime' ? 'One-time purchase' : 'Cancel anytime. Auto-renews.'}
               </p>
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => {
-                  // Grant premium, then send to sign-up
-                  localStorage.setItem('isPremium', 'true');
-                  setIsPremium(true);
-                  setShowPaywall(false);
-                  if (hasAccount()) {
-                    setShowLogin(true);
-                  } else {
-                    // Jump directly to the createAccount step (index 13)
-                    setOnboardingInitialStep(12);
-                    setShowOnboarding(true);
+                onClick={async () => {
+                  try {
+                    const purchased = await purchaseProduct(paywallPlan as PlanType);
+                    if (purchased) {
+                      setIsPremium(true);
+                      setShowPaywall(false);
+                      if (!hasAccount()) {
+                        setOnboardingInitialStep(12);
+                        setShowOnboarding(true);
+                      }
+                    }
+                  } catch (err: any) {
+                    console.error('Purchase failed:', err?.message);
                   }
                 }}
                 style={{

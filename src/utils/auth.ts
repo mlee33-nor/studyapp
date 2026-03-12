@@ -2,7 +2,7 @@
 // Credentials stored in localStorage — never in plain text.
 
 const AUTH_KEY = 'studyBuddyAuth';
-const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_ITERATIONS = 200_000;
 
 interface StoredCredentials {
   email: string;
@@ -96,8 +96,20 @@ export function getStoredEmail(): string | null {
 }
 
 export function logout(): void {
-  // Only clears the login session flag, not the account itself
   localStorage.removeItem('studyBuddyLoggedIn');
+  localStorage.removeItem('studyBuddyAuth');
+  localStorage.removeItem('isPremium');
+  localStorage.removeItem('pomodoroStudyApp');
+  localStorage.removeItem('userData');
+  localStorage.removeItem('studyStreak');
+  localStorage.removeItem('selectedTheme');
+  localStorage.removeItem('onboardingCompleted');
+  localStorage.removeItem('onboardingData');
+  localStorage.removeItem('tutorialCompleted');
+  localStorage.removeItem('personalizedCategories');
+  localStorage.removeItem('studyCategories');
+  localStorage.removeItem('enhancedFocusSessions');
+  localStorage.removeItem('focusHistory');
 }
 
 export function setLoggedIn(): void {

@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
 # Capacitor
 ios/App/Pods
 ios/App/App/public

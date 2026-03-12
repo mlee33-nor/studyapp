@@ -1,7 +1,7 @@
 {
   "name": "studybuddy",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "homepage": "https://mlee33-nor.github.io/studyapp",
   "scripts": {
@@ -20,6 +20,7 @@
     "@capacitor/core": "^8.0.1",
     "@capacitor/haptics": "^8.0.0",
     "@capacitor/ios": "^8.0.1",
+    "@capgo/native-purchases": "^8.2.2",
     "@remotion/player": "^4.0.427",
     "@rive-app/react-canvas": "^4.27.0",
     "@types/canvas-confetti": "^1.9.0",

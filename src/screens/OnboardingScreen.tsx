@@ -4,6 +4,7 @@ import Lottie from 'lottie-react';
 import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
 import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
+import { purchaseProduct, type PlanType } from '../utils/purchases';
 import sanctuaryVideo from '../assets/YourSanctuary.mov';
 import sanctuaryPoster from '../assets/Sanctuary.jpg';
 
@@ -1293,11 +1294,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
             fontFamily: "'Quicksand', -apple-system, sans-serif",
           }}
         >
-          No payment now
+          {selectedPlan === 'lifetime' ? 'One-time purchase' : 'Cancel anytime. Auto-renews.'}
         </p>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={() => { if (navCooldown) return; localStorage.setItem('isPremium', 'true'); triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 3, STEPS.length - 1)); setNavCooldown(true); setTimeout(() => setNavCooldown(false), 1000); }}
+          onClick={async () => { if (navCooldown) return; setNavCooldown(true); try { const purchased = await purchaseProduct(selectedPlan as PlanType); if (purchased) { triggerSelectionTick(); setDirection(1); setCurrentStep((s) => Math.min(s + 3, STEPS.length - 1)); } } catch (err: any) { console.error('Purchase failed:', err?.message); } setTimeout(() => setNavCooldown(false), 1000); }}
           style={{
             width: '100%',
             maxWidth: 360,
@@ -1672,7 +1673,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         <motion.button
           whileTap={lastChanceTapGuard || navCooldown ? {} : { scale: 0.97 }}
           disabled={lastChanceTapGuard}
-          onClick={() => { localStorage.setItem('isPremium', 'true'); goNext(); }}
+          onClick={async () => { try { const purchased = await purchaseProduct('lifetime'); if (purchased) goNext(); } catch (err: any) { console.error('Purchase failed:', err?.message); } }}
           style={{
             width: '100%',
             padding: '16px',

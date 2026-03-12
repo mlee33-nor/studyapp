@@ -7,7 +7,7 @@ import Character from '../components/Character';
 
 const SettingsScreen: React.FC = () => {
   const navigate = useNavigate();
-  const { userData, updateSettings, resetAllStats, setUserData } = useUserData();
+  const { userData, updateSettings, resetAllStats } = useUserData();
   const { getGradientClass } = useTheme();
   const [showProfile, setShowProfile] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -113,36 +113,24 @@ const SettingsScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Dev Mode */}
-      <div className="bg-purple-50/80 backdrop-blur-sm rounded-3xl p-6 mb-6 shadow-soft border-2 border-purple-200">
-        <div className="flex items-center gap-2 mb-3">
-          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-          </svg>
-          <h3 className="text-lg font-semibold text-purple-800">Dev Mode</h3>
-        </div>
-        <p className="text-sm text-purple-700 mb-4">
-          Unlock all biomes for testing and exploration.
-        </p>
-        <button
-          onClick={() => {
-            const biomeIds: any[] = ['meadow', 'safari', 'forest', 'ocean', 'farm'];
-            const newData = {
-              ...userData,
-              level: 50,
-              xp: 25000,
-              unlockedBiomes: biomeIds,
-              activeBiome: 'meadow' as any,
-            };
-            setUserData(newData);
-            setTimeout(() => {
-              navigate('/');
-            }, 100);
-          }}
-          className="w-full py-3 px-4 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-2xl transition-all duration-200 shadow-soft"
+      {/* Support */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 mb-6 shadow-soft">
+        <h3 className="text-lg font-semibold text-text-primary mb-3">Support</h3>
+        <a
+          href="mailto:mylesdrewbiz@gmail.com"
+          className="flex items-center gap-3 text-text-primary hover:text-purple-600 transition-colors"
         >
-          Unlock All Biomes
-        </button>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span className="text-sm font-medium">mylesdrewbiz@gmail.com</span>
+        </a>
+        <div className="mt-3 flex items-center gap-3 text-text-secondary">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+          <span className="text-sm font-medium">(760) 900-9205</span>
+        </div>
       </div>
 
       {/* Daily Goal */}

@@ -135,7 +135,7 @@ export const addToCollection = (
   lottieUrl: string
 ): CollectedAnimal => {
   const animal: CollectedAnimal = {
-    id: `${Date.now()}-${Math.random()}`,
+    id: `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`,
     name,
     biome,
     lottieUrl,

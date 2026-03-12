@@ -1,8 +1,23 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useUserData } from '../hooks/useUserData';
+import { getEnhancedSessions } from '../utils/categoryManager';
 
 const JournalScreen: React.FC = () => {
   const { getGradientClass } = useTheme();
+  const { userData } = useUserData();
+  const sessions = getEnhancedSessions();
+  const recentSessions = sessions.slice(-20).reverse();
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
 
   return (
     <div className={`min-h-screen ${getGradientClass()} transition-all duration-700 pb-20 px-6 pt-8`}>
@@ -11,59 +26,66 @@ const JournalScreen: React.FC = () => {
         <h1 className="text-2xl font-semibold text-text-primary">Study Journal</h1>
       </div>
 
-      {/* Coming Soon Card */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-soft text-center">
-        <div className="text-6xl mb-4">📚</div>
-        <h2 className="text-xl font-semibold text-text-primary mb-2">Coming Soon</h2>
-        <p className="text-text-secondary">
-          Track your study notes and reflections here
-        </p>
-      </div>
-
-      {/* Feature Preview */}
-      <div className="mt-6 space-y-4">
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-soft">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pastel-blue flex items-center justify-center">
-              <svg className="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-medium text-text-primary">Daily Notes</h3>
-              <p className="text-sm text-text-secondary">Record what you learned</p>
-            </div>
+      {/* Summary Card */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-soft mb-6">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <div className="text-2xl font-bold text-text-primary">{userData.totalCompletedSessions || 0}</div>
+            <div className="text-xs text-text-secondary">Sessions</div>
           </div>
-        </div>
-
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-soft">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pastel-purple flex items-center justify-center">
-              <svg className="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-medium text-text-primary">Study Goals</h3>
-              <p className="text-sm text-text-secondary">Set and track your goals</p>
-            </div>
+          <div>
+            <div className="text-2xl font-bold text-text-primary">{userData.studyStreak || 0}</div>
+            <div className="text-xs text-text-secondary">Day Streak</div>
           </div>
-        </div>
-
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 shadow-soft">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pastel-green flex items-center justify-center">
-              <svg className="w-5 h-5 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-medium text-text-primary">Session History</h3>
-              <p className="text-sm text-text-secondary">Review past study sessions</p>
-            </div>
+          <div>
+            <div className="text-2xl font-bold text-text-primary">{userData.coins || 0}</div>
+            <div className="text-xs text-text-secondary">Coins</div>
           </div>
         </div>
       </div>
+
+      {/* Session History */}
+      <h2 className="text-lg font-semibold text-text-primary mb-3">Recent Sessions</h2>
+      {recentSessions.length === 0 ? (
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-soft text-center">
+          <div className="text-4xl mb-3">📚</div>
+          <p className="text-text-secondary text-sm">
+            Complete your first study session to see your history here!
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {recentSessions.map((session) => (
+            <div
+              key={session.id}
+              className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-soft flex items-center gap-3"
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+                style={{ backgroundColor: `${session.themeColor}20` }}
+              >
+                {session.emoji || '📖'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-text-primary text-sm truncate">
+                  {session.category}
+                </div>
+                <div className="text-xs text-text-secondary">
+                  {formatDate(session.date)} at {formatTime(session.date)}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="font-semibold text-text-primary text-sm">
+                  {session.duration} min
+                </div>
+                <div className={`text-xs font-medium ${session.successStatus ? 'text-green-600' : 'text-red-400'}`}>
+                  {session.successStatus ? 'Completed' : 'Stopped'}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
