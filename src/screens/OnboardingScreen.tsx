@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
 import confetti from 'canvas-confetti';
 import { triggerHapticFeedback, triggerSelectionTick } from '../utils/haptics';
-import { createAccount, verifyLogin, setLoggedIn } from '../utils/auth';
+import { signInWithApple, signInWithGoogle, claimUsername, isUsernameTaken, isValidUsername, hasUsername } from '../utils/auth';
+import { syncFromCloud } from '../utils/sync';
 import { purchaseProduct, type PlanType } from '../utils/purchases';
 import sanctuaryVideo from '../assets/YourSanctuary.mov';
 import sanctuaryPoster from '../assets/Sanctuary.jpg';
@@ -177,17 +178,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
   const [calculatingProgress, setCalculatingProgress] = useState(0);
   const [calculatingLabel, setCalculatingLabel] = useState('Analyzing your study habits...');
   const [bunnyAnimData, setBunnyAnimData] = useState<any>(null);
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
+  const [chosenUsername, setChosenUsername] = useState('');
   const [signupError, setSignupError] = useState('');
   const [signupLoading, setSignupLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginMode, setLoginMode] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'lifetime' | 'annual' | 'monthly'>('lifetime');
   const [chestAnimData, setChestAnimData] = useState<any>(null);
   const [chestStage, setChestStage] = useState(0);
@@ -1919,27 +1913,67 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
     </div>
   );
 
-  // --- Create Account Screen ---
-  const handleCreateAccount = async () => {
+  // --- Sign In + Username Claim ---
+  const handleSignInWithApple = async () => {
     setSignupError('');
-    const email = signupEmail.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setSignupError('Please enter a valid email address.');
-      return;
+    setSignupLoading(true);
+    try {
+      await signInWithApple();
+      // Check if user already has a username (returning user)
+      const restored = await syncFromCloud();
+      if (restored && hasUsername()) {
+        onComplete(data);
+        return;
+      }
+      setSignedIn(true);
+    } catch (err: any) {
+      if (err?.code !== 'auth/popup-closed-by-user') {
+        setSignupError('Sign in failed. Please try again.');
+      }
+    } finally {
+      setSignupLoading(false);
     }
-    if (signupPassword.length < 8) {
-      setSignupError('Password must be at least 8 characters.');
+  };
+
+  const handleSignInWithGoogle = async () => {
+    setSignupError('');
+    setSignupLoading(true);
+    try {
+      await signInWithGoogle();
+      const restored = await syncFromCloud();
+      if (restored && hasUsername()) {
+        onComplete(data);
+        return;
+      }
+      setSignedIn(true);
+    } catch (err: any) {
+      if (err?.code !== 'auth/popup-closed-by-user') {
+        setSignupError('Sign in failed. Please try again.');
+      }
+    } finally {
+      setSignupLoading(false);
+    }
+  };
+
+  const handleClaimUsername = async () => {
+    setSignupError('');
+    const validationError = isValidUsername(chosenUsername);
+    if (validationError) {
+      setSignupError(validationError);
       return;
     }
     setSignupLoading(true);
     try {
-      await createAccount(email, signupPassword);
+      const taken = await isUsernameTaken(chosenUsername);
+      if (taken) {
+        setSignupError('That username is already taken. Try another!');
+        return;
+      }
+      await claimUsername(chosenUsername);
       onComplete(data);
     } catch (err) {
-      if (err instanceof Error && err.message === 'EMAIL_IN_USE') {
-        setSignupError('This email is already in use. Try logging in instead.');
-      } else if (err instanceof Error && err.message === 'ACCOUNT_EXISTS') {
-        setSignupError('An account already exists on this device. Try logging in instead.');
+      if (err instanceof Error && err.message === 'USERNAME_TAKEN') {
+        setSignupError('That username is already taken. Try another!');
       } else {
         setSignupError('Something went wrong. Please try again.');
       }
@@ -1963,34 +1997,8 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
     transition: 'border-color 0.2s',
   };
 
-  const handleLogin = async () => {
-    setLoginError('');
-    const email = loginEmail.trim();
-    if (!email) {
-      setLoginError('Please enter your email.');
-      return;
-    }
-    if (!loginPassword) {
-      setLoginError('Please enter your password.');
-      return;
-    }
-    setLoginLoading(true);
-    try {
-      const valid = await verifyLogin(email, loginPassword);
-      if (valid) {
-        setLoggedIn();
-        onComplete(data);
-      } else {
-        setLoginError('Incorrect email or password.');
-      }
-    } catch {
-      setLoginError('Something went wrong. Please try again.');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const renderCreateAccount = () => loginMode ? (
+  const renderCreateAccount = () => signedIn ? (
+    /* Phase 2: Username picker (after sign-in) */
     <div
       style={{
         display: 'flex',
@@ -2003,319 +2011,164 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete, theme, 
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
       }}
     >
-      <motion.button
-        whileTap={{ scale: 0.9 }}
-        onClick={() => onComplete(data)}
-        style={{
-          position: 'absolute',
-          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-          right: '20px',
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          border: 'none',
-          background: 'rgba(255, 255, 255, 0.1)',
-          color: t.textSecondary,
-          fontSize: '20px',
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 10,
-          fontFamily: "'Quicksand', sans-serif",
-        }}
-      >
-        ✕
-      </motion.button>
-
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
-        <h2
-          style={{
-            fontSize: '28px',
-            fontWeight: 800,
-            color: t.textPrimary,
-            margin: '0 0 8px 0',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Welcome back
+        <h2 style={{ fontSize: '28px', fontWeight: 800, color: t.textPrimary, margin: '0 0 8px 0', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+          Choose your username
         </h2>
-
-        <p
-          style={{
-            fontSize: '16px',
-            fontWeight: 500,
-            color: t.textSecondary,
-            margin: '0 0 32px 0',
-            lineHeight: 1.5,
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Sign in to continue your study journey.
+        <p style={{ fontSize: '16px', fontWeight: 500, color: t.textSecondary, margin: '0 0 32px 0', lineHeight: 1.5, fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+          This is how friends will find you. You can't change it later!
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+        <div style={{ position: 'relative' }}>
+          <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: t.textTertiary, fontSize: '16px', fontWeight: 600, fontFamily: "'Quicksand', -apple-system, sans-serif" }}>@</span>
           <input
-            type="email"
-            placeholder="Email address"
-            autoComplete="email"
-            value={loginEmail}
-            onChange={(e) => { setLoginEmail(e.target.value); setLoginError(''); }}
-            style={inputStyle}
+            type="text"
+            placeholder="username"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={20}
+            value={chosenUsername}
+            onChange={(e) => { setChosenUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, '')); setSignupError(''); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleClaimUsername(); }}
+            style={{ ...inputStyle, paddingLeft: '36px' }}
           />
-
-          <div style={{ position: 'relative' }}>
-            <input
-              type={showLoginPassword ? 'text' : 'password'}
-              placeholder="Password"
-              autoComplete="current-password"
-              value={loginPassword}
-              onChange={(e) => { setLoginPassword(e.target.value); setLoginError(''); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }}
-              style={inputStyle}
-            />
-            <button
-              type="button"
-              onClick={() => setShowLoginPassword(!showLoginPassword)}
-              style={{
-                position: 'absolute',
-                right: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                color: t.textTertiary,
-                fontSize: '14px',
-                fontFamily: "'Quicksand', -apple-system, sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              {showLoginPassword ? 'Hide' : 'Show'}
-            </button>
-          </div>
         </div>
-
-        {loginError && (
-          <p
-            style={{
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#EF4444',
-              margin: '12px 0 0 0',
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-            }}
-          >
-            {loginError}
-          </p>
-        )}
-      </div>
-
-      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handleLogin}
-          disabled={loginLoading}
-          style={{
-            width: '100%',
-            padding: '18px',
-            borderRadius: '20px',
-            border: 'none',
-            background: t.buttonGradient,
-            color: 'white',
-            fontSize: '17px',
-            fontWeight: 700,
-            cursor: loginLoading ? 'default' : 'pointer',
-            boxShadow: t.buttonShadow,
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-            opacity: loginLoading ? 0.7 : 1,
-          }}
-        >
-          {loginLoading ? 'Signing in...' : 'Sign In'}
-        </motion.button>
-
-        <button
-          onClick={() => { setLoginMode(false); setLoginError(''); }}
-          style={{
-            width: '100%',
-            padding: '14px',
-            borderRadius: '20px',
-            border: 'none',
-            background: 'transparent',
-            color: t.textTertiary,
-            fontSize: '15px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Back to sign up
-        </button>
-      </div>
-    </div>
-  ) : (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: '100%',
-        padding: '0 32px',
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
-      }}
-    >
-      <motion.button
-        whileTap={{ scale: 0.9 }}
-        onClick={() => onComplete(data)}
-        style={{
-          position: 'absolute',
-          top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
-          right: '20px',
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          border: 'none',
-          background: 'rgba(255, 255, 255, 0.1)',
-          color: t.textSecondary,
-          fontSize: '20px',
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 10,
-          fontFamily: "'Quicksand', sans-serif",
-        }}
-      >
-        ✕
-      </motion.button>
-
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
-        <h2
-          style={{
-            fontSize: '28px',
-            fontWeight: 800,
-            color: t.textPrimary,
-            margin: '0 0 8px 0',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Create your account
-        </h2>
-
-        <p
-          style={{
-            fontSize: '16px',
-            fontWeight: 500,
-            color: t.textSecondary,
-            margin: '0 0 32px 0',
-            lineHeight: 1.5,
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Save your progress and pick up where you left off.
+        <p style={{ fontSize: '12px', fontWeight: 500, color: t.textTertiary, margin: '8px 0 0 0', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+          3-20 characters. Letters, numbers, and underscores only.
         </p>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
-          <input
-            type="email"
-            placeholder="Email address"
-            autoComplete="email"
-            value={signupEmail}
-            onChange={(e) => { setSignupEmail(e.target.value); setSignupError(''); }}
-            style={inputStyle}
-          />
-
-          <div style={{ position: 'relative' }}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password (8+ characters)"
-              autoComplete="new-password"
-              value={signupPassword}
-              onChange={(e) => { setSignupPassword(e.target.value); setSignupError(''); }}
-              style={inputStyle}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                color: t.textTertiary,
-                fontSize: '14px',
-                fontFamily: "'Quicksand', -apple-system, sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              {showPassword ? 'Hide' : 'Show'}
-            </button>
-          </div>
-        </div>
-
         {signupError && (
-          <p
-            style={{
-              fontSize: '14px',
-              fontWeight: 600,
-              color: '#EF4444',
-              margin: '12px 0 0 0',
-              fontFamily: "'Quicksand', -apple-system, sans-serif",
-            }}
-          >
+          <p style={{ fontSize: '14px', fontWeight: 600, color: '#EF4444', margin: '12px 0 0 0', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
             {signupError}
           </p>
         )}
       </div>
 
-      <div style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ width: '100%', maxWidth: 360 }}>
         <motion.button
           whileTap={{ scale: 0.97 }}
-          onClick={handleCreateAccount}
+          onClick={handleClaimUsername}
           disabled={signupLoading}
-          style={{
-            width: '100%',
-            padding: '18px',
-            borderRadius: '20px',
-            border: 'none',
-            background: t.buttonGradient,
-            color: 'white',
-            fontSize: '17px',
-            fontWeight: 700,
-            cursor: signupLoading ? 'default' : 'pointer',
-            boxShadow: t.buttonShadow,
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-            opacity: signupLoading ? 0.7 : 1,
-          }}
+          style={{ width: '100%', padding: '18px', borderRadius: '20px', border: 'none', background: t.buttonGradient, color: 'white', fontSize: '17px', fontWeight: 700, cursor: signupLoading ? 'default' : 'pointer', boxShadow: t.buttonShadow, fontFamily: "'Quicksand', -apple-system, sans-serif", opacity: signupLoading ? 0.7 : 1 }}
         >
-          {signupLoading ? 'Creating...' : 'Create Account'}
+          {signupLoading ? 'Claiming...' : 'Claim Username'}
         </motion.button>
+      </div>
+    </div>
+  ) : (
+    /* Phase 1: Apple / Google sign-in */
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: '100%',
+        padding: '0 32px',
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+      }}
+    >
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        onClick={() => onComplete(data)}
+        style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 16px)', right: '20px', width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: 'rgba(255, 255, 255, 0.1)', color: t.textSecondary, fontSize: '20px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 10, fontFamily: "'Quicksand', sans-serif" }}
+      >
+        ✕
+      </motion.button>
 
-        <button
-          onClick={() => { setLoginMode(true); setSignupError(''); }}
-          style={{
-            width: '100%',
-            padding: '8px',
-            border: 'none',
-            background: 'transparent',
-            color: t.textSecondary,
-            fontSize: '14px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            fontFamily: "'Quicksand', -apple-system, sans-serif",
-          }}
-        >
-          Already have an account? <span style={{ color: t.textPrimary, fontWeight: 700 }}>Log in</span>
-        </button>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', maxWidth: 360 }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 800, color: t.textPrimary, margin: '0 0 8px 0', fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+          Create your account
+        </h2>
+        <p style={{ fontSize: '16px', fontWeight: 500, color: t.textSecondary, margin: '0 0 40px 0', lineHeight: 1.5, fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+          Sign in to save your progress, sync across devices, and add friends.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%' }}>
+          {/* Sign in with Apple */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleSignInWithApple}
+            disabled={signupLoading}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '16px',
+              border: 'none',
+              background: '#FFFFFF',
+              color: '#000000',
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: signupLoading ? 'default' : 'pointer',
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              opacity: signupLoading ? 0.7 : 1,
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+            </svg>
+            Continue with Apple
+          </motion.button>
+
+          {/* Sign in with Google */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleSignInWithGoogle}
+            disabled={signupLoading}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: t.textPrimary,
+              fontSize: '16px',
+              fontWeight: 700,
+              cursor: signupLoading ? 'default' : 'pointer',
+              fontFamily: "'Quicksand', -apple-system, sans-serif",
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              opacity: signupLoading ? 0.7 : 1,
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 001 12c0 1.77.42 3.44 1.18 4.93l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+          </motion.button>
+        </div>
+
+        {signupError && (
+          <p style={{ fontSize: '14px', fontWeight: 600, color: '#EF4444', margin: '16px 0 0 0', fontFamily: "'Quicksand', -apple-system, sans-serif", textAlign: 'center' }}>
+            {signupError}
+          </p>
+        )}
+
+        {signupLoading && (
+          <p style={{ fontSize: '14px', fontWeight: 500, color: t.textTertiary, margin: '16px 0 0 0', fontFamily: "'Quicksand', -apple-system, sans-serif", textAlign: 'center' }}>
+            Signing in...
+          </p>
+        )}
+      </div>
+
+      <div style={{ width: '100%', maxWidth: 360, textAlign: 'center' }}>
+        <p style={{ fontSize: '12px', fontWeight: 500, color: t.textTertiary, margin: 0, lineHeight: 1.5, fontFamily: "'Quicksand', -apple-system, sans-serif" }}>
+          By continuing, you agree to our{' '}
+          <a href="/studyapp/terms.html" target="_blank" rel="noopener noreferrer" style={{ color: t.textSecondary, textDecoration: 'underline' }}>Terms</a>
+          {' '}and{' '}
+          <a href="/studyapp/privacy.html" target="_blank" rel="noopener noreferrer" style={{ color: t.textSecondary, textDecoration: 'underline' }}>Privacy Policy</a>
+        </p>
       </div>
     </div>
   );

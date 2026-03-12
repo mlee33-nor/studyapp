@@ -9,8 +9,8 @@ import { triggerHapticFeedback, triggerSelectionTick } from './utils/haptics';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
-import LoginScreen from './screens/LoginScreen';
-import { hasAccount, isLoggedIn, setLoggedIn, logout, getStoredEmail } from './utils/auth';
+import { hasAccount, hasUsername, logout, getUsername } from './utils/auth';
+import { scheduleSyncToCloud } from './utils/sync';
 import GalleryScreen from './screens/GalleryScreen';
 import AchievementsScreen from './screens/AchievementsScreen';
 import TutorialOverlay from './components/TutorialOverlay';
@@ -1238,10 +1238,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     return !localStorage.getItem('onboardingCompleted');
   });
   const [onboardingInitialStep, setOnboardingInitialStep] = useState<number | undefined>(undefined);
-  const [showLogin, setShowLogin] = useState(() => {
-    // Show login if user has an account but isn't logged in this session
-    return !showOnboarding && hasAccount() && !isLoggedIn();
-  });
+
 
   // Tutorial state
   const [tutorialStep, setTutorialStep] = useState<number>(-1);
@@ -1726,6 +1723,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
 
     // Add completed session to storage (this spawns biome animal automatically)
     addCompletedSession(actualMinutesStudied, currentAnimal.url);
+    scheduleSyncToCloud();
 
     // Read back updated data from canonical storage (pomodoroStudyApp key)
     // This includes the new permanentCollection and meadowAnimals
@@ -3148,7 +3146,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               Account
             </h3>
           </div>
-          {hasAccount() && getStoredEmail() && (
+          {hasAccount() && getUsername() && (
             <p style={{
               margin: '0 0 16px 0',
               fontSize: '14px',
@@ -3156,44 +3154,37 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
               fontFamily: "'Quicksand', sans-serif",
               fontWeight: 500,
             }}>
-              Signed in as {getStoredEmail()}
+              @{getUsername()}
             </p>
           )}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (hasAccount()) {
-                logout();
+          {hasUsername() ? (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={async () => {
+                await logout();
                 window.location.reload();
-              } else {
-                setShowLogin(true);
-              }
-            }}
-            style={{
-              width: '100%',
-              padding: '14px',
-              borderRadius: '14px',
-              border: 'none',
-              background: BACKGROUND_THEMES[selectedTheme].isDark
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(0, 0, 0, 0.06)',
-              color: getTextColor(selectedTheme, 'primary'),
-              fontSize: '15px',
-              fontWeight: 600,
-              fontFamily: "'Quicksand', sans-serif",
-              cursor: 'pointer',
-            }}
-          >
-            {hasAccount() ? 'Log Out' : 'Log In'}
-          </motion.button>
-          {!hasAccount() && (
+              }}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '14px',
+                border: 'none',
+                background: BACKGROUND_THEMES[selectedTheme].isDark
+                  ? 'rgba(255, 255, 255, 0.1)'
+                  : 'rgba(0, 0, 0, 0.06)',
+                color: getTextColor(selectedTheme, 'primary'),
+                fontSize: '15px',
+                fontWeight: 600,
+                fontFamily: "'Quicksand', sans-serif",
+                cursor: 'pointer',
+              }}
+            >
+              Log Out
+            </motion.button>
+          ) : (
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                if (!isPremium) {
-                  setShowPaywall(true);
-                  return;
-                }
                 setOnboardingInitialStep(12);
                 setShowOnboarding(true);
               }}
@@ -3202,7 +3193,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 padding: '14px',
                 borderRadius: '14px',
                 border: 'none',
-                marginTop: '10px',
                 background: 'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
                 color: '#FFFFFF',
                 fontSize: '15px',
@@ -3211,7 +3201,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 cursor: 'pointer',
               }}
             >
-              Sign Up
+              Create Username
             </motion.button>
           )}
         </GlassCard>
@@ -3227,12 +3217,10 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
         onComplete={(onboardingData) => {
           localStorage.setItem('onboardingCompleted', 'true');
           localStorage.setItem('onboardingData', JSON.stringify(onboardingData));
-          // If they created an account during onboarding, mark as logged in
-          if (hasAccount()) {
-            setLoggedIn();
-          }
           setShowOnboarding(false);
           setOnboardingInitialStep(undefined);
+          // Sync data to cloud after onboarding
+          scheduleSyncToCloud();
           // Sync premium status in case user purchased during onboarding
           if (localStorage.getItem('isPremium') === 'true') {
             setIsPremium(true);
@@ -3247,15 +3235,6 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
     );
   }
 
-  if (showLogin) {
-    return (
-      <LoginScreen
-        theme="midnight"
-        onSuccess={() => setShowLogin(false)}
-        onClose={() => setShowLogin(false)}
-      />
-    );
-  }
 
   return (
     <>

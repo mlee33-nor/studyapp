@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.studybuddy.app',
   appName: 'StudyBuddy',
   webDir: 'dist',
-  includePlugins: ['@capacitor/haptics', '@capgo/native-purchases'],
+  includePlugins: ['@capacitor/haptics', '@capgo/native-purchases', '@capacitor-firebase/authentication'],
   server: {
     cleartext: false,
     androidScheme: 'https',

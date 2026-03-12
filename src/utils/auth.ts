@@ -1,103 +1,230 @@
-// Secure client-side auth using Web Crypto API (PBKDF2 with random salt)
-// Credentials stored in localStorage — never in plain text.
+import { Capacitor } from '@capacitor/core';
+import { auth, db } from './firebase';
+import {
+  signInWithPopup,
+  signInWithCredential,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signOut,
+  onAuthStateChanged,
+  type User,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const AUTH_KEY = 'studyBuddyAuth';
-const PBKDF2_ITERATIONS = 200_000;
-
-interface StoredCredentials {
-  email: string;
-  salt: string;       // hex-encoded random salt
-  hash: string;       // hex-encoded PBKDF2 hash
-}
-
-function bufToHex(buf: ArrayBuffer): string {
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-function hexToBuf(hex: string): ArrayBuffer {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < hex.length; i += 2) {
-    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
-  }
-  return bytes.buffer;
-}
-
-async function deriveKey(password: string, salt: ArrayBuffer): Promise<string> {
-  const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    enc.encode(password),
-    'PBKDF2',
-    false,
-    ['deriveBits'],
-  );
-  const bits = await crypto.subtle.deriveBits(
-    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
-    keyMaterial,
-    256,
-  );
-  return bufToHex(bits);
-}
-
-export async function createAccount(email: string, password: string): Promise<void> {
-  const normalizedEmail = email.toLowerCase().trim();
-
-  // Prevent overwriting an existing account
-  const existing = localStorage.getItem(AUTH_KEY);
-  if (existing) {
+// Capacitor Firebase Auth plugin (native Apple/Google sign-in on iOS)
+let FirebaseAuthentication: any = null;
+async function loadNativeAuth() {
+  if (Capacitor.isNativePlatform()) {
     try {
-      const creds: StoredCredentials = JSON.parse(existing);
-      if (creds.email === normalizedEmail) {
-        throw new Error('EMAIL_IN_USE');
-      }
-      // Different email — still an existing account on this device
-      throw new Error('ACCOUNT_EXISTS');
-    } catch (e) {
-      if (e instanceof Error && (e.message === 'EMAIL_IN_USE' || e.message === 'ACCOUNT_EXISTS')) {
-        throw e;
-      }
-      // JSON parse error — corrupted data, allow overwrite
+      const mod = await import('@capacitor-firebase/authentication');
+      FirebaseAuthentication = mod.FirebaseAuthentication;
+    } catch {
+      // Plugin not available
     }
   }
+}
+const nativeAuthPromise = loadNativeAuth();
 
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const hash = await deriveKey(password, salt.buffer);
-  const creds: StoredCredentials = { email: normalizedEmail, salt: bufToHex(salt.buffer), hash };
-  localStorage.setItem(AUTH_KEY, JSON.stringify(creds));
+const USERNAME_KEY = 'studyBuddyUsername';
+const UID_KEY = 'studyBuddyUid';
+
+// ------ Auth State ------
+
+let currentUser: User | null = null;
+const authReadyPromise = new Promise<void>((resolve) => {
+  onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    if (user) {
+      localStorage.setItem(UID_KEY, user.uid);
+    }
+    resolve();
+  });
+});
+
+export async function waitForAuth(): Promise<void> {
+  await authReadyPromise;
 }
 
-export async function verifyLogin(email: string, password: string): Promise<boolean> {
-  const raw = localStorage.getItem(AUTH_KEY);
-  if (!raw) return false;
+export function getCurrentUser(): User | null {
+  return currentUser;
+}
+
+export function getUid(): string | null {
+  return currentUser?.uid || localStorage.getItem(UID_KEY);
+}
+
+// ------ Sign In ------
+
+export async function signInWithApple(): Promise<User> {
+  await nativeAuthPromise;
+
+  if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+    // Native iOS sign-in (shows the Apple ID sheet)
+    const result = await FirebaseAuthentication.signInWithApple();
+    // The Capacitor plugin auto-links to Firebase Auth
+    // Wait for Firebase Auth state to update
+    await new Promise<void>((resolve) => {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        if (user) { unsub(); resolve(); }
+      });
+      // If credential is available, sign in manually
+      if (result.credential) {
+        const appleProvider = new OAuthProvider('apple.com');
+        const oauthCredential = appleProvider.credential({
+          idToken: result.credential.idToken,
+          rawNonce: result.credential.nonce,
+        });
+        signInWithCredential(auth, oauthCredential).then(() => {
+          unsub();
+          resolve();
+        });
+      }
+    });
+  } else {
+    // Web fallback — popup sign-in
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('name');
+    await signInWithPopup(auth, provider);
+  }
+
+  if (!auth.currentUser) throw new Error('Sign-in failed');
+  currentUser = auth.currentUser;
+  localStorage.setItem(UID_KEY, currentUser.uid);
+  return currentUser;
+}
+
+export async function signInWithGoogle(): Promise<User> {
+  await nativeAuthPromise;
+
+  if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
+    const result = await FirebaseAuthentication.signInWithGoogle();
+    await new Promise<void>((resolve) => {
+      const unsub = onAuthStateChanged(auth, (user) => {
+        if (user) { unsub(); resolve(); }
+      });
+      if (result.credential) {
+        const credential = GoogleAuthProvider.credential(result.credential.idToken);
+        signInWithCredential(auth, credential).then(() => {
+          unsub();
+          resolve();
+        });
+      }
+    });
+  } else {
+    // Web fallback
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  }
+
+  if (!auth.currentUser) throw new Error('Sign-in failed');
+  currentUser = auth.currentUser;
+  localStorage.setItem(UID_KEY, currentUser.uid);
+  return currentUser;
+}
+
+// ------ Username System ------
+
+export function isValidUsername(username: string): string | null {
+  const trimmed = username.trim();
+  if (trimmed.length < 3) return 'Username must be at least 3 characters.';
+  if (trimmed.length > 20) return 'Username must be 20 characters or less.';
+  if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) return 'Only letters, numbers, and underscores allowed.';
+  if (/^_|_$/.test(trimmed)) return 'Username cannot start or end with underscore.';
+  return null;
+}
+
+export async function isUsernameTaken(username: string): Promise<boolean> {
+  const normalized = username.toLowerCase().trim();
   try {
-    const creds: StoredCredentials = JSON.parse(raw);
-    if (creds.email !== email.toLowerCase().trim()) return false;
-    const hash = await deriveKey(password, hexToBuf(creds.salt));
-    return hash === creds.hash;
+    const snap = await getDoc(doc(db, 'usernames', normalized));
+    return snap.exists();
   } catch {
     return false;
   }
 }
 
-export function hasAccount(): boolean {
-  return localStorage.getItem(AUTH_KEY) !== null;
-}
+export async function claimUsername(username: string): Promise<void> {
+  const uid = getUid();
+  if (!uid) throw new Error('Must be signed in to claim a username.');
 
-export function getStoredEmail(): string | null {
-  const raw = localStorage.getItem(AUTH_KEY);
-  if (!raw) return null;
-  try {
-    return (JSON.parse(raw) as StoredCredentials).email;
-  } catch {
-    return null;
+  const normalized = username.toLowerCase().trim();
+  const displayName = username.trim();
+
+  // Check if taken
+  const snap = await getDoc(doc(db, 'usernames', normalized));
+  if (snap.exists()) {
+    throw new Error('USERNAME_TAKEN');
   }
+
+  // Claim the username → links to this user's UID
+  await setDoc(doc(db, 'usernames', normalized), {
+    uid,
+    displayName,
+    createdAt: new Date().toISOString(),
+  });
+
+  // Store username on user profile
+  await setDoc(doc(db, 'users', uid), {
+    username: normalized,
+    displayName,
+  }, { merge: true });
+
+  localStorage.setItem(USERNAME_KEY, displayName);
 }
 
-export function logout(): void {
+export async function loadUsername(): Promise<string | null> {
+  // Check local cache first
+  const cached = localStorage.getItem(USERNAME_KEY);
+  if (cached) return cached;
+
+  // Try to load from Firestore
+  const uid = getUid();
+  if (!uid) return null;
+
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (snap.exists() && snap.data().displayName) {
+      localStorage.setItem(USERNAME_KEY, snap.data().displayName);
+      return snap.data().displayName;
+    }
+  } catch {
+    // Offline or Firebase not configured
+  }
+  return null;
+}
+
+// ------ State Helpers ------
+
+export function getUsername(): string | null {
+  return localStorage.getItem(USERNAME_KEY);
+}
+
+export function hasAccount(): boolean {
+  return getUid() !== null;
+}
+
+export function hasUsername(): boolean {
+  return localStorage.getItem(USERNAME_KEY) !== null;
+}
+
+export function isLoggedIn(): boolean {
+  return currentUser !== null || localStorage.getItem(UID_KEY) !== null;
+}
+
+export function setLoggedIn(): void {
+  // No-op — auth state managed by Firebase
+}
+
+export async function logoutUser(): Promise<void> {
+  try {
+    await signOut(auth);
+  } catch {
+    // Already signed out
+  }
+  currentUser = null;
+  localStorage.removeItem(USERNAME_KEY);
+  localStorage.removeItem(UID_KEY);
   localStorage.removeItem('studyBuddyLoggedIn');
-  localStorage.removeItem('studyBuddyAuth');
   localStorage.removeItem('isPremium');
   localStorage.removeItem('pomodoroStudyApp');
   localStorage.removeItem('userData');
@@ -112,10 +239,11 @@ export function logout(): void {
   localStorage.removeItem('focusHistory');
 }
 
-export function setLoggedIn(): void {
-  localStorage.setItem('studyBuddyLoggedIn', 'true');
+// Legacy compat
+export function logout(): void {
+  logoutUser();
 }
 
-export function isLoggedIn(): boolean {
-  return localStorage.getItem('studyBuddyLoggedIn') === 'true';
+export function getStoredEmail(): string | null {
+  return getUsername();
 }
