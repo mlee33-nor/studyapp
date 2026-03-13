@@ -31,7 +31,7 @@ export function scheduleSyncToCloud(): void {
 
 async function syncToCloud(): Promise<void> {
   const uid = getUid();
-  if (!uid) return;
+  if (!uid || !db) return;
 
   const data: Record<string, string | null> = {};
   for (const key of SYNC_KEYS) {
@@ -54,7 +54,7 @@ async function syncToCloud(): Promise<void> {
 // Restore all data from Firestore to localStorage
 export async function syncFromCloud(): Promise<boolean> {
   const uid = getUid();
-  if (!uid) return false;
+  if (!uid || !db) return false;
 
   try {
     const snap = await getDoc(doc(db, 'users', uid));

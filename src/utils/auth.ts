@@ -32,6 +32,10 @@ const UID_KEY = 'studyBuddyUid';
 
 let currentUser: User | null = null;
 const authReadyPromise = new Promise<void>((resolve) => {
+  if (!auth) {
+    resolve();
+    return;
+  }
   onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (user) {
@@ -56,6 +60,7 @@ export function getUid(): string | null {
 // ------ Sign In ------
 
 export async function signInWithApple(): Promise<User> {
+  if (!auth) throw new Error('Firebase not configured');
   await nativeAuthPromise;
 
   if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
@@ -64,7 +69,7 @@ export async function signInWithApple(): Promise<User> {
     // The Capacitor plugin auto-links to Firebase Auth
     // Wait for Firebase Auth state to update
     await new Promise<void>((resolve) => {
-      const unsub = onAuthStateChanged(auth, (user) => {
+      const unsub = onAuthStateChanged(auth!, (user) => {
         if (user) { unsub(); resolve(); }
       });
       // If credential is available, sign in manually
@@ -74,7 +79,7 @@ export async function signInWithApple(): Promise<User> {
           idToken: result.credential.idToken,
           rawNonce: result.credential.nonce,
         });
-        signInWithCredential(auth, oauthCredential).then(() => {
+        signInWithCredential(auth!, oauthCredential).then(() => {
           unsub();
           resolve();
         });
@@ -94,17 +99,18 @@ export async function signInWithApple(): Promise<User> {
 }
 
 export async function signInWithGoogle(): Promise<User> {
+  if (!auth) throw new Error('Firebase not configured');
   await nativeAuthPromise;
 
   if (Capacitor.isNativePlatform() && FirebaseAuthentication) {
     const result = await FirebaseAuthentication.signInWithGoogle();
     await new Promise<void>((resolve) => {
-      const unsub = onAuthStateChanged(auth, (user) => {
+      const unsub = onAuthStateChanged(auth!, (user) => {
         if (user) { unsub(); resolve(); }
       });
       if (result.credential) {
         const credential = GoogleAuthProvider.credential(result.credential.idToken);
-        signInWithCredential(auth, credential).then(() => {
+        signInWithCredential(auth!, credential).then(() => {
           unsub();
           resolve();
         });
@@ -134,6 +140,7 @@ export function isValidUsername(username: string): string | null {
 }
 
 export async function isUsernameTaken(username: string): Promise<boolean> {
+  if (!db) return false;
   const normalized = username.toLowerCase().trim();
   try {
     const snap = await getDoc(doc(db, 'usernames', normalized));
@@ -144,6 +151,7 @@ export async function isUsernameTaken(username: string): Promise<boolean> {
 }
 
 export async function claimUsername(username: string): Promise<void> {
+  if (!db) throw new Error('Firebase not configured');
   const uid = getUid();
   if (!uid) throw new Error('Must be signed in to claim a username.');
 
@@ -179,7 +187,7 @@ export async function loadUsername(): Promise<string | null> {
 
   // Try to load from Firestore
   const uid = getUid();
-  if (!uid) return null;
+  if (!uid || !db) return null;
 
   try {
     const snap = await getDoc(doc(db, 'users', uid));
@@ -217,7 +225,7 @@ export function setLoggedIn(): void {
 
 export async function logoutUser(): Promise<void> {
   try {
-    await signOut(auth);
+    if (auth) await signOut(auth);
   } catch {
     // Already signed out
   }
