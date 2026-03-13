@@ -1,10 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+// Use '/studyapp/' for GitHub Pages, '/' for Capacitor native builds
+const isCapacitor = process.env.CAPACITOR_BUILD === 'true'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/studyapp/',
+  base: isCapacitor ? '/' : '/studyapp/',
   build: {
     // Generate source maps for better debugging
     sourcemap: false,
