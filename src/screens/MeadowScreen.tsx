@@ -9,6 +9,7 @@ import type { MeadowAnimal, BiomeType, CollectedAnimal } from '../types';
 import { BIOME_CONFIG, getAnimalScale, getBiomeCost } from '../data/biomes';
 import { fetchAnimation, getAllCached } from '../utils/lottieCache';
 import { Lock } from 'lucide-react';
+import CoinIcon from '../components/CoinIcon';
 import { BiomeUnlockCelebration } from '../animations/BiomeUnlockAnimation';
 import {
   format,
@@ -733,7 +734,7 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
                     borderRadius: '8px',
                     fontFamily: "'Quicksand', sans-serif",
                   }}>
-                    <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {cost.toLocaleString()}
+                    <CoinIcon size={14} /> {cost.toLocaleString()}
                   </div>
                 )}
               </motion.button>
@@ -1301,7 +1302,7 @@ const MeadowScreen: React.FC<MeadowScreenProps> = ({ onBiomeRevealChange }) => {
                 fontFamily: "'Quicksand', sans-serif",
                 marginBottom: '20px',
               }}>
-                <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {biomePurchaseTarget.cost.toLocaleString()}
+                <CoinIcon size={16} /> {biomePurchaseTarget.cost.toLocaleString()}
               </div>
 
               {/* Buttons */}

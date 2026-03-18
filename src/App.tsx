@@ -6,6 +6,7 @@ import confetti from 'canvas-confetti';
 import Lottie from 'lottie-react';
 import RiveComponent from '@rive-app/react-canvas';
 import { triggerHapticFeedback, triggerSelectionTick } from './utils/haptics';
+import CoinIcon from './components/CoinIcon';
 import { StatsPage } from './components/StatsPage';
 import MeadowScreen from './screens/MeadowScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
@@ -618,7 +619,7 @@ const InteractiveTimerRing: React.FC<{
             fontFamily: "'Quicksand', sans-serif",
             fontWeight: 500
           }}>
-            <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {Math.floor((totalSeconds - timeLeft) / 60)}
+            <CoinIcon size={12} /> {Math.floor((totalSeconds - timeLeft) / 60)}
           </div>
         )}
         {!isRunning && !isPaused && (
@@ -633,7 +634,7 @@ const InteractiveTimerRing: React.FC<{
               fontWeight: 500
             }}
           >
-            <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {minutes} coins
+            <CoinIcon size={12} /> {minutes} coins
           </motion.div>
         )}
       </div>
@@ -1959,7 +1960,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0}
+                <CoinIcon size={14} /> {userData.coins ?? 0}
               </div>
               <motion.div
                   whileTap={!isPremium ? { scale: 0.9 } : {}}
@@ -2166,7 +2167,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 color: BACKGROUND_THEMES[selectedTheme].isDark ? '#A78BFA' : '#7C3AED',
                 fontFamily: "'Quicksand', sans-serif",
               }}>
-                <span style={{ fontSize: '14px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {userData.coins ?? 0} coins
+                <CoinIcon size={14} /> {userData.coins ?? 0} coins
               </div>
               <div style={{
                 display: 'flex',
@@ -2267,7 +2268,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                           color: canAfford ? '#CA8A04' : '#DC2626',
                           fontFamily: "'Quicksand', sans-serif",
                         }}>
-                          <span style={{ fontSize: '11px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span>{animal.price}
+                          <CoinIcon size={11} />{animal.price}
                         </div>
                       )}
                     </motion.button>
@@ -2360,7 +2361,7 @@ const [_selectedDate, _setSelectedDate] = useState<Date | null>(null);
                 fontFamily: "'Quicksand', sans-serif",
                 marginBottom: '20px',
               }}>
-                <span style={{ fontSize: '16px', filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span> {purchaseTarget.price}
+                <CoinIcon size={16} /> {purchaseTarget.price}
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <motion.button

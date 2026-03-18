@@ -9,6 +9,7 @@ import { triggerSelectionTick } from '../utils/haptics';
 import { getAnimalsForBiome, getAnimalScale, BIOME_CONFIG } from '../data/biomes';
 import Lottie from 'lottie-react';
 import { fetchAnimation, getAllCached } from '../utils/lottieCache';
+import CoinIcon from '../components/CoinIcon';
 
 const TimerScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -342,7 +343,7 @@ const TimerScreen: React.FC = () => {
                   </span>
                   {timer.isRunning && timerMode === 'study' && (
                     <p className="text-sm text-text-secondary mt-1 flex items-center justify-center gap-1">
-                      <span style={{ filter: 'sepia(1) saturate(3) brightness(1.1) hue-rotate(15deg)' }}>🪙</span>
+                      <CoinIcon size={14} />
                       {Math.floor((timer.progress / 100) * customDuration)} coins earned
                     </p>
                   )}
